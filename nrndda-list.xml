@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<layman>
+  <overlay
+      type = "git"
+      src  = "git://10.0.0.2/nrndda-overlay"
+      contact = "nrndda@gmail.com"
+      name = "nrndda">
+
+    <link>
+      http://nrndda.mine.nu
+    </link>
+    <description>My overlay</description>
+
+  </overlay>
+</layman>
