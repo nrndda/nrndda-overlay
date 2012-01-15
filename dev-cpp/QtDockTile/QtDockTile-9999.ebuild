@@ -6,8 +6,8 @@ EAPI=4
 
 inherit cmake-utils git-2
 
-DESCRIPTION="A YAML parser and emitter in C++"
-HOMEPAGE="http://code.google.com/p/yaml-cpp/"
+DESCRIPTION="Library to access docks from Qt software, supports unity, kde 4.8, macos and windows"
+HOMEPAGE="https://github.com/gorthauer/QtDockTile"
 EGIT_REPO_URI="git://github.com/gorthauer/QtDockTile.git"
 
 LICENSE="LGPL-2"
@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug"
 
-DEPEND=""
+DEPEND="x11-libs/qt-gui:4"
 RDEPEND="${DEPEND}"
 
 src_unpack() {
