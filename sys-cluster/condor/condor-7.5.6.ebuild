@@ -34,7 +34,7 @@ DEPEND="${CDEPEND}
 
 RESTRICT=fetch
 
-S="${WORKDIR}/${P}/src"
+S="${WORKDIR}/${P}"
 
 pkg_setup() {
 	enewgroup condor

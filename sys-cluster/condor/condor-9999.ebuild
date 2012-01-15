@@ -1,23 +1,26 @@
-# Copyright 1999-2010 Gentoo Foundation
+# Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
 EAPI=2
 
-inherit autotools eutils flag-o-matic
+inherit eutils flag-o-matic cmake-utils git-2
 
 DESCRIPTION="Workload management system for compute-intensive jobs"
 HOMEPAGE="http://www.cs.wisc.edu/condor/"
-SRC_URI="${PN}_src-${PV}-all-all.tar.gz"
+#SRC_URI="ssh://chopin.cs.wisc.edu/p/condor/repository/CONDOR_SRC.git"
+EGIT_REPO_URI=""
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
-IUSE="classads drmaa examples gcb kbdd kerberos postgres soap ssl static-libs"
+KEYWORDS=""
+
+IUSE="+cgroup classads drmaa examples gcb kbdd kerberos postgres soap ssl"
 
 CDEPEND="sys-libs/zlib
 	app-emulation/libvirt
 	dev-libs/libpcre
+	cgroup? ( dev-libs/libcgroup )
 	classads? ( sys-cluster/classads[pcre] )
 	gcb? ( net-firewall/gcb )
 	kerberos? ( app-crypt/mit-krb5 )
@@ -30,11 +33,9 @@ RDEPEND="${CDEPEND}
 	mail-client/mailx"
 
 DEPEND="${CDEPEND}
-	x11-misc/imake"
+	dev-util/cmake"
 
-RESTRICT=fetch
-
-S="${WORKDIR}/${P}/src"
+S="${WORKDIR}/${P}"
 
 pkg_setup() {
 	enewgroup condor
@@ -44,10 +45,11 @@ pkg_setup() {
 src_prepare() {
 	# these two eauto* are to replicate the build_init script
 	# not so sure they are really needed
-	eautoheader
-	eautoconf
+	#eautoheader
+	#eautoconf
+	#./configure_uw
 	# this patch is mostly to use standard fhs
-	cd condor_examples
+	cd src/condor_examples
 	epatch ./condor_config.generic.rpm.patch
 	# the base local file is in /etc, then the condor local file is updated and should reside in /var/lib
 	sed -i \
@@ -59,33 +61,35 @@ src_configure() {
 	# condor seems to be buggy with -O2 and above with gcc
 	filter-flags "-O[s2-9]" "-O1"
 
-	# set USE_OLD_IMAKE to anything so condor_imake will use the system
-	# installed imake instead of building its own
-	export USE_OLD_IMAKE=YES
-	econf \
-		--with-buildid=Gentoo-${P} \
-		--enable-proper \
-		--disable-full-port \
-		--disable-gcc-version-check \
-		--disable-glibc-version-check \
-		--disable-rpm \
-		--without-zlib \
-		--with-libvirt \
-		$(use_enable kbdd) \
-		$(use_enable postgres quill) \
-		$(use_enable static-libs static) \
-		$(use_with classads) \
-		$(use_with drmaa) \
-		$(use_with gcb) \
-		$(use_with kerberos krb5) \
-		$(use_with postgres postgresql) \
-		$(use_with soap gsoap) \
-		$(use_with ssl openssl)
+	mycmakeargs=(
+                -DPROPER=ON
+		-DCLIPPED=ON
+		-DWITH_LIBVIRT=ON
+		-DWITH_GLOBUS=OFF
+		-DWANT_MAN_PAGES=ON
+                $(cmake-utils_use kerberos WITH_KRB5)
+                $(cmake-utils_use soap WITH_GSOAP)
+                $(cmake-utils_use ssl WITH_OPENSSL)
+                $(cmake-utils_use gcb)
+                $(cmake-utils_use drmaa)
+                $(cmake-utils_use postgres WANT_CONTRIB)
+                $(cmake-utils_use classads)
+                $(cmake-utils_use kbdd HAVE_KBDD)
+        )
+		#-DUW_BUILD=OFF
+		#-DBUILD_TESTS=OFF
+		#-DENABLE_JAVA_TESTS=OFF
+	#HAVE_BACKFILL:BOOL=ON
+	#HAVE_BOINC:BOOL=ON
+
+
+	cmake-utils_src_configure
 }
 
 src_compile() {
 	# yet to find a way to parallelize compilation
-	emake -j1 || die "emake failed"
+	cmake-utils_src_make -j1 || die "emake failed"
+	#MAKEOPTS="-j1"
 }
 
 src_install() {

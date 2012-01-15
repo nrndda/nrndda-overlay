@@ -1,0 +1,3 @@
+BUS="usb", SYSFS{product}="Tablet WP8060U", NAME="input/%k", SYMLINK="wizardpen"
+BUS="usb", SYSFS{product}="Tablet WP4030U", NAME="input/%k", SYMLINK="wizardpen"
+BUS="usb", SYSFS{product}="Tablet WP5540U", NAME="input/%k", SYMLINK="wizardpen"

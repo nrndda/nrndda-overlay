@@ -1,0 +1,15 @@
+66,69c66,69
+<         char * pHeader = strstr(pData, APE_LINK_HEADER);
+<         char * pImageFile = strstr(pData, APE_LINK_IMAGE_FILE_TAG);
+<         char * pStartBlock = strstr(pData, APE_LINK_START_BLOCK_TAG);
+<         char * pFinishBlock = strstr(pData, APE_LINK_FINISH_BLOCK_TAG);
+---
+>         const char * pHeader = strstr(pData, APE_LINK_HEADER);
+>         const char * pImageFile = strstr(pData, APE_LINK_IMAGE_FILE_TAG);
+>         const char * pStartBlock = strstr(pData, APE_LINK_START_BLOCK_TAG);
+>         const char * pFinishBlock = strstr(pData, APE_LINK_FINISH_BLOCK_TAG);
+84c84
+<                 char * pImageCharacter = &pImageFile[strlen(APE_LINK_IMAGE_FILE_TAG)];
+---
+>                 const char * pImageCharacter = &pImageFile[strlen(APE_LINK_IMAGE_FILE_TAG)];
+
