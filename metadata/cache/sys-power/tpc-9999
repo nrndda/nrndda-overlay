@@ -1,0 +1,22 @@
+x11-libs/qwt:5 || ( =sys-devel/automake-1.11* ) >=sys-devel/autoconf-2.61 >=sys-devel/libtool-2.2.6b >=dev-vcs/bzr-2.0.1
+x11-libs/qwt:5
+0
+
+
+http://bazaar.launchpad.net/~klich-lukasz/tpc
+GPL-3 as-is unicode
+Turion Power Control
+**
+autotools bzr eutils libtool multilib portability toolchain-funcs
+
+
+
+
+2
+
+compile install prepare unpack
+
+
+
+
+

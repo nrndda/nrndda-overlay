@@ -1,0 +1,60 @@
+--- a/crossdev
++++ a/crossdev
+@@ -2,7 +2,7 @@
+ # Copyright 1999-2011 Gentoo Foundation
+ # Distributed under the terms of the GNU General Public License v2
+ 
+-CROSSDEV_VER="20111221"
++CROSSDEV_VER="72b8767e712ba8615331a035c8bcecaf5492347e"
+ 
+ cd /
+ umask 0022 #159111
+@@ -289,7 +289,7 @@
+ 	[[ -d ${CROSSDEV_OVERLAY}/cross-${CTARGET} ]] \
+ 		&& rm -r ${CROSSDEV_OVERLAY}/cross-${CTARGET}
+ 	sed -i -e "/^cross-${CTARGET}$/d" "${CONFIGROOT}"/categories
+-	for f in package.{mask,keywords,use} profile/package.use.force ; do
++	for f in package.{mask,keywords,use} profile/package.use.{force,mask} ; do
+ 		f="${CONFIGROOT}/${f}"
+ 		if [[ -d ${f} ]] ; then
+ 			rm -f "${f}"/cross-${CTARGET}
+@@ -662,6 +662,12 @@
+ 	output=$(_set_portage_file ${pkg} profile/package.use.force)
+ 	echo "cross-${CTARGET}/${pkg} ${use}" >> ${output}
+ }
++set_use_mask() {
++	local pkg=$1 output use=${@:2}
++	[[ -z ${use} ]] && return 0
++	output=$(_set_portage_file ${pkg} profile/package.use.mask)
++	echo "cross-${CTARGET}/${pkg} ${use}" >> ${output}
++}
+ set_links() {
+ 	local cat=$1 pkg=$2 ovl=$3
+ 	local s srcdir=${PORTDIR} d
+@@ -711,9 +717,16 @@
+ 
+ 	[[ ${pkg} == "[none]" ]] && return 0
+ 
++	case ${CTARGET} in
++		# avr requires multilib, that provides
++		# libgcc for all sub-architectures #378387
++		avr*)      set_use_force ${pkg} multilib
++		           set_use_mask ${pkg} -multilib;;
++		*)        set_use_force ${pkg} -multilib;;
++	esac
++
+ 	set_keywords ${pkg} ${ver}
+ 	set_use ${pkg} ${use}
+-	set_use_force ${pkg} -multilib
+ 	set_links ${cat} ${pkg} "${ovl}"
+ 	set_env ${pkg} "${env}"
+ }
+@@ -767,7 +780,7 @@
+ 	|| echo cross-${CTARGET} >> "${CONFIGROOT}"/categories
+ mkdir -p "${CROSSDEV_OVERLAY}"/cross-${CTARGET} || exit 1
+ cd "${CONFIGROOT}"
+-for f in package.{keywords,mask,use} env/cross-${CTARGET} profile/package.use.force ; do
++for f in package.{keywords,mask,use} env/cross-${CTARGET} profile/package.use.{force,mask}; do
+ 	[[ -f ${f} ]] && continue
+ 	mkdir -p ${f} || exit 1
+ 	rm -f ${f}/cross-${CTARGET}

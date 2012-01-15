@@ -1,0 +1,22 @@
+virtual/libc asmb? ( dev-lang/yasm )
+virtual/libc asmb? ( dev-lang/yasm )
+0
+http://supermmx.org/resources/linux/mac/mac-3.99-u4-b5.tar.gz
+mirror
+http://supermmx.org/linux/mac/
+unknown
+Unix port of Monkey's Audio
+~amd64 ~ppc ~x86
+eutils multilib portability toolchain-funcs versionator
+asmb
+
+
+
+
+
+compile install unpack
+
+
+
+
+

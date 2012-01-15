@@ -1,0 +1,11 @@
+--- Makefile    2011-08-11 01:03:56.561544201 +0400
++++ Makefile.orig       2011-08-11 01:03:49.445359791 +0400
+@@ -1,7 +1,7 @@
+ 
+ PREFIX=/usr
+ 
+-ARCH=$(shell uname -p)
++ARCH=$(shell uname -m)
+ 
+ PROJECT=TurionPowerControl
+ PROJ_CXXFLAGS=-O2 $(CXXFLAGS)
