@@ -1,0 +1,5 @@
+# Options to pass to the lircd process
+
+# for devices with lirc-kernel-module
+ULATENCYD_OPTS="-v"
+ULATENCYD_LOG="/var/log/ulatencyd.log"

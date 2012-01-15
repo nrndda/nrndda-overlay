@@ -1,0 +1,27 @@
+#!/sbin/runscript
+# Copyright 1999-2011 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: Exp $
+
+PIDFILE=/var/run/ulatencyd/${SVCNAME}.pid
+
+depend() {
+	need localmount
+	use modules
+}
+
+start() {
+	local retval
+	ebegin "Starting ulatencyd"
+
+	start-stop-daemon --start --quiet --pidfile "${PIDFILE}" --exec /usr/sbin/ulatencyd -- \
+		-f "${ULATENCYD_LOG}" ${ULATENCYD_OPTS}
+
+	eend ${retval}
+}
+
+stop() {
+	ebegin "Stopping ulatencyd"
+	start-stop-daemon --stop --quiet --pidfile "${PIDFILE}" --exec /usr/sbin/ulatencyd
+	eend $?
+}
