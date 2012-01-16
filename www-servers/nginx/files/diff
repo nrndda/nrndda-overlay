@@ -1,0 +1,14 @@
+--- config~	2011-05-06 18:56:57.000000000 +0400
++++ config	2011-05-06 18:58:48.000000000 +0400
+@@ -3,10 +3,7 @@
+     echo "*** The Phusion Passenger support files are not yet compiled. Compiling them for you... ***"
+     echo "*** Running 'rake nginx RELEASE=yes' in $ngx_addon_dir... ***"
+     old_dir=`pwd`
+-    if ! cd $ngx_addon_dir; then
+-        exit 1
+-    fi
+-    if ! rake nginx RELEASE=yes; then
++    if ! (cd $ngx_addon_dir && rake nginx RELEASE=yes) then
+         exit 1
+     fi
+     cd "$old_dir"

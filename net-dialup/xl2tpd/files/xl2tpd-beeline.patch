@@ -1,0 +1,16 @@
+--- xl2tpd-1.2.7/control.c~	2011-08-30 21:45:53.000000000 +0400
++++ xl2tpd-1.2.7/control.c	2011-08-30 21:46:33.000000000 +0400
+@@ -325,10 +325,10 @@
+                                         if (c->ourrws > -1) c->ourfbit = FBIT; else c->ourfbit = 0; */
+                 }
+ 
+-                if (t->fc & SYNC_FRAMING)
+-                    c->frame = SYNC_FRAMING;
+-                else
++                if (t->fc & ASYNC_FRAMING)
+                     c->frame = ASYNC_FRAMING;
++                else
++                    c->frame = SYNC_FRAMING;
+                 buf = new_outgoing (t);
+                 add_message_type_avp (buf, OCRQ);
+ #ifdef TEST_HIDDEN
