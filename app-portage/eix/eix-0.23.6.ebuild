@@ -4,7 +4,7 @@
 
 EAPI=4
 
-inherit multilib bash-completion-r1
+inherit multilib eutils bash-completion-r1
 
 DESCRIPTION="Search and query ebuilds, portage incl. local settings, ext. overlays, version changes, and more"
 HOMEPAGE="http://eix.berlios.de"
@@ -22,7 +22,9 @@ DEPEND="${RDEPEND}
 	app-arch/xz-utils
 	nls? ( sys-devel/gettext )"
 
-PATCHES=( "${FILESDIR}"/${P}-umask.patch )
+src_prepare() {
+       sed -ie 's/previouus_umask/previous_umask/g' src/eix-sync.in
+}
 
 src_configure() {
 	econf $(use_with sqlite) $(use_with doc extra-doc) \
