@@ -1,0 +1,14 @@
+diff --git a/app-portage/eix/eix-0.23.6.ebuild b/app-portage/eix/eix-0.23.6.ebuild
+--- a/app-portage/eix/eix-0.23.6.ebuild
++++ b/app-portage/eix/eix-0.23.6.ebuild
+@@ -37,6 +37,10 @@
+ 		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html"
+ }
+ 
++src_prepare() {
++	sed -ie 's/previouus_umask/previous_umask/g' src/eix-sync.in
++}
++
+ src_install() {
+ 	default
+ 	dobashcomp bash/eix
