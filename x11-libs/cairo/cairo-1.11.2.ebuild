@@ -64,7 +64,7 @@ DEPEND="${RDEPEND}
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.8.8-interix.patch
 	epatch "${FILESDIR}"/${PN}-1.10.0-buggy_gradients.patch
-	#epatch "${FILESDIR}"/${P}-interix.patch
+	epatch "${FILESDIR}"/${PN}-1.10.2-qt-surface.patch
 
 	# Slightly messed build system YAY
 	if [[ ${PV} == *9999* ]]; then
