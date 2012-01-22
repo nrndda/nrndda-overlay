@@ -203,8 +203,8 @@ src_configure() {
 	if use nginx_modules_http_passenger; then
 		cd "${WORKDIR}"/all/passenger-${PASSENGER_PV}
 		epatch \
-			"${FILESDIR}/passenger-3.0.8-gentoo.patch"
-#			"${FILESDIR}/passenger-3.0.0-ldlags.patch" \
+			"${FILESDIR}/passenger-3.0.8-gentoo.patch" \
+			"${FILESDIR}/passenger-3.0.9-glibc.patch"
 
 		sed -i \
 			-e 's|/usr/lib/phusion-passenger/agents|/usr/libexec/passenger/agents|' \
