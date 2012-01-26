@@ -1,0 +1,32 @@
+# ChangeLog for sys-apps/vgabios
+# Copyright 1999-2012 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/vgabios/ChangeLog,v 1.6 2012/01/25 08:16:41 cardoe Exp $
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> vgabios-0.7a.ebuild:
+  0.7a should still be masked
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> vgabios-0.6c.ebuild,
+  vgabios-0.7a.ebuild:
+  Fix bad naming error
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> vgabios-0.6c.ebuild,
+  vgabios-0.7a.ebuild:
+  Add blockers for qemu and qemu-kvm since they previously provided these
+  files.
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> vgabios-0.6c.ebuild:
+  Unmask 0.6c based version so we can test it and stabilize it.
+
+*vgabios-0.7a (25 Jan 2012)
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> vgabios-0.6c.ebuild,
+  +vgabios-0.7a.ebuild:
+  Add 0.7a based vesion. Add debug USE flag.
+
+*vgabios-0.6c (25 Jan 2012)
+
+  25 Jan 2012; Doug Goldstein <cardoe@gentoo.org> +vgabios-0.6c.ebuild,
+  +metadata.xml:
+  Initial work on a vgabios ebuild instead of using the precompiled pieces from
+  QEMU.
+
