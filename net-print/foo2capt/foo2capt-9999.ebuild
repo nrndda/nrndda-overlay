@@ -18,9 +18,11 @@ ESVN_REPO_URI="https://foo2capt.svn.sourceforge.net/svnroot/foo2capt"
 RDEPEND="net-print/cups"
 
 src_install() {
-	insinto /usr/share/ppd/Canon/
-	doins "${S}"/ppd/*
+	emake PREFIX="/usr/" CUPSROOT="/usr/libexec/cups/" DESTDIR="${D}" install || die "emake install failed"
 
-	dobin capt
+#	insinto /usr/share/ppd/Canon/
+#	doins "${S}"/ppd/*
+#
+#	dobin capt
 }
 
