@@ -46,7 +46,7 @@ ASM_DEPEND=">=dev-lang/yasm-1.1"
 RDEPEND="
 	>=sys-devel/binutils-2.16.1
 	>=dev-libs/nss-3.13.1
-	>=dev-libs/nspr-4.8.8
+	>=dev-libs/nspr-4.9.0
 	>=dev-libs/glib-2.26:2
 	>=media-libs/mesa-7.10
 	media-libs/libpng[apng]
@@ -124,6 +124,14 @@ src_unpack() {
 }
 
 src_prepare() {
+	#This patches don't apply anymore.
+	rm \
+		${WORKDIR}/firefox/"5005_use_resource_urls_appropriately.patch" \
+		${WORKDIR}/firefox/"5006_export_IO_stdin_symbol_for_sparc.patch" \
+		${WORKDIR}/firefox/"5007_bug_709259_fix_cursor_support.patch" \
+		${WORKDIR}/firefox/"6007_fix_ARMAssembler-getOp2RegScale_on_ARMv5.patch" \
+		${WORKDIR}/firefox/"6008_fix_build_failure_on_platforms_without_yarr_support.patch" \
+		${WORKDIR}/firefox/"6009_avaoid_R_SPARC_WDISP22_relocation_in_TrampolineSparc.s.patch"
 	# Apply our patches
 	EPATCH_SUFFIX="patch" \
 	EPATCH_FORCE="yes" \
