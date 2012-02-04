@@ -60,7 +60,7 @@ esac
 
 # Add linguas_* to IUSE according to available language packs
 # No language packs for alphas and betas
-if ! [[ ${PV} =~ alpha|beta ]]; then
+if ! [[ ${PV} =~ alpha ]]; then
 	for x in "${LANGS[@]}" ; do
 		# en and en_US are handled internally
 		if [[ ${x} = en ]] || [[ ${x} = en-US ]]; then
