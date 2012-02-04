@@ -9,4 +9,4 @@ inherit mozilla-app
 DESCRIPTION="Firefox Web Browser"
 HOMEPAGE="http://www.mozilla.com/en-US/firefox"
 
-KEYWORDS="**"
+KEYWORDS=""
