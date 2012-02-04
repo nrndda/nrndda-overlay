@@ -11,7 +11,7 @@ use enigmail && inherit cvs
 DESCRIPTION="Mozilla Mercurial repositories"
 HOMEPAGE="${MOZ_HG_BASE_URI}"
 
-KEYWORDS="~amd64 ~x86"
+KEYWORDS=""
 IUSE="enigmail mozdom thunderbird"
 
 REQUIRE_USE="
