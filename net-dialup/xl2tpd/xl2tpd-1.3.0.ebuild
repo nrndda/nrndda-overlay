@@ -4,7 +4,7 @@
 
 EAPI="4"
 
-inherit eutils toolchain-funcs
+inherit eutils toolchain-funcs linux-info
 
 DESCRIPTION="A modern version of the Layer 2 Tunneling Protocol (L2TP) daemon"
 HOMEPAGE="http://www.xelerance.com/services/software/xl2tpd/"
@@ -13,16 +13,24 @@ SRC_URI="ftp://ftp.xelerance.com/${PN}/${P}.tar.gz"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc ~x86"
-IUSE="dnsretry beeline"
+IUSE="dnsretry kernel beeline"
 
 DEPEND="net-libs/libpcap"
 RDEPEND="${DEPEND}
 	net-dialup/ppp"
+CONFIG_CHECK=""
 
 src_prepare() {
 	use beeline && epatch "${FILESDIR}/${PN}-beeline.patch"
 	sed -i Makefile -e 's| -O2 | $(USERCFLAGS) |g' || die "sed Makefile"
 	use dnsretry && epatch "${FILESDIR}/${PN}-dnsretry.patch"
+	if use kernel; then
+		if kernel_is lt 2 6 32; then
+			die "Kernel 2.6.32 required"
+		fi
+		CONFIG_CHECK="L2TP"
+		epatch "${FILESDIR}/${P}-0001-Add-kernel-support-for-2.6.23.patch"
+	fi
 }
 
 src_compile() {
