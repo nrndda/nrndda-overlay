@@ -19,10 +19,7 @@ IUSE=""
 
 DEPEND=""
 RDEPEND=">=sys-apps/sg3_utils-1.24
-		|| ( 
-			sys-apps/module-init-tools 
-			sys-apps/kmod[compat]
-		)
+		virtual/modutils
 		app-shells/bash"
 
 S="${WORKDIR}"
