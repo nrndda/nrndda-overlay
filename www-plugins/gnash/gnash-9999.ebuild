@@ -15,7 +15,7 @@ HOMEPAGE="http://www.gnu.org/software/gnash/"
 SRC_URI=""
 EGIT_REPO_URI="git://git.savannah.gnu.org/gnash.git"
 inherit git-2
-KEYWORDS=""
+KEYWORDS="**"
 
 LICENSE="GPL-3"
 SLOT="0"
