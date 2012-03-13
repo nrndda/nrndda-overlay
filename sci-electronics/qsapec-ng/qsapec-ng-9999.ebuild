@@ -32,8 +32,9 @@ S="${WORKDIR}/QSapecNG-${PV}-source"
 DOCS=( "${S}/README" "${S}/AUTHOR" "${S}/TODO" )
 
 src_configure() {
-	ewarn "If configure fails link /usr/include/qwt6 to /usr/include/qwt"
+	ewarn "If configure fails link /usr/include/qwt6 to /usr/include/qwt and /usr/lib64/libqwt6.so to /usr/lib64/libqwt.so"
 	export QWT_ROOT_DIR="/usr/include/qwt6/"
+	export QWT_LIBRARY="/usr/lib64/libqwt6.so"
 	cmake-utils_src_configure
 }
 
