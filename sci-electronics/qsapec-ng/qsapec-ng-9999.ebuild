@@ -18,7 +18,7 @@ SLOT="0"
 
 RDEPEND="x11-libs/qt-gui:4
 	sci-electronics/sapec-ng
-	>=x11-libs/qwt-5.1.2
+	>=x11-libs/qwt-6.0.0
 "
 #qt-core should arrive with qt-gui deps.
 
@@ -32,6 +32,8 @@ S="${WORKDIR}/QSapecNG-${PV}-source"
 DOCS=( "${S}/README" "${S}/AUTHOR" "${S}/TODO" )
 
 src_configure() {
+	ewarn "If configure fails link /usr/include/qwt6 to /usr/include/qwt"
+	export QWT_ROOT_DIR="/usr/include/qwt6/"
 	cmake-utils_src_configure
 }
 

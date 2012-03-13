@@ -7,7 +7,8 @@ LANGS="cs de fi fr he it ja nl pl pt pt_BR ru tr zh_CN zh_TW"
 
 inherit eutils qt4-r2
 
-MY_P=${PN}_${PV}
+#MY_P=${PN}_${PV}
+MY_P=RockboxUtility-v${PV}
 
 DESCRIPTION="Rockbox opensource firmware manager for mp3 players"
 HOMEPAGE="http://www.rockbox.org/twiki/bin/view/Main/RockboxUtility"
@@ -26,10 +27,6 @@ DEPEND="${RDEPEND}"
 
 S=${WORKDIR}/${MY_P}/${PN}/${PN}qt
 
-src_prepare() {
-	epatch "${FILESDIR}/${PV}"-fix-parallel-make.patch
-}
-
 src_configure() {
 	# generate binary translations
 	lrelease ${PN}qt.pro || die
@@ -40,6 +37,6 @@ src_configure() {
 
 src_install() {
 	newbin RockboxUtility ${PN} || die
-	newicon icons/rockbox-5.png ${PN}.png || die
+	#newicon icons/rockbox-5.png ${PN}.png || die
 	make_desktop_entry ${PN} "Rockbox Utility"
 }
