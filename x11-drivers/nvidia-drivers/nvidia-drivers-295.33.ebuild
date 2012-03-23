@@ -1,10 +1,10 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/nvidia-drivers-275.09.07.ebuild,v 1.1 2011/06/14 21:00:01 jer Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/nvidia-drivers-295.20-r1.ebuild,v 1.5 2012/03/21 08:50:38 ssuominen Exp $
 
 EAPI="2"
 
-inherit eutils multilib versionator linux-mod flag-o-matic nvidia-driver
+inherit eutils unpacker multilib portability versionator linux-mod flag-o-matic nvidia-driver
 
 X86_NV_PACKAGE="NVIDIA-Linux-x86-${PV}"
 AMD64_NV_PACKAGE="NVIDIA-Linux-x86_64-${PV}"
@@ -12,19 +12,22 @@ X86_FBSD_NV_PACKAGE="NVIDIA-FreeBSD-x86-${PV}"
 
 DESCRIPTION="NVIDIA X11 driver and GLX libraries"
 HOMEPAGE="http://www.nvidia.com/"
-SRC_URI="amd64? ( ftp://download.nvidia.com/XFree86/Linux-x86_64/${PV}/${AMD64_NV_PACKAGE}.run )"
+SRC_URI="x86? ( http://us.download.nvidia.com/XFree86/Linux-x86/${PV}/${X86_NV_PACKAGE}.run )
+	 amd64? ( http://us.download.nvidia.com/XFree86/Linux-x86_64/${PV}/${AMD64_NV_PACKAGE}.run )
+	 x86-fbsd? ( http://us.download.nvidia.com/XFree86/FreeBSD-x86/${PV}/${X86_FBSD_NV_PACKAGE}.tar.gz )"
 
 LICENSE="NVIDIA"
 SLOT="0"
-KEYWORDS="-* ~amd64 ~x86 ~x86-fbsd"
+KEYWORDS="-* amd64 ~x86 ~x86-fbsd"
 IUSE="acpi custom-cflags gtk multilib kernel_linux"
 RESTRICT="strip"
 EMULTILIB_PKG="true"
 
-COMMON="<x11-base/xorg-server-1.12.90
+COMMON="<x11-base/xorg-server-1.12.99
 	kernel_linux? ( >=sys-libs/glibc-2.6.1 )
 	multilib? ( app-emulation/emul-linux-x86-xlibs )
 	>=app-admin/eselect-opengl-1.0.9
+	app-admin/eselect-opencl
 	!<media-video/nvidia-settings-256.52"
 DEPEND="${COMMON}
 	kernel_linux? ( virtual/linux-sources )"
@@ -35,7 +38,7 @@ PDEPEND=">=x11-libs/libvdpau-0.3-r1
 	gtk? ( media-video/nvidia-settings )"
 
 QA_TEXTRELS_x86="
-	usr/lib/libOpenCL.so.1.0.0
+	usr/lib/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
 	usr/lib/libXvMCNVIDIA.so.${PV}
 	usr/lib/libcuda.so.${PV}
 	usr/lib/libnvcuvid.so.${PV}
@@ -59,10 +62,10 @@ QA_TEXTRELS_x86_fbsd="boot/modules/nvidia.ko
 
 QA_TEXTRELS_amd64="usr/lib32/opengl/nvidia/lib/libnvidia-tls.so.${PV}
 	usr/lib32/libnvidia-glcore.so.${PV}
+	usr/lib32/libvdpau_nvidia.so.${PV}
 	usr/lib32/opengl/nvidia/lib/libGL.so.${PV}
 	usr/lib32/libcuda.so.${PV}
-	usr/lib32/libvdpau_nvidia.so.${PV}
-	usr/lib32/libOpenCL.so.1.0.0
+	usr/lib32/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
 	usr/lib32/libnvidia-compiler.so.${PV}"
 
 QA_EXECSTACK_x86="usr/lib/opengl/nvidia/lib/libGL.so.${PV}
@@ -70,19 +73,18 @@ QA_EXECSTACK_x86="usr/lib/opengl/nvidia/lib/libGL.so.${PV}
 	usr/lib/opengl/nvidia/extensions/libglx.so.${PV}
 	usr/lib64/libXvMCNVIDIA.so.${PV}
 	usr/lib/libXvMCNVIDIA.a:NVXVMC.o
-	usr/lib/libnvidia-compiler.so.${PV}
 	usr/lib/libvdpau_nvidia.so.${PV}
+	usr/lib/libnvidia-compiler.so.${PV}
 	usr/lib/libcuda.so.${PV}
-	usr/lib/libOpenCL.so.1.0.0"
+	usr/lib/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0"
 
 QA_EXECSTACK_amd64="usr/lib32/libnvidia-glcore.so.${PV}
 	usr/lib32/opengl/nvidia/lib/libGL.so.${PV}
-	usr/lib32/libnvidia-compiler.so.${PV}
 	usr/lib32/opengl/nvidia/lib/libnvidia-tls.so.${PV}
 	usr/lib32/libvdpau_nvidia.so.${PV}
 	usr/lib32/libcuda.so.${PV}
-	usr/lib32/libOpenCL.so.1.0.0
-	usr/lib64/libnvidia-compiler.so.${PV}
+	usr/lib32/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
+	usr/lib32/libnvidia-compiler.so.${PV}
 	usr/lib64/libXvMCNVIDIA.a:NVXVMC.o
 	usr/lib64/libnvidia-cfg.so.${PV}
 	usr/lib64/libnvidia-ml.so.${PV}
@@ -93,7 +95,8 @@ QA_EXECSTACK_amd64="usr/lib32/libnvidia-glcore.so.${PV}
 	usr/lib64/opengl/nvidia/extensions/libglx.so.${PV}
 	usr/lib64/libXvMCNVIDIA.so.${PV}
 	usr/lib64/libcuda.so.${PV}
-	usr/lib64/libOpenCL.so.1.0.0
+	usr/lib64/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
+	usr/lib64/libnvidia-compiler.so.${PV}
 	usr/lib64/xorg/modules/drivers/nvidia_drv.so
 	usr/bin/nvidia-smi
 	usr/bin/nvidia-xconfig
@@ -122,7 +125,7 @@ QA_DT_HASH_amd64="usr/lib32/libcuda.so.${PV}
 	usr/lib32/libnvidia-glcore.so.${PV}
 	usr/lib32/opengl/nvidia/lib/libnvidia-tls.so.${PV}
 	usr/lib32/libvdpau_nvidia.so.${PV}
-	usr/lib32/libOpenCL.so.1.0.0
+	usr/lib32/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
 	usr/lib32/libnvidia-compiler.so.${PV}
 	usr/lib64/libXvMCNVIDIA.so.${PV}
 	usr/lib64/libcuda.so.${PV}
@@ -134,7 +137,7 @@ QA_DT_HASH_amd64="usr/lib32/libcuda.so.${PV}
 	usr/lib64/opengl/nvidia/extensions/libglx.so.${PV}
 	usr/lib64/xorg/modules/drivers/nvidia_drv.so
 	usr/lib64/libvdpau_nvidia.so.${PV}
-	usr/lib64/libOpenCL.so.1.0.0
+	usr/lib64/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
 	usr/lib64/libnvidia-compiler.so.${PV}
 	usr/lib64/libnvcuvid.so.${PV}
 	usr/bin/nvidia-smi
@@ -151,14 +154,14 @@ QA_DT_HASH_x86="usr/lib/libcuda.so.${PV}
 	usr/lib/xorg/modules/drivers/nvidia_drv.so
 	usr/lib/libXvMCNVIDIA.so.${PV}
 	usr/lib/libvdpau_nvidia.so.${PV}
-	usr/lib/libOpenCL.so.1.0.0
+	usr/lib/OpenCL/vendors/nvidia/libOpenCL.so.1.0.0
 	usr/lib/libnvidia-compiler.so.${PV}
 	usr/lib/libnvcuvid.so.${PV}
 	usr/bin/nvidia-smi
 	usr/bin/nvidia-xconfig
 	usr/bin/nvidia-settings"
 
-S="${WORKDIR}/"
+S=${WORKDIR}/
 
 mtrr_check() {
 	ebegin "Checking for MTRR support"
@@ -280,12 +283,20 @@ src_prepare() {
 
 		epatch "${FILESDIR}"/256.35-unified-arch.patch
 
+		# Fix building with Linux 3.3.x wrt #408841
+		sed -i \
+			-e '/CFLAGS="$CFLAGS/s:-I$SOURCES/arch/x86/include:& -I$OUTPUT/arch/x86/include/generated:' \
+			kernel/conftest.sh || die
+
 		# If you set this then it's your own fault when stuff breaks :)
 		use custom-cflags && sed -i "s:-O:${CFLAGS}:" "${NV_SRC}"/Makefile.*
 
 		# If greater than 2.6.5 use M= instead of SUBDIR=
 		convert_to_m "${NV_SRC}"/Makefile.kbuild
 	fi
+	cat <<- EOF > "${S}"/nvidia.icd
+		/usr/$(get_libdir)/libcuda.so
+	EOF
 }
 
 src_compile() {
@@ -330,21 +341,30 @@ src_install() {
 	# NVIDIA kernel <-> userspace driver config lib
 	dolib.so ${NV_LIB}/libnvidia-cfg.so.${NV_SOVER} || \
 		die "failed to install libnvidia-cfg"
-	dosym /usr/$(get_libdir)/libnvidia-cfg.so.${NV_SOVER} \
+	dosym libnvidia-cfg.so.${NV_SOVER} \
+		/usr/$(get_libdir)/libnvidia-cfg.so.1 || \
+		die "failed to create libnvidia-cfg.so symlink"
+	dosym libnvidia-cfg.so.1 \
 		/usr/$(get_libdir)/libnvidia-cfg.so || \
 		die "failed to create libnvidia-cfg.so symlink"
 
 	# NVIDIA monitoring library
 	dolib.so ${NV_LIB}/libnvidia-ml.so.${NV_SOVER} || \
 		die "failed to install libnvidia-ml"
-	dosym /usr/$(get_libdir)/libnvidia-ml.so.${NV_SOVER} \
+	dosym libnvidia-ml.so.${NV_SOVER} \
+		/usr/$(get_libdir)/libnvidia-ml.so.1 || \
+		die "failed to create libnvidia-ml.so symlink"
+	dosym libnvidia-ml.so.1 \
 		/usr/$(get_libdir)/libnvidia-ml.so || \
 		die "failed to create libnvidia-ml.so symlink"
 
 	# NVIDIA video decode <-> CUDA
 	dolib.so ${NV_LIB}/libnvcuvid.so.${NV_SOVER} || \
 		die "failed to install libnvcuvid.so"
-	dosym /usr/$(get_libdir)/libnvcuvid.so.${NV_SOVER} \
+	dosym libnvcuvid.so.${NV_SOVER} \
+		/usr/$(get_libdir)/libnvcuvid.so.1 || \
+		die "failed to create libnvcuvid.so symlink"
+	dosym libnvcuvid.so.1 \
 		/usr/$(get_libdir)/libnvcuvid.so || \
 		die "failed to create libnvcuvid.so symlink"
 
@@ -356,7 +376,7 @@ src_install() {
 	insinto /usr/$(get_libdir)/opengl/nvidia/extensions
 	doins ${NV_X11_EXT}/libglx.so.${NV_SOVER} || \
 		die "failed to install libglx.so"
-	dosym /usr/$(get_libdir)/opengl/nvidia/extensions/libglx.so.${NV_SOVER} \
+	dosym libglx.so.${NV_SOVER} \
 		/usr/$(get_libdir)/opengl/nvidia/extensions/libglx.so || \
 		die "failed to create libglx.so symlink"
 
@@ -365,12 +385,17 @@ src_install() {
 		die "failed to install libXvMCNVIDIA.so"
 	dolib.so ${NV_X11}/libXvMCNVIDIA.so.${NV_SOVER} || \
 		die "failed to install libXvMCNVIDIA.so"
-	dosym libXvMCNVIDIA.so.${NV_SOVER} /usr/$(get_libdir)/libXvMCNVIDIA.so || \
+	dosym libXvMCNVIDIA.so.${NV_SOVER} \
+		/usr/$(get_libdir)/libXvMCNVIDIA.so.1 || \
 		die "failed to create libXvMCNVIDIA.so symlink"
+	dosym libXvMCNVIDIA.so.1 /usr/$(get_libdir)/libXvMCNVIDIA.so || \
+		die "failed to create libXvMCNVIDIA.so symlink"
+	dosym libXvMCNVIDIA.so.${NV_SOVER} \
+		/usr/$(get_libdir)/libXvMCNVIDIA_dynamic.so.1 || \
+		die "failed to create libXvMCNVIDIA_dynamic.so symlink"
 
 	# OpenCL ICD for NVIDIA
 	if use kernel_linux; then
-		dodir /etc/OpenCL/vendors
 		insinto /etc/OpenCL/vendors
 		doins nvidia.icd
 	fi
@@ -442,6 +467,7 @@ donvidia() {
 src_install-libs() {
 	local inslibdir=$(get_libdir)
 	local NV_ROOT="/usr/${inslibdir}/opengl/nvidia"
+	local CL_ROOT=/usr/${inslibdir}/OpenCL/vendors/nvidia
 	local libdir= sover=
 
 	if use kernel_linux; then
@@ -473,8 +499,8 @@ src_install-libs() {
 	if use kernel_linux; then
 		donvidia /usr/${inslibdir} ${libdir}/libcuda.so ${sover}
 		donvidia /usr/${inslibdir} ${libdir}/libnvidia-compiler.so ${sover}
-		donvidia /usr/${inslibdir} ${libdir}/libOpenCL.so 1.0.0
-		dosym libOpenCL.so.1 /usr/${inslibdir}/libOpenCL.so
+		donvidia ${CL_ROOT} ${libdir}/libOpenCL.so 1.0.0
+		#dosym libOpenCL.so.1 ${CL_ROOT}/libOpenCL.so
 	fi
 }
 
@@ -501,6 +527,7 @@ pkg_postinst() {
 
 	# Switch to the nvidia implementation
 	eselect opengl set --use-old nvidia
+	eselect opencl set --use-old nvidia
 
 	echo
 	elog "You must be in the video group to use the NVIDIA device"
@@ -514,6 +541,8 @@ pkg_postinst() {
 	elog
 
 	elog "To use the NVIDIA GLX, run \"eselect opengl set nvidia\""
+	elog
+	elog "To use the NVIDIA CUDA/OpenCL, run \"eselect opencl set nvidia\""
 	elog
 	elog "NVIDIA has requested that any bug reports submitted have the"
 	elog "output of /usr/bin/nvidia-bug-report.sh included."
