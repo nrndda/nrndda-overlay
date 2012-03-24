@@ -2,10 +2,10 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/x11-libs/cairo/cairo-1.10.2-r1.ebuild,v 1.13 2011/07/13 09:05:48 mduft Exp $
 
-EAPI=3
+EAPI=4
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/git/cairo"
-[[ ${PV} == *9999 ]] && GIT_ECLASS="git"
+[[ ${PV} == *9999 ]] && GIT_ECLASS="git-2"
 
 inherit eutils flag-o-matic autotools ${GIT_ECLASS}
 
