@@ -1,10 +1,10 @@
 # Mozilla SCM packages
-~meta-sync/mozilla-repositories-9999
-~dev-libs/nspr-9999
-~dev-libs/nss-9999
-~net-libs/xulrunner-9999
-~www-client/firefox-9999
+~meta-sync/mozilla-repositories-9999::nrndda
+~dev-libs/nspr-9999::nrndda
+~dev-libs/nss-9999::nrndda
+~net-libs/xulrunner-9999::nrndda
+~www-client/firefox-9999::nrndda
 
 
 #Need testing 
-=x11-libs/cairo-1.12.0
+=x11-libs/cairo-1.12.0::nrndda
