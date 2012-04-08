@@ -29,7 +29,9 @@ REQUIRED_USE="openmp? ( !minimal )
 	opencl? ( !cuda )"
 
 RDEPEND="!minimal? ( >=dev-libs/openssl-0.9.7:0 )
-	mpi? ( virtual/mpi )"
+	mpi? ( virtual/mpi )
+	cuda? ( dev-util/nvidia-cuda-sdk )
+	opencl? ( dev-util/nvidia-cuda-sdk[opencl] )"
 DEPEND="${RDEPEND}"
 
 S="${WORKDIR}/${MY_P}"
@@ -75,9 +77,9 @@ get_target() {
 		echo "linux-sparc"
 	elif use x86; then
 		if use cuda; then
-			echo "linux-x86-64-cuda"
+			echo "linux-x86-cuda"
 		elif use opencl; then
-			echo "linux-x86-64-opencl"
+			echo "linux-x86-opencl"
 		elif has_xop; then
 			echo "linux-x86-xop"
 		elif has_avx; then
