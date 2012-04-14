@@ -1,0 +1,4655 @@
+diff -urpN john-1.7.9-jumbo-5//src/Makefile john-1.7.9-jumbo-5-opencl-5//src/Makefile
+--- john-1.7.9-jumbo-5//src/Makefile	2011-12-16 19:12:33.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/Makefile	2012-01-15 02:30:49.973043355 +0000
+@@ -91,6 +91,11 @@ JOHN_OBJS = \
+ 	undrop.o \
+ 	unique.o
+ 
++OCL_OBJS = \
++	common-opencl.o \
++	cryptmd5_opencl_fmt.o phpass_opencl_fmt.o rawSHA1_opencl_fmt.o \
++	NT_opencl_fmt.o rawMD5_opencl_fmt.o  NSLDAPS_opencl_fmt.o
++
+ BENCH_DES_OBJS_ORIG = \
+ 	DES_fmt.o DES_std.o
+ 
+@@ -142,6 +147,7 @@ default:
+ 	@echo "	make clean SYSTEM"
+ 	@echo "where SYSTEM can be one of the following:"
+ 	@echo "([i] is an optional letter for pre-built intrinsics, eg. -sse2i vs -sse2):"
++	@echo "linux-x86-64-opencl      Linux, x86-64 with SSE2 and OpenCL (experimental)"
+ 	@echo "linux-x86-64-avx         Linux, x86-64 with AVX (2011+ Intel CPUs)"
+ 	@echo "linux-x86-64-xop         Linux, x86-64 with AVX and XOP (2011+ AMD CPUs)"
+ 	@echo "linux-x86-64[i]          Linux, x86-64 with SSE2 (most common)"
+@@ -150,6 +156,7 @@ default:
+ #	@echo "linux-x86-64-32-sse2[i]  Linux, x86-64, 32-bit with SSE2 (for regression tests)"
+ #	@echo "linux-x86-64-32-mmx      Linux, x86-64, 32-bit with MMX (for regression tests)"
+ #	@echo "linux-x86-64-32-any      Linux, x86-64, 32-bit (for regression tests)"
++	@echo "linux-x86-opencl         Linux, x86 32-bit with SSE2 and OpenCL (experimental)"
+ 	@echo "linux-x86-sse2[i]        Linux, x86 32-bit with SSE2 (most common, 32-bit)"
+ 	@echo "linux-x86-mmx            Linux, x86 32-bit with MMX (for old computers)"
+ 	@echo "linux-x86-any            Linux, x86 32-bit (for truly ancient computers)"
+@@ -240,6 +247,15 @@ linux-x86-64-xop:
+ 		ASFLAGS="$(ASFLAGS) -mxop" \
+ 		LDFLAGS="$(LDFLAGS) -lcrypt -ldl"
+ 
++linux-x86-64-opencl:
++	$(LN) x86-64.h arch.h
++	@echo "#define JOHN_BLD" '"'$@'"' > john_build_rule.h
++	$(MAKE) $(PROJ) \
++		JOHN_OBJS="$(JOHN_OBJS) $(OCL_OBJS) c3_fmt.o x86-64.o sse-intrinsics.o" \
++		CFLAGS="$(CFLAGS) -I$(NVIDIA_CUDA)/include -I$(ATISTREAMSDKROOT)/include -DHAVE_CRYPT -DCL_VERSION_1_0 -DHAVE_DL" \
++		LDFLAGS="$(LDFLAGS) -L$(ATISTREAMSDKROOT)/lib/x86_64 -L$(NVIDIA_CUDA)/lib64 -lcrypt -lOpenCL -ldl"
++	/bin/sh ./setup-opencl-stuff.sh
++
+ linux-x86-64:
+ 	$(LN) x86-64.h arch.h
+ 	@echo "#define JOHN_BLD" '"'$@'"' > john_build_rule.h
+@@ -330,6 +346,15 @@ linux-x86-xop:
+ 		ASFLAGS="$(ASFLAGS) -m32 -mxop" \
+ 		LDFLAGS="$(LDFLAGS) -m32 -lcrypt"
+ 
++linux-x86-opencl:
++	$(LN) x86-sse.h arch.h
++	@echo "#define JOHN_BLD" '"'$@'"' > john_build_rule.h
++	$(MAKE) $(PROJ) \
++		JOHN_OBJS="$(JOHN_OBJS) $(OCL_OBJS) c3_fmt.o x86.o x86-sse.o sha1-mmx.o md4-mmx.o md5-mmx.o" \
++		CFLAGS="$(CFLAGS) -I$(NVIDIA_CUDA)/include -I$(ATISTREAMSDKROOT)/include -DHAVE_CRYPT -DCL_VERSION_1_0 -DHAVE_DL" \
++		LDFLAGS="$(LDFLAGS) -L$(ATISTREAMSDKROOT)/lib/x86 -L$(NVIDIA_CUDA)/lib -lcrypt -lOpenCL -ldl"
++	/bin/sh ./setup-opencl-stuff.sh
++
+ linux-x86-sse2:
+ 	$(LN) x86-sse.h arch.h
+ 	@echo "#define JOHN_BLD" '"'$@'"' > john_build_rule.h
+@@ -1349,7 +1374,7 @@ test_utf8:
+ 
+ clean:
+ 	$(RM) $(PROJ) $(PROJ_DOS) $(PROJ_WIN32) $(PROJ_WIN32_MINGW)
+-	$(RM) ../run/john.exe john-macosx-* *.o *.bak core
++	$(RM) ../run/john.exe john-macosx-* *.o *.bak core ../run/*.cl
+ 	$(RM) detect bench generic.h arch.h tmp.s
+ 	$(RM) fmt_registers.h fmt_externs.h john_build_rule.h
+ 	$(CP) $(NULL) Makefile.dep
+diff -urpN john-1.7.9-jumbo-5//src/NSLDAPS_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/NSLDAPS_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/NSLDAPS_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/NSLDAPS_opencl_fmt.c	2012-01-20 13:22:10.704637425 +0000
+@@ -0,0 +1,489 @@
++/*
++ * Copyright (c) 2011 Samuele Giovanni Tonon
++ * samu at linuxasylum dot net
++ * Released under GPL license 
++ */
++
++#include <string.h>
++#include <endian.h>
++
++
++#include "path.h"
++#include "misc.h"
++#include "params.h"
++#include "formats.h"
++#include "common.h"
++
++#include "sha.h"
++#include "base64.h"
++#include "common-opencl.h"
++
++#define FORMAT_LABEL			"ssha-opencl"
++#define FORMAT_NAME			"Netscape LDAP SSHA OPENCL"
++#define SHA_TYPE                        "salted SHA-1"
++
++#define BENCHMARK_COMMENT		""
++#define BENCHMARK_LENGTH		0
++
++#define CIPHERTEXT_LENGTH		40
++
++#define BINARY_SIZE			20
++#define SALT_SIZE			8
++#define NUM_BLOCKS			5
++
++#define SHA_BLOCK			16
++#define PLAINTEXT_LENGTH		SHA_BLOCK
++#define SSHA_NUM_KEYS         		1024*2048
++//#define SSHA_NUM_KEYS                         1024*16
++
++#define MIN_KEYS_PER_CRYPT              1024*32
++#define MAX_KEYS_PER_CRYPT		SSHA_NUM_KEYS
++
++
++#ifndef uint32_t
++#define uint32_t unsigned int
++#endif
++
++typedef struct {
++	uint32_t h0, h1, h2, h3, h4;
++} SHA_DEV_CTX;
++
++
++#define NSLDAP_MAGIC "{ssha}"
++#define NSLDAP_MAGIC_LENGTH 6
++
++/*cl_platform_id platform;
++cl_device_id devices;
++cl_context context;
++cl_program program;*/
++cl_command_queue queue_prof;
++cl_kernel ssha_crypt_kernel;
++cl_mem pinned_saved_keys, pinned_partial_hashes, buffer_out, buffer_keys,
++    len_buffer, data_info, mysalt, mycrypt;
++static cl_uint *outbuffer;
++static cl_uint *outbuffer2;
++static char *inbuffer;
++static char saved_key[SSHA_NUM_KEYS][PLAINTEXT_LENGTH];
++static char saved_salt[SALT_SIZE];
++static unsigned int datai[2];
++//static unsigned int crypted_key[5];
++
++static size_t global_work_size = SSHA_NUM_KEYS;
++
++static struct fmt_tests tests[] = {
++	{"{SSHA}8VKmzf3SqceSL8/CJ0bGz7ij+L0SQCxcHHYzBw==", "mabelove"},
++	{"{SSHA}91PzTv0Wjs/QVzbQ9douCG3HK8gpV1ocqgbZUg==", "12345678"},
++	{"{SSHA}DNPSSyXT0wzh4JiiX1D8RnltILQzUlFBuhKFcA==", "wildstar"},
++	{"{SSHA}yVEfRVwCJqVUBgLvgM89ExKgcfZ9QEFQgmobJg==", "zanzibar"},
++	{"{SSHA}WTT3B9Jjr8gOt0Q7WMs9/XvukyhTQj0Ns0jMKQ==", "Password9"},
++	{"{SSHA}cKFVqtf358j0FGpPsEIK1xh3T0mtDNV1kAaBNg==", "salles"},
++	{"{SSHA}y9Nc5vOnK12ppTjHo35lxM1pMFnLZMwqqwH6Eg==", "00000000"},
++	{"{SSHA}W3ipFGmzS3+j6/FhT7ZC39MIfqFcct9Ep0KEGA==", "asddsa123"},
++
++
++
++#if 0
++/*
++ * These two were found in john-1.6-nsldaps4.diff.gz and apparently they were
++ * supported by that version of they code, but they are not anymore.
++ */
++	{"{SSHA}/EExmSfmhQSPHDJaTxwQSdb/uPpzYWx0ZXI=", "secret"},
++	{"{SSHA}gVK8WC9YyFT1gMsQHTGCgT3sSv5zYWx0", "secret"},
++#endif
++	{NULL}
++};
++
++static void find_best_workgroup(void)
++{
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i = 0;
++	size_t max_group_size;
++
++	clGetDeviceInfo(devices[gpu_id], CL_DEVICE_MAX_WORK_GROUP_SIZE,
++	    sizeof(max_group_size), &max_group_size, NULL);
++	queue_prof =
++	    clCreateCommandQueue(context[gpu_id], devices[gpu_id],
++	    CL_QUEUE_PROFILING_ENABLE, &ret_code);
++	printf("Max Group Work Size %d ", (int) max_group_size);
++	local_work_size = 1;
++
++	// Set keys
++	for (; i < SSHA_NUM_KEYS; i++) {
++		memcpy(&(inbuffer[i * SHA_BLOCK]), "aaaaaaaa", SHA_BLOCK);
++		inbuffer[i * SHA_BLOCK + 8] = 0x80;
++	}
++	clEnqueueWriteBuffer(queue_prof, data_info, CL_TRUE, 0,
++	    sizeof(unsigned int) * 2, datai, 0, NULL, NULL);
++	clEnqueueWriteBuffer(queue_prof, mysalt, CL_TRUE, 0, SALT_SIZE,
++	    saved_salt, 0, NULL, NULL);
++	clEnqueueWriteBuffer(queue_prof, buffer_keys, CL_TRUE, 0,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, inbuffer, 0, NULL, NULL);
++
++	// Find minimum time
++	for (my_work_group = 1; (int) my_work_group <= (int) max_group_size;
++	    my_work_group *= 2) {
++		ret_code =
++		    clEnqueueNDRangeKernel(queue_prof, ssha_crypt_kernel, 1,
++		    NULL, &global_work_size, &my_work_group, 0, NULL,
++		    &myEvent);
++		clFinish(queue_prof);
++
++		if (ret_code != CL_SUCCESS) {
++			printf("Errore %d\n", ret_code);
++			continue;
++		}
++
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_SUBMIT,
++		    sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END,
++		    sizeof(cl_ulong), &endTime, NULL);
++
++		if ((endTime - startTime) < kernelExecTimeNs) {
++			kernelExecTimeNs = endTime - startTime;
++			local_work_size = my_work_group;
++		}
++		//printf("%d time=%ld\n",(int) my_work_group, endTime-startTime);
++		//printf("wgS = %d\n",(int)my_work_group);
++	}
++	printf("Optimal Group work Size = %d\n", (int) local_work_size);
++	clReleaseCommandQueue(queue_prof);
++}
++
++
++// TODO: free resources at exit
++static void fmt_ssha_init(struct fmt_main *pFmt)
++{
++	opencl_init("$JOHN/ssha_opencl_kernel.cl", gpu_id);
++
++	// create kernel to execute
++	ssha_crypt_kernel =
++	    clCreateKernel(program[gpu_id], "sha1_crypt_kernel", &ret_code);
++	HANDLE_CLERROR(ret_code,
++	    "Error creating kernel. Double-check kernel name?");
++
++	// create Page-Locked (Pinned) memory for higher bandwidth between host and device (Nvidia Best Practices)
++	pinned_saved_keys =
++	    clCreateBuffer(context[gpu_id],
++	    CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++	inbuffer =
++	    (char *) clEnqueueMapBuffer(queue[gpu_id], pinned_saved_keys,
++	    CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, 0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error mapping page-locked memory inbuffer");
++
++	memset(inbuffer, 0, SHA_BLOCK * SSHA_NUM_KEYS);
++	outbuffer2 = malloc(sizeof(cl_uint) * 4 * SSHA_NUM_KEYS);
++
++	pinned_partial_hashes =
++	    clCreateBuffer(context[gpu_id],
++	    CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
++	    sizeof(cl_uint) * SSHA_NUM_KEYS, NULL, &ret_code);
++
++	HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++
++	outbuffer =
++	    (cl_uint *) clEnqueueMapBuffer(queue[gpu_id],
++	    pinned_partial_hashes, CL_TRUE, CL_MAP_READ, 0,
++	    sizeof(cl_uint) * SSHA_NUM_KEYS, 0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error mapping page-locked memory outbuffer");
++
++	// create and set arguments
++	buffer_keys =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating buffer keys argument");
++
++	buffer_out =
++	    clCreateBuffer(context[gpu_id], CL_MEM_WRITE_ONLY,
++	    sizeof(cl_uint) * 5 * SSHA_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating buffer out argument");
++
++
++	data_info =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY,
++	    sizeof(unsigned int) * 2, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating data_info out argument");
++
++	mysalt =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, SALT_SIZE, NULL,
++	    &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating mysalt out argument");
++
++	//mycrypt = clCreateBuffer(context, CL_MEM_READ_ONLY, BINARY_SIZE, NULL, &ret_code);
++	//if_error_log (ret_code,"Error creating mycrypt out argument");
++
++	HANDLE_CLERROR(clSetKernelArg(ssha_crypt_kernel, 0, sizeof(data_info),
++		(void *) &data_info), "Error setting argument 0");
++
++	HANDLE_CLERROR(clSetKernelArg(ssha_crypt_kernel, 1, sizeof(mysalt),
++		(void *) &mysalt), "Error setting argument 1");
++
++	//ret_code = clSetKernelArg(ssha_crypt_kernel, 2, sizeof(mycrypt), (void*) &mycrypt);
++	//if_error_log (ret_code, "Error setting argument 2");
++
++	HANDLE_CLERROR(clSetKernelArg(ssha_crypt_kernel, 2,
++		sizeof(buffer_keys), (void *) &buffer_keys),
++	    "Error setting argument 2");
++
++	HANDLE_CLERROR(clSetKernelArg(ssha_crypt_kernel, 3, sizeof(buffer_out),
++		(void *) &buffer_out), "Error setting argument 3");
++
++	datai[0] = SHA_BLOCK;
++	datai[1] = SSHA_NUM_KEYS;
++	find_best_workgroup();
++	//local_work_size = 64; // TODO: detect dynamically
++}
++
++
++static void *binary(char *ciphertext)
++{
++	static char realcipher[BINARY_SIZE + SALT_SIZE + 9];
++
++	memset(realcipher, 0, sizeof(realcipher));
++	base64_decode(NSLDAP_MAGIC_LENGTH + ciphertext, CIPHERTEXT_LENGTH,
++	    realcipher);
++	//memcpy(crypted_key,realcipher,BINARY_SIZE);
++	return (void *) realcipher;
++}
++
++static void *get_salt(char *ciphertext)
++{
++	static char realcipher[BINARY_SIZE + SALT_SIZE + 9];
++	memset(realcipher, 0, sizeof(realcipher));
++	base64_decode(NSLDAP_MAGIC_LENGTH + ciphertext, CIPHERTEXT_LENGTH,
++	    realcipher);
++	return (void *) &realcipher[BINARY_SIZE];
++}
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++	if (ciphertext &&
++	    strlen(ciphertext) == CIPHERTEXT_LENGTH + NSLDAP_MAGIC_LENGTH)
++		return !strncasecmp(ciphertext, NSLDAP_MAGIC,
++		    NSLDAP_MAGIC_LENGTH);
++	return 0;
++}
++
++static int get_hash_0(int index)
++{
++	return outbuffer[index] & 0xF;
++}
++
++static int get_hash_1(int index)
++{
++	return outbuffer[index] & 0xFF;
++}
++
++static int get_hash_2(int index)
++{
++	return outbuffer[index] & 0xFFF;
++}
++
++static int get_hash_3(int index)
++{
++	return outbuffer[index] & 0xFFFF;
++}
++
++static int get_hash_4(int index)
++{
++	return outbuffer[index] & 0xFFFFF;
++}
++
++static int get_hash_5(int index)
++{
++	return outbuffer[index] & 0xFFFFFF;
++}
++
++static int get_hash_6(int index)
++{
++	return outbuffer[index] & 0x7FFFFFF;
++}
++
++static int binary_hash_0(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xF;
++}
++
++static int binary_hash_1(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xFF;
++}
++
++static int binary_hash_2(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xFFF;
++}
++
++static int binary_hash_3(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xFFFF;
++}
++
++static int binary_hash_4(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xFFFFF;
++}
++
++static int binary_hash_5(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xFFFFFF;
++}
++
++static int binary_hash_6(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0x7FFFFFF;
++}
++
++static int salt_hash(void *salt)
++{
++	return *((ARCH_WORD_32 *) salt) & (SALT_HASH_SIZE - 1);
++}
++
++static void set_key(char *key, int index)
++{
++	memset(saved_key[index], 0, PLAINTEXT_LENGTH);
++	strnzcpy(saved_key[index], key, PLAINTEXT_LENGTH);
++}
++
++static void set_salt(void *salt)
++{
++	memcpy(saved_salt, salt, SALT_SIZE);
++}
++
++static char *get_key(int index)
++{
++	return saved_key[index];
++}
++
++static int cmp_all(void *binary, int index)
++{
++	unsigned int i = 0;
++	unsigned int b = ((unsigned int *) binary)[0];
++
++	for (; i < index; i++) {
++		if (b == outbuffer[i]) {
++			bzero(outbuffer2, SSHA_NUM_KEYS * 4 * sizeof(cl_uint));
++			clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++			    sizeof(cl_uint) * (SSHA_NUM_KEYS),
++			    sizeof(cl_uint) * 4 * SSHA_NUM_KEYS, outbuffer2, 0,
++			    NULL, NULL);
++			return 1;
++		} else {
++		}
++	}
++	return 0;
++}
++
++static int cmp_exact(char *source, int index)
++{
++	return 1;
++}
++
++static int cmp_one(void *binary, int index)
++{
++	unsigned int *t = (unsigned int *) binary;
++
++	if (t[1] != outbuffer2[index])
++		return 0;
++	if (t[2] != outbuffer2[1 * SSHA_NUM_KEYS + index])
++		return 0;
++	if (t[3] != outbuffer2[2 * SSHA_NUM_KEYS + index])
++		return 0;
++	return t[4] == outbuffer2[3 * SSHA_NUM_KEYS + index];
++
++}
++
++
++static void crypt_all(int count)
++{
++	cl_int code;
++	int i;
++	int lenpwd;
++
++	for (i = 0; i < count; i++) {
++		lenpwd = strlen(saved_key[i]);
++		memcpy(&(inbuffer[i * SHA_BLOCK]), saved_key[i], SHA_BLOCK);
++		inbuffer[i * SHA_BLOCK + lenpwd] = 0x80;
++	}
++	code =
++	    clEnqueueWriteBuffer(queue[gpu_id], data_info, CL_TRUE, 0,
++	    sizeof(unsigned int) * 2, datai, 0, NULL, NULL);
++	HANDLE_CLERROR(code, "failed in clEnqueueWriteBuffer data_info");
++
++	code =
++	    clEnqueueWriteBuffer(queue[gpu_id], mysalt, CL_TRUE, 0, SALT_SIZE,
++	    saved_salt, 0, NULL, NULL);
++	HANDLE_CLERROR(code, "failed in clEnqueueWriteBuffer mysalt");
++
++	code =
++	    clEnqueueWriteBuffer(queue[gpu_id], buffer_keys, CL_TRUE, 0,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, inbuffer, 0, NULL, NULL);
++	HANDLE_CLERROR(code, "failed in clEnqueueWriteBuffer inbuffer");
++
++	code =
++	    clEnqueueNDRangeKernel(queue[gpu_id], ssha_crypt_kernel, 1, NULL,
++	    &global_work_size, &local_work_size, 0, NULL, NULL);
++	HANDLE_CLERROR(code, "failed in clEnqueueNDRangeKernel");
++
++	HANDLE_CLERROR(clFinish(queue[gpu_id]), "clFinish error");
++	// read back partial hashes
++	code =
++	    clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE, 0,
++	    sizeof(cl_uint) * SSHA_NUM_KEYS, outbuffer, 0, NULL, NULL);
++	HANDLE_CLERROR(code,
++	    "failed in clEnqueueReadBuffer -reading partial hashes");
++}
++
++struct fmt_main fmt_opencl_NSLDAPS = {
++	{
++		    FORMAT_LABEL,
++		    FORMAT_NAME,
++		    SHA_TYPE,
++		    BENCHMARK_COMMENT,
++		    BENCHMARK_LENGTH,
++		    PLAINTEXT_LENGTH,
++		    BINARY_SIZE,
++		    SALT_SIZE,
++		    MIN_KEYS_PER_CRYPT,
++		    MAX_KEYS_PER_CRYPT,
++		    FMT_CASE | FMT_8_BIT,
++	    tests}, {
++		    fmt_ssha_init,
++		    fmt_default_prepare,
++		    valid,
++		    fmt_default_split,
++		    binary,
++		    get_salt,
++		    {
++				binary_hash_0,
++				binary_hash_1,
++				binary_hash_2,
++				binary_hash_3,
++			binary_hash_4,
++			binary_hash_5,
++			binary_hash_6
++		    },
++		    salt_hash,
++		    set_salt,
++		    set_key,
++		    get_key,
++		    fmt_default_clear_keys,
++		    crypt_all,
++		    {
++				get_hash_0,
++				get_hash_1,
++				get_hash_2,
++				get_hash_3,
++			get_hash_4,
++			get_hash_5,
++			get_hash_6
++		    },
++		    cmp_all,
++		    cmp_one,
++	    cmp_exact}
++};
+diff -urpN john-1.7.9-jumbo-5//src/NT_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/NT_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/NT_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/NT_opencl_fmt.c	2012-01-15 02:13:47.016168889 +0000
+@@ -0,0 +1,470 @@
++/* NTLM patch for john (performance improvement and OpenCL 1.0 conformant)
++ *
++ * Written by Alain Espinosa <alainesp at gmail.com> in 2010.  No copyright
++ * is claimed, and the software is hereby placed in the public domain.
++ * In case this attempt to disclaim copyright and place the software in the
++ * public domain is deemed null and void, then the software is
++ * Copyright (c) 2010 Alain Espinosa and it is hereby released to the
++ * general public under the following terms:
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted.
++ *
++ * There's ABSOLUTELY NO WARRANTY, express or implied.
++ *
++ * (This is a heavily cut-down "BSD license".)
++ */
++
++#include <string.h>
++#include "arch.h"
++#include "misc.h"
++#include "memory.h"
++#include "common.h"
++#include "formats.h"
++#include "path.h"
++#include "common-opencl.h"
++
++//Init values
++#define INIT_A 0x67452301
++#define INIT_B 0xefcdab89
++#define INIT_C 0x98badcfe
++#define INIT_D 0x10325476
++
++#define SQRT_2 0x5a827999
++#define SQRT_3 0x6ed9eba1
++
++
++#define FORMAT_LABEL			"nt-opencl"
++#define FORMAT_NAME			"NT MD4"
++
++#define BENCHMARK_COMMENT		""
++#define BENCHMARK_LENGTH		-1
++
++#define PLAINTEXT_LENGTH    23
++#define CIPHERTEXT_LENGTH		36
++
++static struct fmt_tests tests[] = {
++	{"$NT$b7e4b9022cd45f275334bbdb83bb5be5", "John the Ripper"},
++	{"$NT$8bd6e4fb88e01009818749c5443ea712", "\xFC"},         // German u-diaeresis in ISO-8859-1
++	{"$NT$cc1260adb6985ca749f150c7e0b22063", "\xFC\xFC"},     // Two of the above
++	{"$NT$7a21990fcd3d759941e45c490f143d5f", "12345"},
++	{"$NT$f9e37e83b83c47a93c2f09f66408631b", "abc123"},
++	{"$NT$8846f7eaee8fb117ad06bdd830b7586c", "password"},
++	{"$NT$2b2ac2d1c7c8fda6cea80b5fad7563aa", "computer"},
++	{"$NT$32ed87bdb5fdc5e9cba88547376818d4", "123456"},
++	{"$NT$b7e0ea9fbffcf6dd83086e905089effd", "tigger"},
++	{"$NT$7ce21f17c0aee7fb9ceba532d0546ad6", "1234"},
++	{"$NT$b23a90d0aad9da3615fafc27a1b8baeb", "a1b2c3"},
++	{"$NT$2d20d252a479f485cdf5e171d93985bf", "qwerty"},
++	{"$NT$3dbde697d71690a769204beb12283678", "123"},
++	{"$NT$c889c75b7c1aae1f7150c5681136e70e", "xxx"},
++	{"$NT$d5173c778e0f56d9fc47e3b3c829aca7", "money"},
++	{"$NT$0cb6948805f797bf2a82807973b89537", "test"},
++	{"$NT$0569fcf2b14b9c7f3d3b5f080cbd85e5", "carmen"},
++	{"$NT$f09ab1733a528f430353834152c8a90e", "mickey"},
++	{"$NT$878d8014606cda29677a44efa1353fc7", "secret"},
++	{"$NT$85ac333bbfcbaa62ba9f8afb76f06268", "summer"},
++	{"$NT$5962cc080506d90be8943118f968e164", "internet"},
++	{"$NT$f07206c3869bda5acd38a3d923a95d2a", "service"},
++	{"$NT$31d6cfe0d16ae931b73c59d7e0c089c0", ""},
++	{"$NT$d0dfc65e8f286ef82f6b172789a0ae1c", "canada"},
++	{"$NT$066ddfd4ef0e9cd7c256fe77191ef43c", "hello"},
++	{"$NT$39b8620e745b8aa4d1108e22f74f29e2", "ranger"},
++	{"$NT$8d4ef8654a9adc66d4f628e94f66e31b", "shadow"},
++	{"$NT$320a78179516c385e35a93ffa0b1c4ac", "baseball"},
++	{"$NT$e533d171ac592a4e70498a58b854717c", "donald"},
++	{"$NT$5eee54ce19b97c11fd02e531dd268b4c", "harley"},
++	{"$NT$6241f038703cbfb7cc837e3ee04f0f6b", "hockey"},
++	{"$NT$becedb42ec3c5c7f965255338be4453c", "letmein"},
++	{"$NT$ec2c9f3346af1fb8e4ee94f286bac5ad", "maggie"},
++	{"$NT$f5794cbd75cf43d1eb21fad565c7e21c", "mike"},
++	{"$NT$74ed32086b1317b742c3a92148df1019", "mustang"},
++	{"$NT$63af6e1f1dd9ecd82f17d37881cb92e6", "snoopy"},
++	{"$NT$58def5844fe58e8f26a65fff9deb3827", "buster"},
++	{"$NT$f7eb9c06fafaa23c4bcf22ba6781c1e2", "dragon"},
++	{"$NT$dd555241a4321657e8b827a40b67dd4a", "jordan"},
++	{"$NT$bb53a477af18526ada697ce2e51f76b3", "michael"},
++	{"$NT$92b7b06bb313bf666640c5a1e75e0c18", "michelle"},
++	{NULL}
++};
++
++#define BINARY_SIZE			16
++#define SALT_SIZE			0
++
++static void set_key(char *key, int index);
++
++//2^10 * 2^9
++#define NT_NUM_KEYS			1024*512
++
++//Putting here for successful compilation (Needed by assembly functions).
++//Maybe useful in the future perform CPU and GPU cracking side by side
++unsigned int *nt_buffer8x, *output8x;
++unsigned int *nt_buffer4x, *output4x;
++unsigned int *nt_buffer1x, *output1x;
++
++static cl_uint *bbbs;
++static char *saved_plain;
++static int max_key_length = 0;
++static char get_key_saved[PLAINTEXT_LENGTH+1];
++
++//OpenCL variables
++cl_kernel nt_crypt_kernel;
++cl_mem pinned_saved_keys, pinned_bbbs, buffer_out, buffer_keys;
++
++size_t global_work_size = NT_NUM_KEYS;
++size_t local_work_size;
++
++#define ALGORITHM_NAME		"OpenCL 1.0"
++#define NT_CRYPT_FUN		nt_crypt_all_opencl
++
++static void release_all(void)
++{
++	clEnqueueUnmapMemObject(queue[gpu_id], pinned_bbbs, bbbs, 0, NULL, NULL);
++	clEnqueueUnmapMemObject(queue[gpu_id], pinned_saved_keys, saved_plain, 0, NULL, NULL);
++
++	clReleaseMemObject(buffer_keys);
++	clReleaseMemObject(buffer_out);
++	clReleaseMemObject(pinned_bbbs);
++	clReleaseMemObject(pinned_saved_keys);
++
++	clReleaseKernel(nt_crypt_kernel);
++	clReleaseProgram(program[gpu_id]);
++	clReleaseCommandQueue(queue[gpu_id]);
++	clReleaseContext(context[gpu_id]);
++}
++// Find best number of threads per block (named work_group_size or local_work_size)
++// Needed because Nvidia register allocation is per block. This can increase occupancy.
++// ~10% fast clEnqueueNDRangeKernel
++static void find_best_workgroup(size_t max_group_size)
++{
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i = 0;
++
++	cl_command_queue queue_prof = clCreateCommandQueue( context[gpu_id], devices[gpu_id], CL_QUEUE_PROFILING_ENABLE, NULL );
++	local_work_size = 1;
++
++	// Set keys
++	for (; i < NT_NUM_KEYS; i++)
++		set_key("aaaaaaaa",i);
++	// Fill params. Copy only necesary data
++	clEnqueueWriteBuffer(queue[gpu_id], buffer_keys, CL_TRUE, 0, 12 * NT_NUM_KEYS, saved_plain, 0, NULL, NULL);
++
++	// Find minimum time
++	for(;my_work_group <= max_group_size; my_work_group*=2)
++	{
++		ret_code = clEnqueueNDRangeKernel( queue_prof, nt_crypt_kernel, 1, NULL, &global_work_size, &my_work_group, 0, NULL, &myEvent);
++		clFinish(queue_prof);
++
++		if(ret_code != CL_SUCCESS)
++			continue;
++
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END  , sizeof(cl_ulong), &endTime  , NULL);
++
++		if((endTime-startTime) < kernelExecTimeNs)
++		{
++			kernelExecTimeNs = endTime-startTime;
++			local_work_size = my_work_group;
++		}
++	}
++	printf("LwS = %d\n",local_work_size);
++
++	clReleaseCommandQueue(queue_prof);
++}
++// TODO: Use concurrent memory copy & execute
++static void nt_crypt_all_opencl(int count)
++{
++	int key_length_mul_4 = (((max_key_length+1) + 3)/4)*4;
++
++	// Fill params. Copy only necesary data
++	clEnqueueWriteBuffer(queue[gpu_id], buffer_keys, CL_TRUE, 0, key_length_mul_4 * NT_NUM_KEYS, saved_plain, 0, NULL, NULL);
++
++	// Execute method
++	clEnqueueNDRangeKernel( queue[gpu_id], nt_crypt_kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
++	clFinish( queue[gpu_id] );
++
++	// Read partial result
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE, 0, 4*NT_NUM_KEYS, bbbs, 0, NULL, NULL);
++
++	max_key_length = 0;
++}
++
++#define MIN_KEYS_PER_CRYPT		NT_NUM_KEYS
++#define MAX_KEYS_PER_CRYPT		NT_NUM_KEYS
++
++static void fmt_NT_init(struct fmt_main *pFmt){
++	int argIndex = 0;
++	
++	atexit(release_all);
++    	opencl_init("$JOHN/nt_opencl_kernel.cl", gpu_id);
++
++	nt_crypt_kernel = clCreateKernel( program[gpu_id], "nt_crypt", &ret_code );
++	HANDLE_CLERROR(ret_code,"Error creating kernel");
++
++	pinned_saved_keys = clCreateBuffer(context[gpu_id], CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, (PLAINTEXT_LENGTH+1)*NT_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code,"Error creating page-locked memory");
++	pinned_bbbs = clCreateBuffer(context[gpu_id], CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,4*NT_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code,"Error creating page-locked memory");
++
++	saved_plain = (char*) clEnqueueMapBuffer(queue[gpu_id], pinned_saved_keys, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, (PLAINTEXT_LENGTH+1)*NT_NUM_KEYS, 0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code,"Error mapping page-locked memory");
++	bbbs = (cl_uint*)clEnqueueMapBuffer(queue[gpu_id], pinned_bbbs , CL_TRUE, CL_MAP_READ, 0, 4*NT_NUM_KEYS, 0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code,"Error mapping page-locked memory");
++
++	// 6. Create and set arguments
++	buffer_keys = clCreateBuffer( context[gpu_id], CL_MEM_READ_ONLY,(PLAINTEXT_LENGTH+1)*NT_NUM_KEYS, NULL, &ret_code ); 
++	HANDLE_CLERROR(ret_code,"Error creating buffer argument");
++	buffer_out  = clCreateBuffer( context[gpu_id], CL_MEM_WRITE_ONLY , 4*4*NT_NUM_KEYS, NULL, &ret_code ); 
++	HANDLE_CLERROR(ret_code,"Error creating buffer argument");
++
++	argIndex = 0;
++	HANDLE_CLERROR(clSetKernelArg(nt_crypt_kernel, argIndex++, sizeof(buffer_keys), (void*) &buffer_keys),            
++		"Error setting argument 1");
++	HANDLE_CLERROR(clSetKernelArg(nt_crypt_kernel, argIndex++, sizeof(buffer_out ), (void*) &buffer_out ),
++		"Error setting argument 2");
++
++	find_best_workgroup(max_group_size);
++	//local_work_size = 64;
++}
++
++static char * nt_split(char *ciphertext, int index)
++{
++	static char out[37];
++
++	if (!strncmp(ciphertext, "$NT$", 4))
++		ciphertext += 4;
++
++	out[0] = '$';
++	out[1] = 'N';
++	out[2] = 'T';
++	out[3] = '$';
++
++	memcpy(&out[4], ciphertext, 32);
++	out[36] = 0;
++
++	strlwr(&out[4]);
++
++	return out;
++}
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++        char *pos;
++
++	if (strncmp(ciphertext, "$NT$", 4)!=0) return 0;
++
++        for (pos = &ciphertext[4]; atoi16[ARCH_INDEX(*pos)] != 0x7F; pos++);
++
++        if (!*pos && pos - ciphertext == CIPHERTEXT_LENGTH)
++		return 1;
++        else
++        	return 0;
++
++}
++
++static void *get_binary(char *ciphertext)
++{
++	static unsigned int out[4];
++	unsigned int i=0;
++	unsigned int temp;
++
++	ciphertext+=4;
++	for (; i<4; i++)
++	{
++ 		temp  = (atoi16[ARCH_INDEX(ciphertext[i*8+0])])<<4;
++ 		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+1])]);
++		
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+2])])<<12;
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+3])])<<8;
++		
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+4])])<<20;
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+5])])<<16;
++		
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+6])])<<28;
++		temp |= (atoi16[ARCH_INDEX(ciphertext[i*8+7])])<<24;
++		
++		out[i]=temp;
++	}
++
++	out[0] -= INIT_A;
++	out[1] -= INIT_B;
++	out[2] -= INIT_C;
++	out[3] -= INIT_D;
++	
++	out[1]  = (out[1] >> 15) | (out[1] << 17);
++	out[1] -= SQRT_3 + (out[2] ^ out[3] ^ out[0]);
++	out[1]  = (out[1] >> 15) | (out[1] << 17);
++	out[1] -= SQRT_3;
++	
++	return out;
++}
++
++static int binary_hash_0(void *binary)
++{
++	return ((unsigned int *)binary)[1] & 0x0F;
++}
++
++static int binary_hash_1(void *binary)
++{
++	return ((unsigned int *)binary)[1] & 0xFF;
++}
++
++static int binary_hash_2(void *binary)
++{
++	return ((unsigned int *)binary)[1] & 0x0FFF;
++}
++
++static int get_hash_0(int index)
++{
++	return bbbs[index] & 0x0F;
++}
++
++static int get_hash_1(int index)
++{
++	return bbbs[index] & 0xFF;
++}
++
++static int get_hash_2(int index)
++{
++	return bbbs[index] & 0x0FFF;
++}
++
++static int cmp_all(void *binary, int count)
++{
++	unsigned int i=0;
++	unsigned int b=((unsigned int *)binary)[1];
++
++	for(;i<NT_NUM_KEYS;i++)
++		if(b==bbbs[i])
++			return 1;
++	return 0;
++}
++
++static int cmp_one(void * binary, int index)
++{
++	unsigned int *t=(unsigned int *)binary;
++	unsigned int a;
++	unsigned int b;
++	unsigned int c;
++	unsigned int d;
++	
++	unsigned int * buffer;
++	int pos1;
++	int pos2;
++	int pos3;
++
++	//b
++	if (t[1]!=bbbs[index])
++		return 0;
++
++	//a
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,  sizeof(cl_uint)*(1*NT_NUM_KEYS+index), sizeof(a), (void*)&a, 0, NULL, NULL);
++	if (t[0]!=a)
++		return 0;
++	//c
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,  sizeof(cl_uint)*(2*NT_NUM_KEYS+index), sizeof(c), (void*)&c, 0, NULL, NULL);
++	if (t[2]!=c)
++		return 0;
++	//d
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,  sizeof(cl_uint)*(3*NT_NUM_KEYS+index), sizeof(d), (void*)&d, 0, NULL, NULL);
++	return t[3]==d;
++	if(b!=t[1])
++		return 0;
++	b += SQRT_3;b = (b << 15) | (b >> 17);
++	
++	a += (b ^ c ^ d) + buffer[pos1] + SQRT_3; a = (a << 3 ) | (a >> 29);
++	if(a!=t[0])
++		return 0;
++	
++	d += (a ^ b ^ c) + buffer[pos2] + SQRT_3; d = (d << 9 ) | (d >> 23);
++	if(d!=t[3])
++		return 0;
++	
++	c += (d ^ a ^ b) + buffer[pos3] + SQRT_3; c = (c << 11) | (c >> 21);	
++	return c==t[2];
++}
++
++static int cmp_exact(char *source, int index)
++{
++	return 1;
++}
++
++static void set_key(char *key, int index)
++{
++	int length = -1;
++
++	do
++	{
++		length++;
++		//Save keys in a coalescing friendly way
++		saved_plain[(length/4)*NT_NUM_KEYS*4+index*4+length%4] = key[length];
++	}
++	while(key[length]);
++	//Calculate max key length of this chunk
++	if (length > max_key_length)
++		max_key_length = length;
++}
++static char *get_key(int index)
++{
++	int length = -1;
++
++	do
++	{
++		length++;
++		//Decode saved key
++		get_key_saved[length] = saved_plain[(length/4)*NT_NUM_KEYS*4+index*4+length%4];
++	}
++	while(get_key_saved[length]);
++
++	return get_key_saved;
++}
++
++struct fmt_main fmt_opencl_NT = {
++	{
++		FORMAT_LABEL,
++		FORMAT_NAME,
++		ALGORITHM_NAME,
++		BENCHMARK_COMMENT,
++		BENCHMARK_LENGTH,
++		PLAINTEXT_LENGTH,
++		BINARY_SIZE,
++		SALT_SIZE,
++		MIN_KEYS_PER_CRYPT,
++		MAX_KEYS_PER_CRYPT,
++		FMT_CASE | FMT_8_BIT | FMT_SPLIT_UNIFIES_CASE,
++		tests
++	}, {
++		fmt_NT_init,
++		fmt_default_prepare,
++		valid,
++		nt_split,
++		get_binary,
++		fmt_default_salt,
++		{
++			binary_hash_0,
++			binary_hash_1,
++			binary_hash_2,
++			NULL,
++			NULL
++		},
++		fmt_default_salt_hash,
++		fmt_default_set_salt,
++		set_key,
++		get_key,
++		fmt_default_clear_keys,
++		NT_CRYPT_FUN,
++		{
++			get_hash_0,
++			get_hash_1,
++			get_hash_2,
++			NULL,
++			NULL
++		},
++		cmp_all,
++		cmp_one,
++		cmp_exact
++	}
++};
+diff -urpN john-1.7.9-jumbo-5//src/common-opencl.c john-1.7.9-jumbo-5-opencl-5//src/common-opencl.c
+--- john-1.7.9-jumbo-5//src/common-opencl.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/common-opencl.c	2012-01-17 09:54:15.402615205 +0000
+@@ -0,0 +1,158 @@
++/* Common OpenCL functions go in this file */
++
++#include "common-opencl.h"
++#include <assert.h>
++#include <string.h>
++#define LOG_SIZE 1024*16
++#define SRC_SIZE 1024*16
++
++static char opencl_log[LOG_SIZE];
++static char kernel_source[SRC_SIZE];
++static int kernel_loaded;
++
++void handle_clerror(cl_int cl_error, const char *message, const char *file,
++    int line)
++{
++	if (cl_error != CL_SUCCESS) {
++		fprintf(stderr,
++		    "OpenCL error (%s) in file (%s) at line (%d) - (%s)\n",
++		    get_error_name(cl_error), file, line, message);
++		exit(EXIT_FAILURE);
++	}
++}
++
++static void read_kernel_source(char *kernel_filename)
++{
++	//printf("kernel filename:%s\n",kernel_filename);
++	char *kernel_path = path_expand(kernel_filename);
++	FILE *fp = fopen(kernel_path, "r");
++	if (!fp)
++		HANDLE_CLERROR(!CL_SUCCESS, "Source kernel not found!");
++	size_t source_size = fread(kernel_source, sizeof(char), SRC_SIZE, fp);
++	kernel_source[source_size] = 0;
++	fclose(fp);
++	kernel_loaded = 1;
++}
++
++static void dev_init(unsigned int dev_id)
++{				//dev is 0 or 1
++	assert(dev_id < MAXGPUS);
++	cl_platform_id platform;
++	cl_uint platforms, device_num;
++
++	///Find CPU's
++	HANDLE_CLERROR(clGetPlatformIDs(1, &platform, &platforms),
++	    "No OpenCL platform found");
++	printf("OpenCL Platforms: %d", platforms);
++	HANDLE_CLERROR(clGetPlatformInfo(platform, CL_PLATFORM_NAME,
++		sizeof(opencl_log), opencl_log, NULL),
++	    "Error querying PLATFORM_NAME");
++	printf("\nOpenCL Platform: <<<%s>>>", opencl_log);
++
++	HANDLE_CLERROR(clGetDeviceIDs
++	    (platform, CL_DEVICE_TYPE_ALL, MAXGPUS, devices, &device_num),
++	    "No OpenCL device of that type exist");
++
++	printf(" %d device(s), ", device_num);
++	cl_context_properties properties[] = {
++		CL_CONTEXT_PLATFORM, (cl_context_properties) platform,
++		0
++	};
++	HANDLE_CLERROR(clGetDeviceInfo(devices[dev_id], CL_DEVICE_NAME,
++		sizeof(opencl_log), opencl_log, NULL),
++	    "Error querying DEVICE_NAME");
++	printf("using device: <<<%s>>>\n", opencl_log);
++	HANDLE_CLERROR(clGetDeviceInfo(devices[dev_id],
++		CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_group_size),
++		&max_group_size, NULL), "Error querying MAX_WORK_GROUP_SIZE");
++	///Setup context
++	context[dev_id] =
++	    clCreateContext(properties, 1, &devices[dev_id], NULL, NULL,
++	    &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating context");
++	queue[dev_id] =
++	    clCreateCommandQueue(context[dev_id], devices[dev_id], 0,
++	    &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating command queue");
++}
++
++
++static void build_kernel(int dev_id)
++{
++	assert(kernel_loaded);
++	const char *srcptr[] = { kernel_source };
++	program[dev_id] =
++	    clCreateProgramWithSource(context[dev_id], 1, srcptr, NULL,
++	    &ret_code);
++	HANDLE_CLERROR(ret_code, "Error while creating program");
++
++	cl_int build_code;
++	build_code = clBuildProgram(program[dev_id], 0, NULL, "", NULL, NULL);
++
++	HANDLE_CLERROR(clGetProgramBuildInfo(program[dev_id], devices[dev_id],
++		CL_PROGRAM_BUILD_LOG, sizeof(opencl_log), (void *) opencl_log,
++		NULL), "Error while getting build info");
++
++	///Report build errors and warnings
++	if (build_code != CL_SUCCESS)
++		printf("Compilation log: %s\n", opencl_log);
++#ifdef REPORT_OPENCL_WARNINGS
++	else if (strlen(opencl_log) > 0)
++		printf("Compilation log: %s\n", opencl_log);
++#endif
++}
++
++void opencl_init(char *kernel_filename, unsigned int dev_id)
++{
++	//if (!kernel_loaded)
++		read_kernel_source(kernel_filename);
++	dev_init(dev_id);
++	build_kernel(dev_id);
++}
++
++char *get_error_name(cl_int cl_error)
++{
++	static char *err_1[] =
++	    { "CL_SUCCESS", "CL_DEVICE_NOT_FOUND", "CL_DEVICE_NOT_AVAILABLE",
++		"CL_COMPILER_NOT_AVAILABLE",
++		"CL_MEM_OBJECT_ALLOCATION_FAILURE", "CL_OUT_OF_RESOURCES",
++		"CL_OUT_OF_HOST_MEMORY",
++		"CL_PROFILING_INFO_NOT_AVAILABLE", "CL_MEM_COPY_OVERLAP",
++		"CL_IMAGE_FORMAT_MISMATCH",
++		"CL_IMAGE_FORMAT_NOT_SUPPORTED", "CL_BUILD_PROGRAM_FAILURE",
++		"CL_MAP_FAILURE"
++	};
++	static char *err_invalid[] = {
++		"CL_INVALID_VALUE", "CL_INVALID_DEVICE_TYPE",
++		"CL_INVALID_PLATFORM", "CL_INVALID_DEVICE",
++		"CL_INVALID_CONTEXT", "CL_INVALID_QUEUE_PROPERTIES",
++		"CL_INVALID_COMMAND_QUEUE", "CL_INVALID_HOST_PTR",
++		"CL_INVALID_MEM_OBJECT", "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR",
++		"CL_INVALID_IMAGE_SIZE", "CL_INVALID_SAMPLER",
++		"CL_INVALID_BINARY", "CL_INVALID_BUILD_OPTIONS",
++		"CL_INVALID_PROGRAM", "CL_INVALID_PROGRAM_EXECUTABLE",
++		"CL_INVALID_KERNEL_NAME", "CL_INVALID_KERNEL_DEFINITION",
++		"CL_INVALID_KERNEL", "CL_INVALID_ARG_INDEX",
++		"CL_INVALID_ARG_VALUE", "CL_INVALID_ARG_SIZE",
++		"CL_INVALID_KERNEL_ARGS", "CL_INVALID_WORK_DIMENSION",
++		"CL_INVALID_WORK_GROUP_SIZE", "CL_INVALID_WORK_ITEM_SIZE",
++		"CL_INVALID_GLOBAL_OFFSET", "CL_INVALID_EVENT_WAIT_LIST",
++		"CL_INVALID_EVENT", "CL_INVALID_OPERATION",
++		"CL_INVALID_GL_OBJECT", "CL_INVALID_BUFFER_SIZE",
++		"CL_INVALID_MIP_LEVEL", "CL_INVALID_GLOBAL_WORK_SIZE"
++	};
++
++	if (cl_error <= 0 && cl_error >= -12) {
++		cl_error = -cl_error;
++		return err_1[cl_error];
++	}
++	if (cl_error <= -30 && cl_error >= -63) {
++		cl_error = -cl_error;
++		return err_invalid[cl_error - 30];
++	}
++
++	return "UNKNOWN ERROR :(";
++}
++
++#undef LOG_SIZE
++#undef SRC_SIZE
+diff -urpN john-1.7.9-jumbo-5//src/common-opencl.h john-1.7.9-jumbo-5-opencl-5//src/common-opencl.h
+--- john-1.7.9-jumbo-5//src/common-opencl.h	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/common-opencl.h	2012-01-15 01:21:01.671175381 +0000
+@@ -0,0 +1,42 @@
++#ifndef _COMMON_OPENCL_H
++#define _COMMON_OPENCL_H
++
++#ifdef __APPLE__
++#include <OpenCL/opencl.h>
++#else
++#include <CL/cl.h>
++#endif
++
++#include "arch.h"
++#include "misc.h"
++#include "memory.h"
++#include "common.h"
++#include "formats.h"
++#include "path.h"
++
++#define MAXGPUS	4
++/* Comment if you do not want to see OpenCL warnings during kernel compilation */
++#define REPORT_OPENCL_WARNINGS
++
++/* Common OpenCL variables */
++unsigned int gpu_id;
++cl_platform_id platform;
++cl_device_id devices[MAXGPUS];
++cl_context context[MAXGPUS];
++cl_program program[MAXGPUS];
++cl_command_queue queue[MAXGPUS];
++cl_int ret_code;
++cl_kernel crypt_kernel;
++size_t local_work_size;
++size_t max_group_size;
++
++void opencl_init(char *kernel_filename, unsigned int dev_id);
++
++char *get_error_name(cl_int cl_error);
++
++void handle_clerror(cl_int cl_error, const char *message, const char *file,
++    int line);
++/* Use this macro for OpenCL Error handling */
++#define HANDLE_CLERROR(cl_error, message) (handle_clerror(cl_error,message,__FILE__,__LINE__))
++
++#endif
+diff -urpN john-1.7.9-jumbo-5//src/cryptmd5_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/cryptmd5_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/cryptmd5_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/cryptmd5_opencl_fmt.c	2012-01-20 13:18:02.172387395 +0000
+@@ -0,0 +1,498 @@
++/*
++* This software is Copyright (c) 2011 Lukas Odzioba <lukas dot odzioba at gmail dot com> 
++* and it is hereby released to the general public under the following terms:
++* Redistribution and use in source and binary forms, with or without modification, are permitted.
++*/
++#include <string.h>
++#include <unistd.h>
++#include "arch.h"
++#include "formats.h"
++#include "common.h"
++#include "misc.h"
++#include "path.h"
++
++#include "common-opencl.h"
++#define uint32_t unsigned int
++#define uint8_t unsigned char
++
++#define KEYS_PER_CRYPT 1024*9
++#define PLAINTEXT_LENGTH	15
++
++#define MIN(a,b) 		((a)<(b)?(a):(b))
++#define MAX(a,b) 		((a)>(b)?(a):(b))
++
++#define FORMAT_LABEL		"cryptmd5-opencl"
++#define FORMAT_NAME		"CRYPTMD5-OPENCL"
++#define KERNEL_NAME		"cryptmd5"
++
++#define CRYPT_TYPE		"MD5-based CRYPT"
++
++#define BENCHMARK_COMMENT	""
++#define BENCHMARK_LENGTH	-1
++
++#define BINARY_SIZE		16
++#define SALT_SIZE		(8+1)					/** salt + prefix id **/
++#define MIN_KEYS_PER_CRYPT	KEYS_PER_CRYPT
++#define MAX_KEYS_PER_CRYPT	KEYS_PER_CRYPT
++
++typedef struct {
++	unsigned char saltlen;
++	char salt[8];
++	char prefix;		/** 'a' when $apr1$ or '1' when $1$ **/
++} crypt_md5_salt;
++
++typedef struct {
++	unsigned char length;
++	unsigned char v[PLAINTEXT_LENGTH];
++} crypt_md5_password;
++
++typedef struct {
++	uint32_t v[4];		/** 128 bits **/
++} crypt_md5_hash;
++
++typedef struct {
++#define ctx_buffsize 64
++	uint8_t buffer[ctx_buffsize];
++	uint32_t buflen;
++	uint32_t len;
++	uint32_t A, B, C, D;
++} md5_ctx;
++
++static crypt_md5_password inbuffer[MAX_KEYS_PER_CRYPT];			/** plaintext ciphertexts **/
++static crypt_md5_hash outbuffer[MAX_KEYS_PER_CRYPT];			/** calculated hashes **/
++static crypt_md5_salt host_salt;					/** salt **/
++
++static const char md5_salt_prefix[] = "$1$";
++static const char apr1_salt_prefix[] = "$apr1$";
++//OpenCL variables:
++static cl_mem mem_in, mem_out, mem_salt;
++static size_t insize = sizeof(crypt_md5_password) * KEYS_PER_CRYPT;
++static size_t outsize = sizeof(crypt_md5_hash) * KEYS_PER_CRYPT;
++static size_t saltsize = sizeof(crypt_md5_salt);
++static size_t global_work_size = KEYS_PER_CRYPT;
++
++
++//tests are unified for 8+8 length
++static struct fmt_tests tests[] = {
++/*	   {"$1$Btiy90iG$bGn4vzF3g1rIVGZ5odGIp/","qwerty"},
++	   {"$1$salt$c813W/s478KCzR0NnHx7j0","qwerty"},
++	   {"$1$salt$8LO.EVfsTf.HATV1Bd0ZP/","john"},
++	   {"$1$salt$TelRRxWBCxlpXmgAeB82R/","openwall"},
++	   {"$1$salt$l9PzDiECW83MOIMFTRL4Y1","summerofcode"},
++	   {"$1$salt$wZ2yVsplRoPoD7IfTvRsa0","IamMD5"},
++	   {"$1$saltstri$9S4.PyBpUZBRZw6ZsmFQE/","john"},
++	   {"$1$saltstring$YmP55hH3qcHg2cCffyxrq/","ala"},
++*/
++//      {"$1$salt1234$mdji1uBBCWZ5m2mIWKvLW.", "a"},
++//         {"$1$salt1234$/JUvhIWHD.csWSCPvr7po0","ab"},
++//         {"$1$salt1234$GrxHg1bgkN2HB5CRCdrmF.","abc"},
++//         {"$1$salt1234$iZuyvTkrucWx8kVn5BN4M/","abcd"},
++//         {"$1$salt1234$wn0RbuDtbJlD1Q.X7.9wG/","abcde"},
++
++//         {"$1$salt1234$lzB83HS4FjzbcD4yMcjl01","abcdef"},
++//          {"$1$salt1234$bklJHN73KS04Kh6j6qPnr.","abcdefg"}, 
++	{"$1$salt1234$u4RMKGXG2b/Ud2rFmhqi70", "abcdefgh"},	//saltlen=8,passlen=8
++//         {"$1$salt1234$QjP48HUerU7aUYc/aJnre1","abcdefghi"},
++//         {"$1$salt1234$9jmu9ldi9vNw.XDO3TahR.","abcdefghij"},
++
++//         {"$1$salt1234$d3.LnlDWfkTIej5Ef1sCU/","abcdefghijk"},
++//         {"$1$salt1234$pDV0xEgZR14EpQMmhZ6Hg0","abcdefghijkl"},
++//         {"$1$salt1234$WumpbolX2y45Dlv0.A1Mj1","abcdefghijklm"},
++//         {"$1$salt1234$FXBreA27b7N7diemBGn5I1","abcdefghijklmn"},
++//         {"$1$salt1234$8d5IPIbTd7J/WNEG4b4cl.","abcdefghijklmno"},
++
++	//tests from korelogic2010 contest
++/*	   {"$1$bn6UVs3/$S6CQRLhmenR8OmVp3Jm5p0","sparky"},
++	   {"$1$qRiPuG5Z$pLLczmBnwEOD75Vb7YZLg1","walter"},
++	   {"$1$E.qsK.Hy$.eX0H6arTHaGOIFkf6o.a.","heaven"},
++	   {"$1$Hul2mrWs$.NGCgz3fBGDyG7RMGJAdM0","bananas"},
++	   {"$1$1l88Y.UV$swt2d0SPMrBPkdAD8RwSj0","horses"},
++	   {"$1$DiHrL6V7$fCVDD1GEAKB.BjAgJL1ZX0","maddie"},
++	   {"$1$7fpfV7kr$7LgF64DGPtHPktVKdLM490","bitch1"},
++	   {"$1$VKjk2PJc$5wbrtc9oa8kdEO/ocyi06/","crystal"},
++	   {"$1$S66DxkFm$kG.QfeHNLifEDTDmf4pzJ/","claudia"},
++	   {"$1$T2JMeEYj$Y.wDzFvyb9nlH1EiSCI3M/","august"}, 
++	 
++																  	   //tests from MD5_fmt.c
++*//*       {"$1$12345678$aIccj83HRDBo6ux1bVx7D1", "0123456789ABCDE"},
++	   {"$apr1$Q6ZYh...$RV6ft2bZ8j.NGrxLYaJt9.", "test"},
++	   {"$1$12345678$f8QoJuo0DpBRfQSD0vglc1", "12345678"},
++	   {"$1$$qRPK7m23GJusamGpoGLby/", ""},
++	   {"$apr1$a2Jqm...$grFrwEgiQleDr0zR4Jx1b.", "15 chars is max"},
++	   {"$1$$AuJCr07mI7DSew03TmBIv/", "no salt"},
++	   {"$1$`!@#%^&*$E6hD76/pKTS8qToBCkux30", "invalid salt"},
++	   {"$1$12345678$xek.CpjQUVgdf/P2N9KQf/", ""},
++	   {"$1$1234$BdIMOAWFOV2AQlLsrN/Sw.", "1234"},
++	   {"$apr1$rBXqc...$NlXxN9myBOk95T0AyLAsJ0", "john"},
++	   {"$apr1$Grpld/..$qp5GyjwM2dnA5Cdej9b411", "the"},
++	   {"$apr1$GBx.D/..$yfVeeYFCIiEXInfRhBRpy/", "ripper"},
++	 */
++	{NULL}
++};
++
++static void release_all(void)
++{
++	HANDLE_CLERROR(clReleaseKernel(crypt_kernel), "Release kernel");
++	HANDLE_CLERROR(clReleaseMemObject(mem_in), "Release memin");
++	HANDLE_CLERROR(clReleaseMemObject(mem_salt), "Release memsalt");
++	HANDLE_CLERROR(clReleaseMemObject(mem_out), "Release memout");
++	HANDLE_CLERROR(clReleaseCommandQueue(queue[gpu_id]), "Release Queue");
++}
++
++static void set_key(char *key, int index)
++{
++	uint32_t len = strlen(key);
++	inbuffer[index].length = len;
++	memcpy((char *) inbuffer[index].v, key, len);
++}
++
++static char *get_key(int index)
++{
++	static char ret[PLAINTEXT_LENGTH + 1];
++	memcpy(ret, inbuffer[index].v, PLAINTEXT_LENGTH);
++	ret[inbuffer[index].length] = '\0';
++	return ret;
++}
++
++static void find_best_workgroup()
++{
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i;
++	size_t max_group_size;
++
++	clGetDeviceInfo(devices[gpu_id], CL_DEVICE_MAX_WORK_GROUP_SIZE,
++	    sizeof(max_group_size), &max_group_size, NULL);
++	cl_command_queue queue_prof =
++	    clCreateCommandQueue(context[gpu_id], devices[gpu_id],
++	    CL_QUEUE_PROFILING_ENABLE,
++	    &ret_code);
++	//printf("Max Group Work Size %d\n",(int)max_group_size);
++	local_work_size = 1;
++
++	/// Set keys
++	char *pass = "aaaaaaaa";
++	for (i = 0; i < KEYS_PER_CRYPT; i++) {
++		set_key(pass, i);
++	}
++	/// Copy data to GPU
++	HANDLE_CLERROR(clEnqueueWriteBuffer
++	    (queue_prof, mem_in, CL_FALSE, 0, insize, inbuffer, 0, NULL, NULL),
++	    "Copy memin");
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue_prof, mem_salt, CL_FALSE, 0,
++		saltsize, &host_salt, 0, NULL, NULL), "Copy memsalt");
++
++	/// Find minimum time
++	for (my_work_group = 1; (int) my_work_group <= (int) max_group_size;
++	    my_work_group *= 2) {
++
++		size_t localworksize = my_work_group;
++		HANDLE_CLERROR(clEnqueueNDRangeKernel
++		    (queue_prof, crypt_kernel, 1, NULL, &global_work_size,
++			&localworksize, 0, NULL, &myEvent), "Set ND range");
++
++
++		HANDLE_CLERROR(clFinish(queue_prof), "clFinish error");
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_SUBMIT,
++		    sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END,
++		    sizeof(cl_ulong), &endTime, NULL);
++
++		if ((endTime - startTime) < kernelExecTimeNs) {
++			kernelExecTimeNs = endTime - startTime;
++			local_work_size = my_work_group;
++		}
++		//printf("%d time=%lld\n",(int) my_work_group, endTime-startTime);
++	}
++	//printf("Optimal Group work Size = %d\n",(int)local_work_size);
++	clReleaseCommandQueue(queue_prof);
++}
++
++static void init(struct fmt_main *pFmt)
++{
++	opencl_init("$JOHN/cryptmd5_opencl_kernel.cl", gpu_id);
++
++	///Alocate memory on the GPU
++	cl_int cl_error;
++	mem_in =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, insize, NULL,
++	    &cl_error);
++	mem_salt =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, saltsize, NULL,
++	    &cl_error);
++	mem_out =
++	    clCreateBuffer(context[gpu_id], CL_MEM_WRITE_ONLY, outsize, NULL,
++	    &cl_error);
++	///Assign kernel parameters 
++	crypt_kernel = clCreateKernel(program[gpu_id], KERNEL_NAME, &cl_error);
++	clSetKernelArg(crypt_kernel, 0, sizeof(mem_in), &mem_in);
++	clSetKernelArg(crypt_kernel, 1, sizeof(mem_out), &mem_out);
++	clSetKernelArg(crypt_kernel, 2, sizeof(mem_salt), &mem_salt);
++
++	find_best_workgroup();
++	//atexit(release_all);
++}
++
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++	uint8_t i, len = strlen(ciphertext), prefix = 0;
++
++	if (strncmp(ciphertext, md5_salt_prefix, strlen(md5_salt_prefix)) == 0)
++		prefix |= 1;
++	if (strncmp(ciphertext, apr1_salt_prefix,
++		strlen(apr1_salt_prefix)) == 0)
++		prefix |= 2;
++	if (prefix == 0)
++		return 0;
++
++	char *p = strrchr(ciphertext, '$');
++	for (i = p - ciphertext + 1; i < len; i++) {
++		uint8_t z = ARCH_INDEX(ciphertext[i]);
++		if (ARCH_INDEX(atoi64[z]) == 0x7f)
++			return 0;
++	}
++	if (len - (p - ciphertext + 1) != 22)
++		return 0;
++	return 1;
++};
++
++static int findb64(char c)
++{
++	int ret = ARCH_INDEX(atoi64[(uint8_t) c]);
++	return ret != 0x7f ? ret : 0;
++}
++
++static void to_binary(char *crypt, char *alt)
++{
++
++#define _24bit_from_b64(I,B2,B1,B0) \
++  {\
++      unsigned char c1=findb64(crypt[I+0]);\
++      unsigned char c2=findb64(crypt[I+1]);\
++      unsigned char c3=findb64(crypt[I+2]);\
++      unsigned char c4=findb64(crypt[I+3]);\
++      unsigned int w=c4<<18|c3<<12|c2<<6|c1;\
++      unsigned char b2=w&0xff;w>>=8;\
++      unsigned char b1=w&0xff;w>>=8;\
++      unsigned char b0=w&0xff;w>>=8;\
++      alt[B2]=b0;\
++      alt[B1]=b1;\
++      alt[B0]=b2;\
++  }
++
++	_24bit_from_b64(0, 0, 6, 12);
++	_24bit_from_b64(4, 1, 7, 13);
++	_24bit_from_b64(8, 2, 8, 14);
++	_24bit_from_b64(12, 3, 9, 15);
++	_24bit_from_b64(16, 4, 10, 5);
++	uint32_t w = findb64(crypt[21]) << 6 | findb64(crypt[20]) << 0;
++	alt[11] = (w & 0xff);
++}
++
++static void *binary(char *ciphertext)
++{
++	static char b[BINARY_SIZE];
++	memset(b, 0, BINARY_SIZE);
++	char *p = strrchr(ciphertext, '$') + 1;
++	to_binary(p, b);
++	return (void *) b;
++}
++
++
++static void *salt(char *ciphertext)
++{
++	static uint8_t ret[SALT_SIZE];
++	memset(ret, 0, SALT_SIZE);
++	uint8_t i, *pos = (uint8_t *) ciphertext, *dest = ret, *end;
++
++	if (strncmp(ciphertext, md5_salt_prefix, strlen(md5_salt_prefix)) == 0) {
++		pos += strlen(md5_salt_prefix);
++		ret[8] = '1';
++	}
++	if (strncmp(ciphertext, apr1_salt_prefix,
++		strlen(apr1_salt_prefix)) == 0) {
++		pos += strlen(apr1_salt_prefix);
++		ret[8] = 'a';
++	}
++	end = pos;
++	for (i = 0; i < 8 && *end != '$'; i++, end++);
++	while (pos != end)
++		*dest++ = *pos++;
++	return (void *) ret;
++}
++
++static int binary_hash_0(void *binary)
++{
++	return (((ARCH_WORD_32 *) binary)[0] & 0xf);
++}
++
++static int binary_hash_1(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xff;
++}
++
++static int binary_hash_2(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xfff;
++}
++
++static int binary_hash_3(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xffff;
++}
++
++static int binary_hash_4(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xfffff;
++}
++
++static int binary_hash_5(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xffffff;
++}
++
++static int binary_hash_6(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0x7ffffff;
++}
++
++static void set_salt(void *salt)
++{
++	uint8_t *s = salt;
++	uint8_t len;
++	for (len = 0; len < 8 && s[len]; len++);
++	host_salt.saltlen = len;
++	memcpy(host_salt.salt, s, host_salt.saltlen);
++	host_salt.prefix = s[8];
++}
++
++static void crypt_all(int count)
++{
++	///Copy data to GPU memory
++	HANDLE_CLERROR(clEnqueueWriteBuffer
++	    (queue[gpu_id], mem_in, CL_FALSE, 0, insize, inbuffer, 0, NULL,
++		NULL), "Copy memin");
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue[gpu_id], mem_salt, CL_FALSE,
++		0, saltsize, &host_salt, 0, NULL, NULL), "Copy memsalt");
++
++	///Run kernel
++	size_t worksize = KEYS_PER_CRYPT;
++	size_t localworksize = local_work_size;
++	HANDLE_CLERROR(clEnqueueNDRangeKernel
++	    (queue[gpu_id], crypt_kernel, 1, NULL, &worksize, &localworksize,
++		0, NULL, NULL), "Set ND range");
++	HANDLE_CLERROR(clEnqueueReadBuffer(queue[gpu_id], mem_out, CL_FALSE, 0,
++		outsize, outbuffer, 0, NULL, NULL), "Copy data back");
++
++	///Await completion of all the above
++	HANDLE_CLERROR(clFinish(queue[gpu_id]), "clFinish error");
++}
++
++static int get_hash_0(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xf;
++}
++
++static int get_hash_1(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xff;
++}
++
++static int get_hash_2(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xfff;
++}
++
++static int get_hash_3(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xffff;
++}
++
++static int get_hash_4(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xfffff;
++}
++
++static int get_hash_5(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0xffffff;
++}
++
++static int get_hash_6(int index)
++{
++	return ((ARCH_WORD_32 *) outbuffer[index].v)[0] & 0x7ffffff;
++}
++
++static int cmp_all(void *binary, int count)
++{
++	uint32_t i, b = ((uint32_t *) binary)[0];
++	for (i = 0; i < count; i++)
++		if (b == outbuffer[i].v[0])
++			return 1;
++	return 0;
++}
++
++static int cmp_one(void *binary, int index)
++{
++	uint32_t i, *t = (uint32_t *) binary;
++	for (i = 0; i < 4; i++)
++		if (t[i] != outbuffer[index].v[i])
++			return 0;
++	return 1;
++}
++
++static int cmp_exact(char *source, int count)
++{
++	return 1;
++}
++
++struct fmt_main fmt_opencl_cryptMD5 = {
++	{
++		    FORMAT_LABEL,
++		    FORMAT_NAME,
++		    CRYPT_TYPE,
++		    BENCHMARK_COMMENT,
++		    BENCHMARK_LENGTH,
++		    PLAINTEXT_LENGTH,
++		    BINARY_SIZE,
++		    SALT_SIZE,
++		    MIN_KEYS_PER_CRYPT,
++		    MAX_KEYS_PER_CRYPT,
++		    FMT_CASE | FMT_8_BIT,
++	    tests},
++	{
++		    init,
++		    fmt_default_prepare,
++		    valid,
++		    fmt_default_split,
++		    binary,
++		    salt,
++		    {
++				binary_hash_0,
++				binary_hash_1,
++				binary_hash_2,
++				binary_hash_3,
++				binary_hash_4,
++				binary_hash_5,
++			binary_hash_6},
++		    fmt_default_salt_hash,
++		    set_salt,
++		    set_key,
++		    get_key,
++		    fmt_default_clear_keys,
++		    crypt_all,
++		    {
++				get_hash_0,
++				get_hash_1,
++				get_hash_2,
++				get_hash_3,
++				get_hash_4,
++				get_hash_5,
++			get_hash_6},
++		    cmp_all,
++		    cmp_one,
++	    cmp_exact}
++};
+diff -urpN john-1.7.9-jumbo-5//src/cryptmd5_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/cryptmd5_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/cryptmd5_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/cryptmd5_opencl_kernel.cl	2012-01-12 05:54:03.047973859 +0000
+@@ -0,0 +1,303 @@
++/*
++* This software is Copyright (c) 2011 Lukas Odzioba <lukas dot odzioba at gmail dot com> 
++* and it is hereby released to the general public under the following terms:
++* Redistribution and use in source and binary forms, with or without modification, are permitted.
++*/
++#define uint32_t	unsigned int
++#define uint8_t		unsigned char
++
++#define ROTATE_LEFT(x, s) ((x << s) | (x >> (32 - s)))
++
++#define F(x, y, z) (x&y | ~x&z)
++#define G(x, y, z) (x&z | y&~z)
++
++#define H(x, y, z) (x^y^z)
++#define I(x, y, z) (y^(x|~z))
++
++#define FF(v, w, x, y, z, s, ac) { \
++ v += F(w, x, y) + z + ac; \
++ v = ROTATE_LEFT(v, s) + w; \
++ }
++#define GG(v, w, x, y, z, s, ac) { \
++ v += G(w, x, y) + z + ac; \
++ v = ROTATE_LEFT(v, s) + w; \
++ }
++#define HH(v, w, x, y, z, s, ac) { \
++ v += H(w, x, y) + z + ac; \
++ v = ROTATE_LEFT(v, s) + w; \
++ }
++#define II(v, w, x, y, z, s, ac) { \
++ v += I(w, x, y) + z + ac; \
++ v = ROTATE_LEFT(v, s) + w; \
++ }
++
++#define S11 		7
++#define S12 		12
++#define S13 		17
++#define S14 		22
++#define S21 		5
++#define S22 		9
++#define S23 		14
++#define S24 		20
++#define S31 		4
++#define S32 		11
++#define S33 		16
++#define S34 		23
++#define S41 		6
++#define S42 		10
++#define S43 		15
++#define S44 		21
++
++typedef struct {
++	uint8_t saltlen;
++	uint8_t salt[8];
++	uint8_t prefix;		/** 'a' when $apr1$ or '1' when $1$ **/
++} crypt_md5_salt;
++
++typedef struct {
++	uint8_t length;
++	uint8_t v[15];
++} crypt_md5_password;
++
++typedef struct {
++	uint32_t v[4];		/** 128 bits **/
++} crypt_md5_hash;
++
++typedef struct {
++#define ctx_buffsize 64
++	uint8_t buffer[ctx_buffsize];
++	uint32_t buflen;
++	uint32_t len;
++	uint32_t A, B, C, D;
++} md5_ctx;
++
++
++__constant uint8_t cl_md5_salt_prefix[] = "$1$";
++__constant uint8_t cl_apr1_salt_prefix[] = "$apr1$";
++
++void ctx_update_global(__private md5_ctx * ctx, __global uint8_t * string,
++    size_t len)
++{
++	uint8_t *dest = &ctx->buffer[ctx->buflen];
++	__global uint8_t *src = string;
++	ctx->buflen += len;
++	int i = len;
++	for (i = 0; i < len; i++)
++		dest[i] = src[i];
++}
++
++void ctx_update_private(__private md5_ctx * ctx, __private uint8_t * string,
++    size_t len)
++{
++	uint8_t *dest = &ctx->buffer[ctx->buflen];
++	__private uint8_t *src = string;
++	ctx->buflen += len;
++	int i = len;
++	for (i = 0; i < len; i++)
++		dest[i] = src[i];
++}
++
++void ctx_update_prefix(__private md5_ctx * ctx, uint8_t prefix)
++{
++	uint8_t i, *dest = &ctx->buffer[ctx->buflen];
++	if (prefix == '1') {
++		ctx->buflen += 3;
++		for (i = 0; i < 3; i++)
++			dest[i] = cl_md5_salt_prefix[i];
++	} else {
++		ctx->buflen += 6;
++		for (i = 0; i < 6; i++)
++			dest[i] = cl_apr1_salt_prefix[i];
++	}
++}
++
++
++void init_ctx(__private md5_ctx * ctx)
++{
++	int i = ctx_buffsize / sizeof(uint32_t);
++	uint32_t *buf = (uint32_t *) ctx->buffer;
++	while (i--)
++		*buf++ = 0;
++	ctx->buflen = 0;
++	ctx->len = 0;
++}
++
++void md5_block(__private md5_ctx * ctx, uint32_t blocks, size_t len)
++{
++	uint32_t a = 0x67452301;
++	uint32_t b = 0xefcdab89;
++	uint32_t c = 0x98badcfe;
++	uint32_t d = 0x10325476;
++
++	ctx->len += len;
++	len <<= 3;
++	__private uint32_t *x = (uint32_t *) & ctx->buffer[0];
++
++	{
++		FF(a, b, c, d, x[0], S11, 0xd76aa478);	/* 1 */
++		FF(d, a, b, c, x[1], S12, 0xe8c7b756);	/* 2 */
++		FF(c, d, a, b, x[2], S13, 0x242070db);	/* 3 */
++		FF(b, c, d, a, x[3], S14, 0xc1bdceee);	/* 4 */
++		FF(a, b, c, d, x[4], S11, 0xf57c0faf);	/* 5 */
++		FF(d, a, b, c, x[5], S12, 0x4787c62a);	/* 6 */
++		FF(c, d, a, b, x[6], S13, 0xa8304613);	/* 7 */
++		FF(b, c, d, a, x[7], S14, 0xfd469501);	/* 8 */
++		FF(a, b, c, d, x[8], S11, 0x698098d8);	/* 9 */
++		FF(d, a, b, c, x[9], S12, 0x8b44f7af);	/* 10 */
++		FF(c, d, a, b, x[10], S13, 0xffff5bb1);	/* 11 */
++		FF(b, c, d, a, x[11], S14, 0x895cd7be);	/* 12 */
++		FF(a, b, c, d, x[12], S11, 0x6b901122);	/* 13 */
++		FF(d, a, b, c, x[13], S12, 0xfd987193);	/* 14 */
++		FF(c, d, a, b, len, S13, 0xa679438e);	/* 15 */
++		FF(b, c, d, a, 0, S14, 0x49b40821);	/* 16 */
++	}
++	{
++		GG(a, b, c, d, x[1], S21, 0xf61e2562);	/* 17 */
++		GG(d, a, b, c, x[6], S22, 0xc040b340);	/* 18 */
++		GG(c, d, a, b, x[11], S23, 0x265e5a51);	/* 19 */
++		GG(b, c, d, a, x[0], S24, 0xe9b6c7aa);	/* 20 */
++		GG(a, b, c, d, x[5], S21, 0xd62f105d);	/* 21 */
++		GG(d, a, b, c, x[10], S22, 0x2441453);	/* 22 */
++		GG(c, d, a, b, 0, S23, 0xd8a1e681);	/* 23 */
++		GG(b, c, d, a, x[4], S24, 0xe7d3fbc8);	/* 24 */
++		GG(a, b, c, d, x[9], S21, 0x21e1cde6);	/* 25 */
++		GG(d, a, b, c, len, S22, 0xc33707d6);	/* 26 */
++		GG(c, d, a, b, x[3], S23, 0xf4d50d87);	/* 27 */
++		GG(b, c, d, a, x[8], S24, 0x455a14ed);	/* 28 */
++		GG(a, b, c, d, x[13], S21, 0xa9e3e905);	/* 29 */
++		GG(d, a, b, c, x[2], S22, 0xfcefa3f8);	/* 30 */
++		GG(c, d, a, b, x[7], S23, 0x676f02d9);	/* 31 */
++		GG(b, c, d, a, x[12], S24, 0x8d2a4c8a);	/* 32 */
++	}
++	{
++		HH(a, b, c, d, x[5], S31, 0xfffa3942);	/* 33 */
++		HH(d, a, b, c, x[8], S32, 0x8771f681);	/* 34 */
++		HH(c, d, a, b, x[11], S33, 0x6d9d6122);	/* 35 */
++		HH(b, c, d, a, len, S34, 0xfde5380c);	/* 36 */
++		HH(a, b, c, d, x[1], S31, 0xa4beea44);	/* 37 */
++		HH(d, a, b, c, x[4], S32, 0x4bdecfa9);	/* 38 */
++		HH(c, d, a, b, x[7], S33, 0xf6bb4b60);	/* 39 */
++		HH(b, c, d, a, x[10], S34, 0xbebfbc70);	/* 40 */
++		HH(a, b, c, d, x[13], S31, 0x289b7ec6);	/* 41 */
++		HH(d, a, b, c, x[0], S32, 0xeaa127fa);	/* 42 */
++		HH(c, d, a, b, x[3], S33, 0xd4ef3085);	/* 43 */
++		HH(b, c, d, a, x[6], S34, 0x4881d05);	/* 44 */
++		HH(a, b, c, d, x[9], S31, 0xd9d4d039);	/* 45 */
++		HH(d, a, b, c, x[12], S32, 0xe6db99e5);	/* 46 */
++		HH(c, d, a, b, 0, S33, 0x1fa27cf8);	/* 47 */
++		HH(b, c, d, a, x[2], S34, 0xc4ac5665);	/* 48 */
++	}
++	{
++		II(a, b, c, d, x[0], S41, 0xf4292244);	/* 49 */
++		II(d, a, b, c, x[7], S42, 0x432aff97);	/* 50 */
++		II(c, d, a, b, len, S43, 0xab9423a7);	/* 51 */
++		II(b, c, d, a, x[5], S44, 0xfc93a039);	/* 52 */
++		II(a, b, c, d, x[12], S41, 0x655b59c3);	/* 53 */
++		II(d, a, b, c, x[3], S42, 0x8f0ccc92);	/* 54 */
++		II(c, d, a, b, x[10], S43, 0xffeff47d);	/* 55 */
++		II(b, c, d, a, x[1], S44, 0x85845dd1);	/* 56 */
++		II(a, b, c, d, x[8], S41, 0x6fa87e4f);	/* 57 */
++		II(d, a, b, c, 0, S42, 0xfe2ce6e0);	/* 58 */
++		II(c, d, a, b, x[6], S43, 0xa3014314);	/* 59 */
++		II(b, c, d, a, x[13], S44, 0x4e0811a1);	/* 60 */
++		II(a, b, c, d, x[4], S41, 0xf7537e82);	/* 61 */
++		II(d, a, b, c, x[11], S42, 0xbd3af235);	/* 62 */
++		II(c, d, a, b, x[2], S43, 0x2ad7d2bb);	/* 63 */
++		II(b, c, d, a, x[9], S44, 0xeb86d391);	/* 64 */
++	}
++	ctx->A = a + 0x67452301;
++	ctx->B = b + 0xefcdab89;
++	ctx->C = c + 0x98badcfe;
++	ctx->D = d + 0x10325476;
++}
++
++
++void md5_digest(__private md5_ctx * ctx, __private uint32_t * result)
++{
++	uint32_t len = ctx->buflen, blocks = 1;
++	uint32_t *x = (uint32_t *) ctx->buffer;
++	uint32_t i = len % 64;
++	x[i / 4] |= (((uint32_t) 0x80) << ((i & 0x3) << 3));
++
++	md5_block(ctx, blocks, len);
++
++	result[0] = ctx->A;
++	result[1] = ctx->B;
++	result[2] = ctx->C;
++	result[3] = ctx->D;
++}
++
++__kernel void cryptmd5
++    (__global const crypt_md5_password * inbuffer,
++    __global crypt_md5_hash * outbuffer,
++    __global const crypt_md5_salt * hsalt) {
++	uint32_t idx = get_global_id(0);
++	uint32_t i;
++	__global const uint8_t *pass = inbuffer[idx].v;
++	__global uint32_t *tresult = outbuffer[idx].v;
++
++	__private uint32_t alt_result[4];
++	uint8_t pass_len = inbuffer[idx].length;
++	uint8_t salt_len = hsalt->saltlen;
++	const __global uint8_t *salt = hsalt->salt;
++
++	__private md5_ctx ctx, alt_ctx;
++	init_ctx(&ctx);
++	init_ctx(&alt_ctx);
++
++	ctx_update_global(&ctx, (__global uint8_t *) pass, pass_len);
++	ctx_update_prefix(&ctx, hsalt->prefix);
++	ctx_update_global(&ctx, (__global uint8_t *) salt, salt_len);
++
++	ctx_update_global(&alt_ctx, (__global uint8_t *) pass, pass_len);
++	ctx_update_global(&alt_ctx, (__global uint8_t *) salt, salt_len);
++	ctx_update_global(&alt_ctx, (__global uint8_t *) pass, pass_len);
++	md5_digest(&alt_ctx, alt_result);
++
++	for (i = pass_len; i > 16; i -= 16)
++		ctx_update_private(&ctx, (uint8_t *) alt_result, 16);
++	ctx_update_private(&ctx, (uint8_t *) alt_result, i);
++
++
++	*alt_result = 0;
++
++	for (i = pass_len; i > 0; i >>= 1)
++		if ((i & 1) != 0)
++			ctx.buffer[ctx.buflen++] = ((char *) alt_result)[0];
++		else
++			ctx.buffer[ctx.buflen++] = pass[0];
++
++	md5_digest(&ctx, alt_result);
++
++
++
++	for (i = 0; i < 1000; i++) {
++		init_ctx(&ctx);
++
++		if ((i & 1) != 0)
++			ctx_update_global(&ctx, (__global uint8_t *) pass,
++			    pass_len);
++		else
++			ctx_update_private(&ctx, (uint8_t *) alt_result, 16);
++
++		if (i % 3 != 0)
++			ctx_update_global(&ctx, (__global uint8_t *) salt,
++			    salt_len);
++
++		if (i % 7 != 0)
++			ctx_update_global(&ctx, (__global uint8_t *) pass,
++			    pass_len);
++
++		if ((i & 1) != 0)
++			ctx_update_private(&ctx, (uint8_t *) alt_result, 16);
++		else
++			ctx_update_global(&ctx, (__global uint8_t *) pass,
++			    pass_len);
++		md5_digest(&ctx, alt_result);
++
++	}
++	tresult[0] = ctx.A;
++	tresult[1] = ctx.B;
++	tresult[2] = ctx.C;
++	tresult[3] = ctx.D;
++}
+diff -urpN john-1.7.9-jumbo-5//src/john.c john-1.7.9-jumbo-5-opencl-5//src/john.c
+--- john-1.7.9-jumbo-5//src/john.c	2011-12-15 22:23:32.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/john.c	2012-01-15 02:30:33.642293298 +0000
+@@ -87,6 +87,14 @@ extern struct fmt_main fmt_SybaseASE;
+ extern struct fmt_main fmt_SKEY;
+ #endif
+ 
++#ifdef CL_VERSION_1_0
++extern struct fmt_main fmt_opencl_NSLDAPS;
++extern struct fmt_main fmt_opencl_rawMD5;
++extern struct fmt_main fmt_opencl_NT;
++extern struct fmt_main fmt_opencl_rawSHA1;
++extern struct fmt_main fmt_opencl_cryptMD5;
++extern struct fmt_main fmt_opencl_phpass;
++#endif 
+ extern struct fmt_main fmt_ssh;
+ extern struct fmt_main fmt_pdf;
+ extern struct fmt_main rar_fmt;
+@@ -168,6 +176,15 @@ static void john_register_all(void)
+ 	john_register_one(&zip_fmt);
+ 	john_register_one(&fmt_dummy);
+ 
++#ifdef CL_VERSION_1_0
++	john_register_one(&fmt_opencl_NSLDAPS);
++	john_register_one(&fmt_opencl_rawMD5);
++	john_register_one(&fmt_opencl_NT);
++	john_register_one(&fmt_opencl_rawSHA1);
++	john_register_one(&fmt_opencl_cryptMD5);
++	john_register_one(&fmt_opencl_phpass);
++#endif 
++
+ #ifdef HAVE_DL
+ 	if (options.fmt_dlls)
+ 	register_dlls ( options.fmt_dlls,
+diff -urpN john-1.7.9-jumbo-5//src/md4_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/md4_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/md4_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/md4_opencl_kernel.cl	2012-01-05 14:02:59.575169749 +0000
+@@ -0,0 +1,111 @@
++/* MD4 OpenCL kernel based on Solar Designer's MD4 algorithm implementation at:
++ * http://openwall.info/wiki/people/solar/software/public-domain-source-code/md4
++ * This code is in public domain.
++ *
++ * Useful References:
++ * 1  nt_opencl_kernel.c (written by Alain Espinosa <alainesp at gmail.com>)
++ * 2. http://tools.ietf.org/html/rfc1320
++ * 3. http://en.wikipedia.org/wiki/MD4  */
++
++/* The basic MD4 functions */
++#define F(x, y, z)          ((z) ^ ((x) & ((y) ^ (z))))
++#define G(x, y, z)          (((x) & ((y) | (z))) | ((y) & (z)))
++#define H(x, y, z)          ((x) ^ (y) ^ (z))
++
++/* The MD4 transformation for all three rounds. */
++#define STEP(f, a, b, c, d, x, s) \
++    (a) += f((b), (c), (d)) + (x); \
++    (a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s))));
++
++#define GET(i) (key[(i)])
++
++/* some constants used below magically appear after make */
++#define KEY_LENGTH (MD4_PLAINTEXT_LENGTH + 1)
++
++/* OpenCL kernel entry point. Copy KEY_LENGTH bytes key to be hashed from
++ * global to local memory. Break the key into 16 32-bit (uint) words.
++ * MD4 hash of a key is 128 bit (uint4). */
++__kernel void md4(const __global uint * keys, __global uint * output)
++{
++	int id = get_global_id(0);
++	uint key[16] = { 0 };
++	int i = 0;
++	int base = id * (KEY_LENGTH / 4);
++
++	for (i = 0; i != (KEY_LENGTH / 4) && keys[base + i]; i++)
++		key[i] = keys[base + i];
++
++	/* padding code (borrowed from MD5_eq.c) */
++	char *p = (char *) key;
++	for (i = 0; i != 64 && p[i]; i++);
++	p[i] = 0x80;
++	p[56] = i << 3;
++	p[57] = i >> 5;
++
++	uint a, b, c, d;
++	a = 0x67452301;
++	b = 0xefcdab89;
++	c = 0x98badcfe;
++	d = 0x10325476;
++
++	/* Round 1 */
++	STEP(F, a, b, c, d, GET(0), 3)
++	STEP(F, d, a, b, c, GET(1), 7)
++	STEP(F, c, d, a, b, GET(2), 11)
++	STEP(F, b, c, d, a, GET(3), 19)
++	STEP(F, a, b, c, d, GET(4), 3)
++	STEP(F, d, a, b, c, GET(5), 7)
++	STEP(F, c, d, a, b, GET(6), 11)
++	STEP(F, b, c, d, a, GET(7), 19)
++	STEP(F, a, b, c, d, GET(8), 3)
++	STEP(F, d, a, b, c, GET(9), 7)
++	STEP(F, c, d, a, b, GET(10), 11)
++	STEP(F, b, c, d, a, GET(11), 19)
++	STEP(F, a, b, c, d, GET(12), 3)
++	STEP(F, d, a, b, c, GET(13), 7)
++	STEP(F, c, d, a, b, GET(14), 11)
++	STEP(F, b, c, d, a, GET(15), 19)
++
++	/* Round 2 */
++	STEP(G, a, b, c, d, GET(0) + 0x5a827999, 3)
++	STEP(G, d, a, b, c, GET(4) + 0x5a827999, 5)
++	STEP(G, c, d, a, b, GET(8) + 0x5a827999, 9)
++	STEP(G, b, c, d, a, GET(12) + 0x5a827999, 13)
++	STEP(G, a, b, c, d, GET(1) + 0x5a827999, 3)
++	STEP(G, d, a, b, c, GET(5) + 0x5a827999, 5)
++	STEP(G, c, d, a, b, GET(9) + 0x5a827999, 9)
++	STEP(G, b, c, d, a, GET(13) + 0x5a827999, 13)
++	STEP(G, a, b, c, d, GET(2) + 0x5a827999, 3)
++	STEP(G, d, a, b, c, GET(6) + 0x5a827999, 5)
++	STEP(G, c, d, a, b, GET(10) + 0x5a827999, 9)
++	STEP(G, b, c, d, a, GET(14) + 0x5a827999, 13)
++	STEP(G, a, b, c, d, GET(3) + 0x5a827999, 3)
++	STEP(G, d, a, b, c, GET(7) + 0x5a827999, 5)
++	STEP(G, c, d, a, b, GET(11) + 0x5a827999, 9)
++	STEP(G, b, c, d, a, GET(15) + 0x5a827999, 13)
++
++	/* Round 3 */
++	STEP(H, a, b, c, d, GET(0) + 0x6ed9eba1, 3)
++	STEP(H, d, a, b, c, GET(8) + 0x6ed9eba1, 9)
++	STEP(H, c, d, a, b, GET(4) + 0x6ed9eba1, 11)
++	STEP(H, b, c, d, a, GET(12) + 0x6ed9eba1, 15)
++	STEP(H, a, b, c, d, GET(2) + 0x6ed9eba1, 3)
++	STEP(H, d, a, b, c, GET(10) + 0x6ed9eba1, 9)
++	STEP(H, c, d, a, b, GET(6) + 0x6ed9eba1, 11)
++	STEP(H, b, c, d, a, GET(14) + 0x6ed9eba1, 15)
++	STEP(H, a, b, c, d, GET(1) + 0x6ed9eba1, 3)
++	STEP(H, d, a, b, c, GET(9) + 0x6ed9eba1, 9)
++	STEP(H, c, d, a, b, GET(5) + 0x6ed9eba1, 11)
++	STEP(H, b, c, d, a, GET(13) + 0x6ed9eba1, 15)
++	STEP(H, a, b, c, d, GET(3) + 0x6ed9eba1, 3)
++	STEP(H, d, a, b, c, GET(11) + 0x6ed9eba1, 9)
++	STEP(H, c, d, a, b, GET(7) + 0x6ed9eba1, 11)
++	STEP(H, b, c, d, a, GET(15) + 0x6ed9eba1, 15)
++
++	/* The following hack allows only 1/4 of the hash data to be copied in crypt_all.
++	 * This code doesn't seem to have any performance gains but has other benefits */
++	output[id] = a + 0x67452301;
++	output[1 * MD4_NUM_KEYS + id] = b + 0xefcdab89;
++	output[2 * MD4_NUM_KEYS + id] = c + 0x98badcfe;
++	output[3 * MD4_NUM_KEYS + id] = d + 0x10325476;
++}
+diff -urpN john-1.7.9-jumbo-5//src/md5_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/md5_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/md5_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/md5_opencl_kernel.cl	2012-01-05 14:02:59.576169493 +0000
+@@ -0,0 +1,131 @@
++/* MD5 OpenCL kernel based on Solar Designer's MD5 algorithm implementation at:
++ * http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
++ *
++ * Useful References:
++ * 1. CUDA MD5 Hashing Experiments, http://majuric.org/software/cudamd5/
++ * 2. oclcrack, http://sghctoma.extra.hu/index.php?p=entry&id=11
++ * 3. http://people.eku.edu/styere/Encrypt/JS-MD5.html
++ * 4. http://en.wikipedia.org/wiki/MD5#Algorithm */
++
++/* The basic MD5 functions */
++#define F(x, y, z)			((z) ^ ((x) & ((y) ^ (z))))
++#define G(x, y, z)			((y) ^ ((z) & ((x) ^ (y))))
++#define H(x, y, z)			((x) ^ (y) ^ (z))
++#define I(x, y, z)			((y) ^ ((x) | ~(z)))
++
++/* The MD5 transformation for all four rounds. */
++#define STEP(f, a, b, c, d, x, t, s) \
++    (a) += f((b), (c), (d)) + (x) + (t); \
++    (a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s)))); \
++    (a) += (b);
++
++#define GET(i) (key[(i)])
++
++/* some constants used below magically appear after make */
++#define KEY_LENGTH (MD5_PLAINTEXT_LENGTH + 1)
++
++/* OpenCL kernel entry point. Copy KEY_LENGTH bytes key to be hashed from
++ * global to local (thread) memory. Break the key into 16 32-bit (uint)
++ * words. MD5 hash of a key is 128 bit (uint4). */
++__kernel void md5(__global const uint * keys, __global uint * hashes)
++{
++	int id = get_global_id(0);
++	uint key[16] = { 0 };
++	int i;
++	int base = id * (KEY_LENGTH / 4);
++
++	for (i = 0; i != (KEY_LENGTH / 4) && keys[base + i]; i++)
++		key[i] = keys[base + i];
++
++	/* padding code (borrowed from MD5_eq.c) */
++	char *p = (char *) key;
++	for (i = 0; i != 64 && p[i]; i++);
++	p[i] = 0x80;
++	p[56] = i << 3;
++	p[57] = i >> 5;
++
++	uint a, b, c, d;
++	a = 0x67452301;
++	b = 0xefcdab89;
++	c = 0x98badcfe;
++	d = 0x10325476;
++
++	/* Round 1 */
++	STEP(F, a, b, c, d, GET(0), 0xd76aa478, 7)
++	STEP(F, d, a, b, c, GET(1), 0xe8c7b756, 12)
++	STEP(F, c, d, a, b, GET(2), 0x242070db, 17)
++	STEP(F, b, c, d, a, GET(3), 0xc1bdceee, 22)
++	STEP(F, a, b, c, d, GET(4), 0xf57c0faf, 7)
++	STEP(F, d, a, b, c, GET(5), 0x4787c62a, 12)
++	STEP(F, c, d, a, b, GET(6), 0xa8304613, 17)
++	STEP(F, b, c, d, a, GET(7), 0xfd469501, 22)
++	STEP(F, a, b, c, d, GET(8), 0x698098d8, 7)
++	STEP(F, d, a, b, c, GET(9), 0x8b44f7af, 12)
++	STEP(F, c, d, a, b, GET(10), 0xffff5bb1, 17)
++	STEP(F, b, c, d, a, GET(11), 0x895cd7be, 22)
++	STEP(F, a, b, c, d, GET(12), 0x6b901122, 7)
++	STEP(F, d, a, b, c, GET(13), 0xfd987193, 12)
++	STEP(F, c, d, a, b, GET(14), 0xa679438e, 17)
++	STEP(F, b, c, d, a, GET(15), 0x49b40821, 22)
++
++	/* Round 2 */
++	STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
++	STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
++	STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
++	STEP(G, b, c, d, a, GET(0), 0xe9b6c7aa, 20)
++	STEP(G, a, b, c, d, GET(5), 0xd62f105d, 5)
++	STEP(G, d, a, b, c, GET(10), 0x02441453, 9)
++	STEP(G, c, d, a, b, GET(15), 0xd8a1e681, 14)
++	STEP(G, b, c, d, a, GET(4), 0xe7d3fbc8, 20)
++	STEP(G, a, b, c, d, GET(9), 0x21e1cde6, 5)
++	STEP(G, d, a, b, c, GET(14), 0xc33707d6, 9)
++	STEP(G, c, d, a, b, GET(3), 0xf4d50d87, 14)
++	STEP(G, b, c, d, a, GET(8), 0x455a14ed, 20)
++	STEP(G, a, b, c, d, GET(13), 0xa9e3e905, 5)
++	STEP(G, d, a, b, c, GET(2), 0xfcefa3f8, 9)
++	STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
++	STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
++
++	/* Round 3 */
++	STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
++	STEP(H, d, a, b, c, GET(8), 0x8771f681, 11)
++	STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
++	STEP(H, b, c, d, a, GET(14), 0xfde5380c, 23)
++	STEP(H, a, b, c, d, GET(1), 0xa4beea44, 4)
++	STEP(H, d, a, b, c, GET(4), 0x4bdecfa9, 11)
++	STEP(H, c, d, a, b, GET(7), 0xf6bb4b60, 16)
++	STEP(H, b, c, d, a, GET(10), 0xbebfbc70, 23)
++	STEP(H, a, b, c, d, GET(13), 0x289b7ec6, 4)
++	STEP(H, d, a, b, c, GET(0), 0xeaa127fa, 11)
++	STEP(H, c, d, a, b, GET(3), 0xd4ef3085, 16)
++	STEP(H, b, c, d, a, GET(6), 0x04881d05, 23)
++	STEP(H, a, b, c, d, GET(9), 0xd9d4d039, 4)
++	STEP(H, d, a, b, c, GET(12), 0xe6db99e5, 11)
++	STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
++	STEP(H, b, c, d, a, GET(2), 0xc4ac5665, 23)
++
++	/* Round 4 */
++	STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
++	STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
++	STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
++	STEP(I, b, c, d, a, GET(5), 0xfc93a039, 21)
++	STEP(I, a, b, c, d, GET(12), 0x655b59c3, 6)
++	STEP(I, d, a, b, c, GET(3), 0x8f0ccc92, 10)
++	STEP(I, c, d, a, b, GET(10), 0xffeff47d, 15)
++	STEP(I, b, c, d, a, GET(1), 0x85845dd1, 21)
++	STEP(I, a, b, c, d, GET(8), 0x6fa87e4f, 6)
++	STEP(I, d, a, b, c, GET(15), 0xfe2ce6e0, 10)
++	STEP(I, c, d, a, b, GET(6), 0xa3014314, 15)
++	STEP(I, b, c, d, a, GET(13), 0x4e0811a1, 21)
++	STEP(I, a, b, c, d, GET(4), 0xf7537e82, 6)
++	STEP(I, d, a, b, c, GET(11), 0xbd3af235, 10)
++	STEP(I, c, d, a, b, GET(2), 0x2ad7d2bb, 15)
++	STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
++
++	/* The following hack allows only 1/4 of the hash data to be copied in crypt_all.
++	 * This code doesn't seem to have any performance gains but has other benefits */
++	hashes[id] = a + 0x67452301;
++	hashes[1 * MD5_NUM_KEYS + id] = b + 0xefcdab89;
++	hashes[2 * MD5_NUM_KEYS + id] = c + 0x98badcfe;
++	hashes[3 * MD5_NUM_KEYS + id] = d + 0x10325476;
++}
+diff -urpN john-1.7.9-jumbo-5//src/nt_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/nt_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/nt_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/nt_opencl_kernel.cl	2012-01-17 10:13:32.646404706 +0000
+@@ -0,0 +1,179 @@
++/* NTLM kernel (OpenCL 1.0 conformant)
++ *
++ * Written by Alain Espinosa <alainesp at gmail.com> in 2010.  No copyright
++ * is claimed, and the software is hereby placed in the public domain.
++ * In case this attempt to disclaim copyright and place the software in the
++ * public domain is deemed null and void, then the software is
++ * Copyright (c) 2010 Alain Espinosa and it is hereby released to the
++ * general public under the following terms:
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted.
++ *
++ * There's ABSOLUTELY NO WARRANTY, express or implied.
++ *
++ * (This is a heavily cut-down "BSD license".)
++ */
++
++//Init values
++#define INIT_A 0x67452301
++#define INIT_B 0xefcdab89
++#define INIT_C 0x98badcfe
++#define INIT_D 0x10325476
++
++#define SQRT_2 0x5a827999
++#define SQRT_3 0x6ed9eba1
++
++#define NT_NUM_KEYS 1024*512
++
++#define GET_CHAR(x,elem) (((x)>>elem) & 0xFF)
++
++#ifdef __ENDIAN_LITTLE__
++	//little-endian
++	#define ELEM_0 0
++	#define ELEM_1 8
++	#define ELEM_2 16
++	#define ELEM_3 24
++#else
++	//big-endian
++	#define ELEM_0 24
++	#define ELEM_1 16
++	#define ELEM_2 8
++	#define ELEM_3 0
++#endif
++
++__kernel void nt_crypt(const __global uint *keys , __global uint *output)
++{
++	uint i = get_global_id(0);
++	//Max Size 27-4 = 23 for a better use of registers
++	uint nt_buffer[12];
++	
++	//set key-------------------------------------------------------------------------
++	uint nt_index = 0;
++	uint md4_size = 0;
++	
++	uint key_chars = keys[i];//Coalescing access to global memory
++	uint cache_key = GET_CHAR(key_chars,ELEM_0);
++	//Extract 4 chars by cycle
++	int jump = 0;
++	while(cache_key)
++	{
++		md4_size++;
++		uint temp = GET_CHAR(key_chars,ELEM_1);
++		nt_buffer[nt_index] = ((temp ? temp : 0x80) << 16) | cache_key;
++		
++		if(!temp) {
++			jump = 1;
++			break;
++		}
++			
++		md4_size++;
++		nt_index++;
++		cache_key = GET_CHAR(key_chars,ELEM_2);
++		
++		//Repeat for a 4 bytes read
++		if(!cache_key)
++			break;
++		
++		md4_size++;
++		temp = GET_CHAR(key_chars,ELEM_3);
++		nt_buffer[nt_index] = ((temp ? temp : 0x80) << 16) | cache_key;
++		
++		if(!temp) {
++			jump = 1;
++			break;
++		}
++		
++		md4_size++;
++		nt_index++;
++		
++		key_chars = keys[(md4_size>>2)*NT_NUM_KEYS+i];//Coalescing access to global memory
++		cache_key = GET_CHAR(key_chars,ELEM_0);
++	}
++	
++	if(!jump)
++		nt_buffer[nt_index] = 0x80;
++	
++//key_cleaning:
++	nt_index++;
++	for(;nt_index < 12; nt_index++)
++		nt_buffer[nt_index] = 0;
++	
++	md4_size = md4_size << 4;
++	//end set key--------------------------------------------------------------------------
++	
++	uint a;
++	uint b;
++	uint c;
++	uint d;
++	
++	/* Round 1 */
++	a = 		0xFFFFFFFF					 + nt_buffer[0]; a=rotate(a, 3u);
++	d = INIT_D+(INIT_C ^ (a & 0x77777777))   + nt_buffer[1]; d=rotate(d, 7u);
++	c = INIT_C+(INIT_B ^ (d & (a ^ INIT_B))) + nt_buffer[2]; c=rotate(c, 11u);
++	b = INIT_B + (a ^ (c & (d ^ a)))		 + nt_buffer[3]; b=rotate(b, 19u);
++	
++	a += (d ^ (b & (c ^ d)))  +  nt_buffer[4] ; a = rotate(a , 3u );
++	d += (c ^ (a & (b ^ c)))  +  nt_buffer[5] ; d = rotate(d , 7u );
++	c += (b ^ (d & (a ^ b)))  +  nt_buffer[6] ; c = rotate(c , 11u);
++	b += (a ^ (c & (d ^ a)))  +  nt_buffer[7] ; b = rotate(b , 19u);
++	
++	a += (d ^ (b & (c ^ d)))  +  nt_buffer[8] ; a = rotate(a , 3u );
++	d += (c ^ (a & (b ^ c)))  +  nt_buffer[9] ; d = rotate(d , 7u );
++	c += (b ^ (d & (a ^ b)))  +  nt_buffer[10]; c = rotate(c , 11u);
++	b += (a ^ (c & (d ^ a)))  +  nt_buffer[11]; b = rotate(b , 19u);
++	
++	a += (d ^ (b & (c ^ d)))                  ; a = rotate(a , 3u );
++	d += (c ^ (a & (b ^ c)))                  ; d = rotate(d , 7u );
++	c += (b ^ (d & (a ^ b)))  +    md4_size   ; c = rotate(c , 11u);
++	b += (a ^ (c & (d ^ a)))                  ; b = rotate(b , 19u);
++	
++	/* Round 2 */
++	a += ((b & (c | d)) | (c & d)) + nt_buffer[0] + SQRT_2; a = rotate(a , 3u );
++	d += ((a & (b | c)) | (b & c)) + nt_buffer[4] + SQRT_2; d = rotate(d , 5u );
++	c += ((d & (a | b)) | (a & b)) + nt_buffer[8] + SQRT_2; c = rotate(c , 9u );
++	b += ((c & (d | a)) | (d & a))                + SQRT_2; b = rotate(b , 13u);
++	
++	a += ((b & (c | d)) | (c & d)) + nt_buffer[1] + SQRT_2; a = rotate(a , 3u );
++	d += ((a & (b | c)) | (b & c)) + nt_buffer[5] + SQRT_2; d = rotate(d , 5u );
++	c += ((d & (a | b)) | (a & b)) + nt_buffer[9] + SQRT_2; c = rotate(c , 9u );
++	b += ((c & (d | a)) | (d & a))                + SQRT_2; b = rotate(b , 13u);
++	
++	a += ((b & (c | d)) | (c & d)) + nt_buffer[2] + SQRT_2; a = rotate(a , 3u );
++	d += ((a & (b | c)) | (b & c)) + nt_buffer[6] + SQRT_2; d = rotate(d , 5u );
++	c += ((d & (a | b)) | (a & b)) + nt_buffer[10]+ SQRT_2; c = rotate(c , 9u );
++	b += ((c & (d | a)) | (d & a)) +   md4_size   + SQRT_2; b = rotate(b , 13u);
++	
++	a += ((b & (c | d)) | (c & d)) + nt_buffer[3] + SQRT_2; a = rotate(a , 3u );
++	d += ((a & (b | c)) | (b & c)) + nt_buffer[7] + SQRT_2; d = rotate(d , 5u );
++	c += ((d & (a | b)) | (a & b)) + nt_buffer[11]+ SQRT_2; c = rotate(c , 9u );
++	b += ((c & (d | a)) | (d & a))                + SQRT_2; b = rotate(b , 13u);
++	
++	/* Round 3 */
++	a += (d ^ c ^ b) + nt_buffer[0]  + SQRT_3; a = rotate(a , 3u );
++	d += (c ^ b ^ a) + nt_buffer[8]  + SQRT_3; d = rotate(d , 9u );
++	c += (b ^ a ^ d) + nt_buffer[4]  + SQRT_3; c = rotate(c , 11u);
++	b += (a ^ d ^ c)                 + SQRT_3; b = rotate(b , 15u);
++	
++	a += (d ^ c ^ b) + nt_buffer[2]  + SQRT_3; a = rotate(a , 3u );
++	d += (c ^ b ^ a) + nt_buffer[10] + SQRT_3; d = rotate(d , 9u );
++	c += (b ^ a ^ d) + nt_buffer[6]  + SQRT_3; c = rotate(c , 11u);
++	b += (a ^ d ^ c) +   md4_size    + SQRT_3; b = rotate(b , 15u);
++	
++	a += (d ^ c ^ b) + nt_buffer[1]  + SQRT_3; a = rotate(a , 3u );
++	d += (c ^ b ^ a) + nt_buffer[9]  + SQRT_3; d = rotate(d , 9u );
++	c += (b ^ a ^ d) + nt_buffer[5]  + SQRT_3; c = rotate(c , 11u);
++	//It is better to calculate this remining steps that access global memory
++	b += (a ^ d ^ c) ;
++	output[i] = b;//Coalescing write
++	b+= SQRT_3; b = rotate(b , 15u);
++	
++	a += (b ^ c ^ d) + nt_buffer[3]  + SQRT_3; a = rotate(a , 3u );
++	d += (a ^ b ^ c) + nt_buffer[11] + SQRT_3; d = rotate(d , 9u );
++	c += (d ^ a ^ b) + nt_buffer[7]  + SQRT_3; c = rotate(c , 11u);
++	
++	//Coalescing writes
++	output[1*NT_NUM_KEYS+i] = a;
++	output[2*NT_NUM_KEYS+i] = c;
++	output[3*NT_NUM_KEYS+i] = d;
++}
+diff -urpN john-1.7.9-jumbo-5//src/opencl-tweaks.h john-1.7.9-jumbo-5-opencl-5//src/opencl-tweaks.h
+--- john-1.7.9-jumbo-5//src/opencl-tweaks.h	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/opencl-tweaks.h	2012-01-05 14:02:59.576169493 +0000
+@@ -0,0 +1,15 @@
++/* Keep values shared by code and the OpenCL kernels here. This file is
++ * prepended to the OpenCL kernels during make. */
++
++#define MD4_NUM_KEYS          1024*2048
++#define MD4_PLAINTEXT_LENGTH  15
++#ifdef MD4
++#define PLAINTEXT_LENGTH      15
++#endif
++
++#define MD5_NUM_KEYS          1024*2048
++#define MD5_PLAINTEXT_LENGTH  15
++#ifdef MD5
++#define PLAINTEXT_LENGTH      15
++#endif
++
+diff -urpN john-1.7.9-jumbo-5//src/options.c john-1.7.9-jumbo-5-opencl-5//src/options.c
+--- john-1.7.9-jumbo-5//src/options.c	2011-12-15 22:23:47.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/options.c	2012-01-15 00:13:30.038043756 +0000
+@@ -39,6 +39,9 @@
+ #endif
+ #define _PER_NODE ""
+ #endif
++#ifdef CL_VERSION_1_0
++extern unsigned int gpu_id;
++#endif
+ 
+ struct options_main options;
+ static char *field_sep_char_string;
+@@ -125,6 +128,10 @@ static struct opt_entry opt_list[] = {
+ 	{"crack-status", FLG_CRKSTAT, FLG_CRKSTAT},
+ 	{"mkpc", FLG_NONE, FLG_NONE, 0, OPT_REQ_PARAM,
+ 		"%u", &options.mkpc},
++#ifdef CL_VERSION_1_0
++	{"gpu", FLG_NONE, FLG_NONE, 0, OPT_REQ_PARAM,
++		"%u", &gpu_id},
++#endif
+ 	{NULL}
+ };
+ 
+@@ -185,6 +192,9 @@ static struct opt_entry opt_list[] = {
+ #define JOHN_USAGE_PLUGIN \
+ "--plugin=NAME[,..]        load this (these) dynamic plugin(s)\n"
+ 
++#define JOHN_GPUID \
++"--gpu=GPUID               set OpenCL device, 0 - default (Experimental)\n"
++
+ static void print_usage(char *name)
+ {
+ 	int column;
+@@ -216,8 +226,10 @@ static void print_usage(char *name)
+ #ifdef HAVE_DL
+ 	printf("%s", JOHN_USAGE_PLUGIN);
+ #endif
+-
+-	exit(0);
++#ifdef CL_VERSION_1_0
++	printf("%s", JOHN_GPUID);
++#endif
++exit(0);
+ }
+ 
+ void opt_init(char *name, int argc, char **argv)
+diff -urpN john-1.7.9-jumbo-5//src/phpass_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/phpass_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/phpass_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/phpass_opencl_fmt.c	2012-01-20 13:17:49.101262920 +0000
+@@ -0,0 +1,483 @@
++/*
++* This software is Copyright (c) 2011 Lukas Odzioba <lukas dot odzioba at gmail dot com> 
++* and it is hereby released to the general public under the following terms:
++* Redistribution and use in source and binary forms, with or without modification, are permitted.
++*/
++#include <string.h>
++#include <assert.h>
++#include "arch.h"
++#include "formats.h"
++#include "common.h"
++#include "misc.h"
++
++#include "common-opencl.h"
++
++#define uint32_t		unsigned int
++#define uint8_t			unsigned char
++
++#define PHPASS_TYPE		"PORTABLE-MD5"
++
++#define BENCHMARK_COMMENT	""
++#define BENCHMARK_LENGTH	-1
++
++#define PLAINTEXT_LENGTH	15
++#define CIPHERTEXT_LENGTH	34	/// header = 3 | loopcnt = 1 | salt = 8 | ciphertext = 22
++#define BINARY_SIZE		16
++#define SALT_SIZE		8
++
++#define KEYS_PER_CRYPT		1024*9
++#define MIN_KEYS_PER_CRYPT	KEYS_PER_CRYPT
++#define MAX_KEYS_PER_CRYPT	KEYS_PER_CRYPT
++#define FORMAT_LABEL		"phpass-opencl"
++#define FORMAT_NAME		"PHPASS-OPENCL"
++
++//#define _PHPASS_DEBUG
++
++typedef struct {
++	unsigned char v[PLAINTEXT_LENGTH];
++	unsigned char length;
++} phpass_password;
++
++typedef struct {
++	uint32_t v[4];		///128bits for hash
++} phpass_hash;
++
++static phpass_password inbuffer[MAX_KEYS_PER_CRYPT];			/** plaintext ciphertexts **/
++static phpass_hash outbuffer[MAX_KEYS_PER_CRYPT];			/** calculated hashes **/
++static const char phpass_prefix[] = "$P$";
++static char currentsalt[SALT_SIZE + 1];
++
++extern void mem_init(unsigned char *, uint32_t *, char *, char *, int);
++extern void mem_clear(void);
++extern void gpu_phpass(void);
++
++// OpenCL variables:
++static cl_mem mem_in, mem_out, mem_setting;
++static size_t insize = sizeof(phpass_password) * KEYS_PER_CRYPT;
++static size_t outsize = sizeof(phpass_hash) * KEYS_PER_CRYPT;
++static size_t settingsize = sizeof(uint8_t) * SALT_SIZE + 4;
++static size_t global_work_size = KEYS_PER_CRYPT;
++
++
++static struct fmt_tests tests[] = {
++	/*{"$P$900000000jPBDh/JWJIyrF0.DmP7kT.", "ala"},
++	   {"$P$900000000a94rg7R/nUK0icmALICKj1", "john"},
++	   {"$P$900000001ahWiA6cMRZxkgUxj4x/In0", "john"},
++	   {"$P$900000000m6YEJzWtTmNBBL4jypbHv1", "openwall"},
++	   {"$P$900000000zgzuX4Dc2091D8kak8RdR0", "h3ll00"},
++	   {"$P$900000000qZTL5A0XQUX9hq0t8SoKE0", "1234567890"},
++	   {"$P$900112200B9LMtPy2FSq910c1a6BrH0", "1234567890"},
++	   {"$P$900000000a94rg7R/nUK0icmALICKj1", "john"},
++	   {"$P$9sadli2.wzQIuzsR2nYVhUSlHNKgG/0", "john"},
++	   {"$P$90000000000tbNYOc9TwXvLEI62rPt1", ""}, */
++
++	/*{"$P$9saltstriAcRMGl.91RgbAD6WSq64z.", "a"},
++	   {"$P$9saltstriMljTzvdluiefEfDeGGQEl/", "ab"},
++	   {"$P$9saltstrikCftjZCE7EY2Kg/pjbl8S.", "abc"},
++	   {"$P$9saltstriV/GXRIRi9UVeMLMph9BxF0", "abcd"},
++	   {"$P$9saltstri3JPgLni16rBZtI03oeqT.0", "abcde"},
++	   {"$P$9saltstri0D3A6JyITCuY72ZoXdejV.", "abcdef"},
++	   {"$P$9saltstriXeNc.xV8N.K9cTs/XEn13.", "abcdefg"}, */
++	{"$P$9saltstrinwvfzVRP3u1gxG2gTLWqv.", "abcdefgh"},
++	/*
++	   {"$P$9saltstriSUQTD.yC2WigjF8RU0Q.Z.", "abcdefghi"},
++	   {"$P$9saltstriWPpGLG.jwJkwGRwdKNEsg.", "abcdefghij"},
++	   {"$P$9saltstrizjDEWUMXTlQHQ3/jhpR4C.", "abcdefghijk"},
++	   {"$P$9saltstriGLUwnE6bl91BPJP6sxyka.", "abcdefghijkl"},
++	   {"$P$9saltstriq7s97e2m7dXnTEx2mtPzx.", "abcdefghijklm"},
++	   {"$P$9saltstriTWMzWKsEeiE7CKOVVU.rS0", "abcdefghijklmn"},
++	   {"$P$9saltstriXt7EDPKtkyRVOqcqEW5UU.", "abcdefghijklmno"}, 
++	 */
++	{NULL}
++};
++
++static void release_all(void)
++{
++	HANDLE_CLERROR(clReleaseKernel(crypt_kernel), "Release Kernel");
++	HANDLE_CLERROR(clReleaseMemObject(mem_in), "Release mem in");
++	HANDLE_CLERROR(clReleaseMemObject(mem_setting), "Release mem setting");
++	HANDLE_CLERROR(clReleaseMemObject(mem_out), "Release mem out");
++	HANDLE_CLERROR(clReleaseCommandQueue(queue[gpu_id]), "Release Queue");
++}
++
++static void set_key(char *key, int index)
++{
++#ifdef _PHPASS_DEBUG
++	printf("set_key(%d) = %s\n", index, key);
++#endif
++	int length = strlen(key);
++	inbuffer[index].length = length;
++	memcpy(inbuffer[index].v, key, length);
++}
++
++static char *get_key(int index)
++{
++	static char ret[PLAINTEXT_LENGTH + 1];
++	memcpy(ret, inbuffer[index].v, inbuffer[index].length);
++	ret[inbuffer[index].length] = 0;
++	return ret;
++}
++
++static void find_best_workgroup()
++{
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i;
++	size_t max_group_size;
++	clGetDeviceInfo(devices[gpu_id], CL_DEVICE_MAX_WORK_GROUP_SIZE,
++	    sizeof(max_group_size), &max_group_size, NULL);
++	cl_command_queue queue_prof =
++	    clCreateCommandQueue(context[gpu_id], devices[gpu_id],
++	    CL_QUEUE_PROFILING_ENABLE,
++	    &ret_code);
++	HANDLE_CLERROR(ret_code, "Error while creating command queue");
++	local_work_size = 1;
++	/// Set keys
++	char *pass = "aaaaaaaa";
++	for (i = 0; i < KEYS_PER_CRYPT; i++) {
++		set_key(pass, i);
++	}
++	///Set salt
++	memcpy(currentsalt, "saltstri9", 9);
++	char setting[SALT_SIZE + 3 + 1] = { 0 };
++	strcpy(setting, currentsalt);
++	strcpy(setting + SALT_SIZE, phpass_prefix);
++	setting[SALT_SIZE + 3] = atoi64[ARCH_INDEX(currentsalt[8])];
++
++	///Copy data to GPU
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue_prof, mem_in, CL_FALSE, 0,
++		insize, inbuffer, 0, NULL, NULL), "Copy data to gpu");
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue_prof, mem_setting, CL_FALSE,
++		0, settingsize, setting, 0, NULL, NULL),
++	    "Copy setting to gpu");
++
++	///Find best local work size
++	for (my_work_group = 1; (int) my_work_group <= (int) max_group_size;
++	    my_work_group *= 2) {
++
++		HANDLE_CLERROR(clEnqueueNDRangeKernel(queue_prof, crypt_kernel,
++			1, NULL, &global_work_size, &my_work_group, 0, NULL,
++			&myEvent), "Run kernel");
++
++		HANDLE_CLERROR(clFinish(queue_prof), "clFinish error");
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_SUBMIT,
++		    sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END,
++		    sizeof(cl_ulong), &endTime, NULL);
++
++		if ((endTime - startTime) < kernelExecTimeNs) {
++			kernelExecTimeNs = endTime - startTime;
++			local_work_size = my_work_group;
++		}
++		//printf("%d time=%lld\n",(int) my_work_group, endTime-startTime);
++	}
++	printf("Optimal Group work Size = %d\n", (int) local_work_size);
++	clReleaseCommandQueue(queue_prof);
++}
++
++static void init(struct fmt_main *pFmt)
++{
++	//atexit(release_all);
++	opencl_init("$JOHN/phpass_opencl_kernel.cl", gpu_id);
++
++	/// Alocate memory
++	cl_int cl_error;
++	mem_in =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, insize, NULL,
++	    &cl_error);
++	HANDLE_CLERROR(cl_error, "Error alocating mem in");
++	mem_setting =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, settingsize,
++	    NULL, &cl_error);
++	HANDLE_CLERROR(cl_error, "Error alocating mem setting");
++	mem_out =
++	    clCreateBuffer(context[gpu_id], CL_MEM_WRITE_ONLY, outsize, NULL,
++	    &cl_error);
++	HANDLE_CLERROR(cl_error, "Error alocating mem out");
++
++	/// Setup kernel parameters
++	crypt_kernel = clCreateKernel(program[gpu_id], "phpass", &cl_error);
++	HANDLE_CLERROR(cl_error, "Error creating kernel");
++	clSetKernelArg(crypt_kernel, 0, sizeof(mem_in), &mem_in);
++	clSetKernelArg(crypt_kernel, 1, sizeof(mem_out), &mem_out);
++	clSetKernelArg(crypt_kernel, 2, sizeof(mem_setting), &mem_setting);
++
++	find_best_workgroup();
++}
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++	uint32_t i, j, count_log2, found;
++
++	if (strlen(ciphertext) != CIPHERTEXT_LENGTH)
++		return 0;
++	if (strncmp(ciphertext, phpass_prefix, 3) != 0)
++		return 0;
++
++	for (i = 3; i < CIPHERTEXT_LENGTH; i++) {
++		found = 0;
++		for (j = 0; j < 64; j++)
++			if (itoa64[j] == ARCH_INDEX(ciphertext[i])) {
++				found = 1;
++				break;
++			}
++		if (!found)
++			return 0;
++	}
++	count_log2 = atoi64[ARCH_INDEX(ciphertext[3])];
++	if (count_log2 < 7 || count_log2 > 31)
++		return 0;
++
++	return 1;
++};
++
++//code from historical JtR phpass patch
++static void *binary(char *ciphertext)
++{
++	static unsigned char b[BINARY_SIZE];
++	memset(b, 0, BINARY_SIZE);
++	int i, bidx = 0;
++	unsigned sixbits;
++	char *pos = &ciphertext[3 + 1 + 8];
++
++	for (i = 0; i < 5; i++) {
++		sixbits = atoi64[ARCH_INDEX(*pos++)];
++		b[bidx] = sixbits;
++		sixbits = atoi64[ARCH_INDEX(*pos++)];
++		b[bidx++] |= (sixbits << 6);
++		sixbits >>= 2;
++		b[bidx] = sixbits;
++		sixbits = atoi64[ARCH_INDEX(*pos++)];
++		b[bidx++] |= (sixbits << 4);
++		sixbits >>= 4;
++		b[bidx] = sixbits;
++		sixbits = atoi64[ARCH_INDEX(*pos++)];
++		b[bidx++] |= (sixbits << 2);
++	}
++	sixbits = atoi64[ARCH_INDEX(*pos++)];
++	b[bidx] = sixbits;
++	sixbits = atoi64[ARCH_INDEX(*pos++)];
++	b[bidx] |= (sixbits << 6);
++	return (void *) b;
++}
++
++static void *salt(char *ciphertext)
++{
++	static unsigned char salt[SALT_SIZE + 1];
++	memcpy(salt, &ciphertext[4], 8);
++	salt[8] = ciphertext[3];
++	return salt;
++}
++
++
++static void set_salt(void *salt)
++{
++	memcpy(currentsalt, salt, SALT_SIZE + 1);
++}
++
++static void crypt_all(int count)
++{
++#ifdef _PHPASS_DEBUG
++	printf("crypt_all(%d)\n", count);
++#endif
++	///Prepare setting format: salt+prefix+count_log2
++	char setting[SALT_SIZE + 3 + 1] = { 0 };
++	strcpy(setting, currentsalt);
++	strcpy(setting + SALT_SIZE, phpass_prefix);
++	setting[SALT_SIZE + 3] = atoi64[ARCH_INDEX(currentsalt[8])];
++	/// Copy data to gpu
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue[gpu_id], mem_in, CL_FALSE, 0,
++		insize, inbuffer, 0, NULL, NULL), "Copy data to gpu");
++	HANDLE_CLERROR(clEnqueueWriteBuffer(queue[gpu_id], mem_setting,
++		CL_FALSE, 0, settingsize, setting, 0, NULL, NULL),
++	    "Copy setting to gpu");
++
++	/// Run kernel
++	HANDLE_CLERROR(clEnqueueNDRangeKernel(queue[gpu_id], crypt_kernel, 1,
++		NULL, &global_work_size, &local_work_size, 0, NULL, NULL),
++	    "Run kernel");
++	HANDLE_CLERROR(clFinish(queue[gpu_id]), "clFinish");
++
++	/// Read the result back
++	HANDLE_CLERROR(clEnqueueReadBuffer(queue[gpu_id], mem_out, CL_FALSE, 0,
++		outsize, outbuffer, 0, NULL, NULL), "Copy result back");
++
++	/// Await completion of all the above
++	HANDLE_CLERROR(clFinish(queue[gpu_id]), "clFinish");
++}
++
++static int binary_hash_0(void *binary)
++{
++#ifdef _PHPASS_DEBUG
++	printf("binary_hash_0 ");
++	int i;
++	uint32_t *b = binary;
++	for (i = 0; i < 4; i++)
++		printf("%08x ", b[i]);
++	puts("");
++#endif
++	return (((ARCH_WORD_32 *) binary)[0] & 0xf);
++}
++
++static int binary_hash_1(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xff;
++}
++
++static int binary_hash_2(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xfff;
++}
++
++static int binary_hash_3(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xffff;
++}
++
++static int binary_hash_4(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xfffff;
++}
++
++static int binary_hash_5(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0xffffff;
++}
++
++static int binary_hash_6(void *binary)
++{
++	return ((ARCH_WORD_32 *) binary)[0] & 0x7ffffff;
++}
++
++static int get_hash_0(int index)
++{
++#ifdef _PHPASS_DEBUG
++	printf("get_hash_0:   ");
++	int i;
++	for (i = 0; i < 4; i++)
++		printf("%08x ", outbuffer[index].v[i]);
++	puts("");
++#endif
++	return outbuffer[index].v[0] & 0xf;
++}
++
++static int get_hash_1(int index)
++{
++	return outbuffer[index].v[0] & 0xff;
++}
++
++static int get_hash_2(int index)
++{
++	return outbuffer[index].v[0] & 0xfff;
++}
++
++static int get_hash_3(int index)
++{
++	return outbuffer[index].v[0] & 0xffff;
++}
++
++static int get_hash_4(int index)
++{
++	return outbuffer[index].v[0] & 0xfffff;
++}
++
++static int get_hash_5(int index)
++{
++	return outbuffer[index].v[0] & 0xffffff;
++}
++
++static int get_hash_6(int index)
++{
++	return outbuffer[index].v[0] & 0x7ffffff;
++}
++
++static int cmp_all(void *binary, int count)
++{
++
++	uint32_t b = ((uint32_t *) binary)[0];
++	uint32_t i;
++	for (i = 0; i < count; i++) {
++		if (b == outbuffer[i].v[0]) {
++#ifdef _PHPASS_DEBUG
++			puts("cmp_all = 1");
++#endif
++			return 1;
++		}
++	}
++#ifdef _PHPASS_DEBUG
++	puts("cmp_all = 0");
++#endif	/* _PHPASS_DEBUG */
++	return 0;
++}
++
++static int cmp_one(void *binary, int index)
++{
++	int i;
++	uint32_t *t = (uint32_t *) binary;
++	for (i = 0; i < 4; i++)
++		if (t[i] != outbuffer[index].v[i]) {
++#ifdef _PHPASS_DEBUG
++			puts("cmp_one = 0");
++#endif
++			return 0;
++		}
++#ifdef _PHPASS_DEBUG
++	puts("cmp_one = 1");
++#endif
++	return 1;
++}
++
++static int cmp_exact(char *source, int count)
++{
++	return 1;
++}
++
++struct fmt_main fmt_opencl_phpass = {
++	{
++		    FORMAT_LABEL,
++		    FORMAT_NAME,
++		    PHPASS_TYPE,
++		    BENCHMARK_COMMENT,
++		    BENCHMARK_LENGTH,
++		    PLAINTEXT_LENGTH,
++		    BINARY_SIZE,
++		    SALT_SIZE + 1,
++		    MIN_KEYS_PER_CRYPT,
++		    MAX_KEYS_PER_CRYPT,
++		    FMT_CASE | FMT_8_BIT,
++	    tests},
++	{
++		    init,
++		    fmt_default_prepare,
++		    valid,
++		    fmt_default_split,
++		    binary,
++		    salt,
++		    {
++				binary_hash_0,
++				binary_hash_1,
++				binary_hash_2,
++				binary_hash_3,
++				binary_hash_4,
++				binary_hash_5,
++			binary_hash_6},
++		    fmt_default_salt_hash,
++		    set_salt,
++		    set_key,
++		    get_key,
++		    fmt_default_clear_keys,
++		    crypt_all,
++		    {
++				get_hash_0,
++				get_hash_1,
++				get_hash_2,
++				get_hash_3,
++				get_hash_4,
++				get_hash_5,
++			get_hash_6},
++		    cmp_all,
++		    cmp_one,
++	    cmp_exact}
++};
+diff -urpN john-1.7.9-jumbo-5//src/phpass_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/phpass_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/phpass_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/phpass_opencl_kernel.cl	2012-01-15 01:30:56.072043329 +0000
+@@ -0,0 +1,298 @@
++
++#define PLAINTEXT_LENGTH	15
++typedef struct {
++	unsigned char v[PLAINTEXT_LENGTH];
++	unsigned char length;
++} phpass_password;
++
++typedef struct {
++	unsigned int v[4];
++} phpass_hash;
++
++
++#define ROTATE_LEFT(x, s) ((x << s) | (x >> (32 - s)))
++#define F(x, y, z) (((x) & (y)) | ((~x) & (z)))
++#define G(x, y, z) (((x) & (z)) | ((y) & (~z)))
++#define H(x, y, z) ((x) ^ (y) ^ (z))
++#define I(x, y, z) ((y) ^ ((x) | (~z)))
++
++
++#define FF(a, b, c, d, x, s, ac) \
++  {(a) += F ((b), (c), (d)) + (x) + (uint32_t)(ac); \
++   (a) = ROTATE_LEFT ((a), (s)); \
++   (a) += (b); \
++  }
++#define GG(a, b, c, d, x, s, ac) \
++  {(a) += G ((b), (c), (d)) + (x) + (uint32_t)(ac); \
++   (a) = ROTATE_LEFT ((a), (s)); \
++   (a) += (b); \
++  }
++#define HH(a, b, c, d, x, s, ac) \
++  {(a) += H ((b), (c), (d)) + (x) + (uint32_t)(ac); \
++   (a) = ROTATE_LEFT ((a), (s)); \
++   (a) += (b); \
++  }
++#define II(a, b, c, d, x, s, ac) \
++  {(a) += I ((b), (c), (d)) + (x) + (uint32_t)(ac); \
++   (a) = ROTATE_LEFT ((a), (s)); \
++   (a) += (b); \
++  }
++
++#define S11 7
++#define S12 12
++#define S13 17
++#define S14 22
++#define S21 5
++#define S22 9
++#define S23 14
++#define S24 20
++#define S31 4
++#define S32 11
++#define S33 16
++#define S34 23
++#define S41 6
++#define S42 10
++#define S43 15
++#define S44 21
++#define uint32_t unsigned int
++#define SALT_SIZE		8
++
++#define AC1				0xd76aa477
++#define AC2pCd				0xf8fa0bcc
++#define AC3pCc				0xbcdb4dd9
++#define AC4pCb				0xb18b7a77
++#define MASK1				0x77777777
++
++
++
++inline void cuda_md5(char len,__private uint32_t * internal_ret,__private uint32_t * x)
++{
++	x[len / 4] |= (((uint32_t) 0x80) << ((len & 0x3) << 3));
++	uint32_t x14 = len << 3;
++
++	uint32_t a = 0x67452301;
++	uint32_t b = 0xefcdab89;
++	uint32_t c = 0x98badcfe;
++	uint32_t d = 0x10325476;
++
++FF(a, b, c, d, x[0], S11, 0xd76aa478);
++    FF(d, a, b, c, x[1], S12, 0xe8c7b756);
++   FF(c, d, a, b, x[2], S13, 0x242070db);
++    FF(b, c, d, a, x[3], S14, 0xc1bdceee);
++	FF(a, b, c, d, x[4], S11, 0xf57c0faf);
++	FF(d, a, b, c, x[5], S12, 0x4787c62a);
++	FF(c, d, a, b, x[6], S13, 0xa8304613);
++	FF(b, c, d, a, x[7], S14, 0xfd469501);
++	FF(a, b, c, d, 0, S11, 0x698098d8);
++	FF(d, a, b, c, 0, S12, 0x8b44f7af);
++	FF(c, d, a, b, 0, S13, 0xffff5bb1);
++	FF(b, c, d, a, 0, S14, 0x895cd7be);
++	FF(a, b, c, d, 0, S11, 0x6b901122);
++	FF(d, a, b, c, 0, S12, 0xfd987193);
++	FF(c, d, a, b, x14, S13, 0xa679438e);
++	FF(b, c, d, a, 0, S14, 0x49b40821);
++
++	GG(a, b, c, d, x[1], S21, 0xf61e2562);
++	GG(d, a, b, c, x[6], S22, 0xc040b340);
++	GG(c, d, a, b, 0, S23, 0x265e5a51);
++	GG(b, c, d, a, x[0], S24, 0xe9b6c7aa);
++	GG(a, b, c, d, x[5], S21, 0xd62f105d);
++	GG(d, a, b, c, 0, S22, 0x2441453);
++	GG(c, d, a, b, 0, S23, 0xd8a1e681);
++	GG(b, c, d, a, x[4], S24, 0xe7d3fbc8);
++	GG(a, b, c, d, 0, S21, 0x21e1cde6);
++	GG(d, a, b, c, x14, S22, 0xc33707d6);
++	GG(c, d, a, b, x[3], S23, 0xf4d50d87);
++	GG(b, c, d, a, 0, S24, 0x455a14ed);
++	GG(a, b, c, d, 0, S21, 0xa9e3e905);
++	GG(d, a, b, c, x[2], S22, 0xfcefa3f8);
++	GG(c, d, a, b, x[7], S23, 0x676f02d9);
++	GG(b, c, d, a, 0, S24, 0x8d2a4c8a);
++
++	HH(a, b, c, d, x[5], S31, 0xfffa3942);
++	HH(d, a, b, c, 0, S32, 0x8771f681);
++	HH(c, d, a, b, 0, S33, 0x6d9d6122);
++	HH(b, c, d, a, x14, S34, 0xfde5380c);
++	HH(a, b, c, d, x[1], S31, 0xa4beea44);
++	HH(d, a, b, c, x[4], S32, 0x4bdecfa9);
++	HH(c, d, a, b, x[7], S33, 0xf6bb4b60);
++	HH(b, c, d, a, 0, S34, 0xbebfbc70);
++	HH(a, b, c, d, 0, S31, 0x289b7ec6);
++	HH(d, a, b, c, x[0], S32, 0xeaa127fa);
++	HH(c, d, a, b, x[3], S33, 0xd4ef3085);
++	HH(b, c, d, a, x[6], S34, 0x4881d05);
++	HH(a, b, c, d, 0, S31, 0xd9d4d039);
++	HH(d, a, b, c, 0, S32, 0xe6db99e5);
++	HH(c, d, a, b, 0, S33, 0x1fa27cf8);
++	HH(b, c, d, a, x[2], S34, 0xc4ac5665);
++
++	II(a, b, c, d, x[0], S41, 0xf4292244);
++	II(d, a, b, c, x[7], S42, 0x432aff97);
++	II(c, d, a, b, x14, S43, 0xab9423a7);
++	II(b, c, d, a, x[5], S44, 0xfc93a039);
++	II(a, b, c, d, 0, S41, 0x655b59c3);
++	II(d, a, b, c, x[3], S42, 0x8f0ccc92);
++	II(c, d, a, b, 0, S43, 0xffeff47d);
++	II(b, c, d, a, x[1], S44, 0x85845dd1);
++	II(a, b, c, d, 0, S41, 0x6fa87e4f);
++	II(d, a, b, c, 0, S42, 0xfe2ce6e0);
++	II(c, d, a, b, x[6], S43, 0xa3014314);
++	II(b, c, d, a, 0, S44, 0x4e0811a1);
++	II(a, b, c, d, x[4], S41, 0xf7537e82);
++	II(d, a, b, c, 0, S42, 0xbd3af235);
++	II(c, d, a, b, x[2], S43, 0x2ad7d2bb);
++	II(b, c, d, a, 0, S44, 0xeb86d391);
++
++	internal_ret[0] = a + 0x67452301;
++	internal_ret[1] = b + 0xefcdab89;
++	internal_ret[2] = c + 0x98badcfe;
++	internal_ret[3] = d + 0x10325476;
++}
++
++inline void clear_ctx(__private uint32_t * x)
++{
++	int i;
++	for (i = 0; i < 8; i++)
++		*x++ = 0;
++}
++
++
++
++__kernel void phpass
++    (   __global    const   phpass_password*    data
++    ,   __global            phpass_hash*    	data_out
++    ,   __global    const   char* 		setting
++    )
++{
++	uint32_t x[8];
++	clear_ctx(x);
++	uint32_t a, b, c, d, x0, x1, x2, x3, x4, x5, x6, x7;
++
++	uint32_t idx = get_global_id(0);
++
++	__global const char *password = (__global const char*) data[idx].v;
++	int length, count, i;
++	__private unsigned char *buff = (unsigned char *) x;
++
++	length = data[idx].length;
++
++	for (i = 0; i < 8; i++)
++		buff[i] = setting[i];
++
++	for (i = 8; i < 8 + length; i++) {
++		buff[i] = password[i - 8];
++	}
++
++	cuda_md5(8 + length, x, x);
++	count = 1 << setting[SALT_SIZE+3];
++	for (i = 16; i < 16 + length; i++)
++		buff[i] = password[i - 16];
++
++
++	uint32_t len = 16 + length;
++	uint32_t x14 = len << 3;
++
++	x[len / 4] |= ((0x80) << ((len & 0x3) << 3));
++	x0 = x[0];
++	x1 = x[1];
++	x2 = x[2];
++	x3 = x[3];
++	x4 = x[4];
++	x5 = x[5];
++	x6 = x[6];
++	x7 = x[7];
++do {
++
++		b = 0xefcdab89;
++		c = 0x98badcfe;
++		d = 0x10325476;
++
++// FF(a, b, c, d, x0, S11, 0xd76aa478);
++		a = AC1 + x0;
++		a = ROTATE_LEFT(a, S11);
++		a += b;		
++		d = (c ^ (a & MASK1)) + x1 + AC2pCd;
++		d = ROTATE_LEFT(d, S12);
++		d += a;		
++		c = F(d, a, b) + x2 + AC3pCc;
++		c = ROTATE_LEFT(c, S13);
++		c += d;		
++		b = F(c, d, a) + x3 + AC4pCb;
++		b = ROTATE_LEFT(b, S14);
++		b += c;
++		FF(a, b, c, d, x4, S11, 0xf57c0faf);
++		FF(d, a, b, c, x5, S12, 0x4787c62a);
++		FF(c, d, a, b, x6, S13, 0xa8304613);
++		FF(b, c, d, a, x7, S14, 0xfd469501);
++		FF(a, b, c, d, 0, S11, 0x698098d8);
++		FF(d, a, b, c, 0, S12, 0x8b44f7af);
++		FF(c, d, a, b, 0, S13, 0xffff5bb1);
++		FF(b, c, d, a, 0, S14, 0x895cd7be);
++		FF(a, b, c, d, 0, S11, 0x6b901122);
++		FF(d, a, b, c, 0, S12, 0xfd987193);
++		FF(c, d, a, b, x14, S13, 0xa679438e);
++		FF(b, c, d, a, 0, S14, 0x49b40821);
++
++		GG(a, b, c, d, x1, S21, 0xf61e2562);
++		GG(d, a, b, c, x6, S22, 0xc040b340);
++		GG(c, d, a, b, 0, S23, 0x265e5a51);
++		GG(b, c, d, a, x0, S24, 0xe9b6c7aa);
++		GG(a, b, c, d, x5, S21, 0xd62f105d);
++		GG(d, a, b, c, 0, S22, 0x2441453);
++		GG(c, d, a, b, 0, S23, 0xd8a1e681);
++		GG(b, c, d, a, x4, S24, 0xe7d3fbc8);
++		GG(a, b, c, d, 0, S21, 0x21e1cde6);
++		GG(d, a, b, c, x14, S22, 0xc33707d6);
++		GG(c, d, a, b, x3, S23, 0xf4d50d87);
++		GG(b, c, d, a, 0, S24, 0x455a14ed);
++		GG(a, b, c, d, 0, S21, 0xa9e3e905);
++		GG(d, a, b, c, x2, S22, 0xfcefa3f8);
++		GG(c, d, a, b, x7, S23, 0x676f02d9);
++		GG(b, c, d, a, 0, S24, 0x8d2a4c8a);
++
++		HH(a, b, c, d, x5, S31, 0xfffa3942);
++		HH(d, a, b, c, 0, S32, 0x8771f681);
++		HH(c, d, a, b, 0, S33, 0x6d9d6122);
++		HH(b, c, d, a, x14, S34, 0xfde5380c);
++		HH(a, b, c, d, x1, S31, 0xa4beea44);
++		HH(d, a, b, c, x4, S32, 0x4bdecfa9);
++		HH(c, d, a, b, x7, S33, 0xf6bb4b60);
++		HH(b, c, d, a, 0, S34, 0xbebfbc70);
++		HH(a, b, c, d, 0, S31, 0x289b7ec6);
++		HH(d, a, b, c, x0, S32, 0xeaa127fa);
++		HH(c, d, a, b, x3, S33, 0xd4ef3085);
++		HH(b, c, d, a, x6, S34, 0x4881d05);
++		HH(a, b, c, d, 0, S31, 0xd9d4d039);
++		HH(d, a, b, c, 0, S32, 0xe6db99e5);
++		HH(c, d, a, b, 0, S33, 0x1fa27cf8);
++		HH(b, c, d, a, x2, S34, 0xc4ac5665);
++
++		II(a, b, c, d, x0, S41, 0xf4292244);
++		II(d, a, b, c, x7, S42, 0x432aff97);
++		II(c, d, a, b, x14, S43, 0xab9423a7);
++		II(b, c, d, a, x5, S44, 0xfc93a039);
++		II(a, b, c, d, 0, S41, 0x655b59c3);
++		II(d, a, b, c, x3, S42, 0x8f0ccc92);
++		II(c, d, a, b, 0, S43, 0xffeff47d);
++		II(b, c, d, a, x1, S44, 0x85845dd1);
++		II(a, b, c, d, 0, S41, 0x6fa87e4f);
++		II(d, a, b, c, 0, S42, 0xfe2ce6e0);
++		II(c, d, a, b, x6, S43, 0xa3014314);
++		II(b, c, d, a, 0, S44, 0x4e0811a1);
++		II(a, b, c, d, x4, S41, 0xf7537e82);
++		II(d, a, b, c, 0, S42, 0xbd3af235);
++		II(c, d, a, b, x2, S43, 0x2ad7d2bb);
++		II(b, c, d, a, 0, S44, 0xeb86d391);
++
++		x0 = a + 0x67452301;
++		x1 = b + 0xefcdab89;
++		x2 = c + 0x98badcfe;
++		x3 = d + 0x10325476;
++
++	} while (--count);
++
++	data_out[idx].v[0] = x0;
++	data_out[idx].v[1] = x1;
++	data_out[idx].v[2] = x2;
++	data_out[idx].v[3] = x3;
++}
+\ No newline at end of file
+diff -urpN john-1.7.9-jumbo-5//src/rawMD5_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/rawMD5_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/rawMD5_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/rawMD5_opencl_fmt.c	2012-01-20 13:22:36.788387417 +0000
+@@ -0,0 +1,435 @@
++/*
++ * This file is part of John the Ripper password cracker,
++ * Copyright (c) 2010 by Solar Designer
++ *
++ * MD5 OpenCL code is based on Alain Espinosa's OpenCL patches.
++ */
++
++#include <string.h>
++
++#include "arch.h"
++#include "params.h"
++#include "path.h"
++#include "common.h"
++#include "formats.h"
++#include "common-opencl.h"
++
++#define MD5
++#include "opencl-tweaks.h"
++
++#define FORMAT_LABEL        "raw-md5-opencl"
++#define FORMAT_NAME         "Raw MD5"
++#define ALGORITHM_NAME      "raw-md5-opencl"
++#define BENCHMARK_COMMENT   ""
++#define BENCHMARK_LENGTH    -1
++#define CIPHERTEXT_LENGTH   32
++#define BINARY_SIZE         16
++#define SALT_SIZE           0
++
++cl_command_queue queue_prof;
++cl_mem pinned_saved_keys, pinned_partial_hashes, buffer_out, buffer_keys;
++static cl_uint *partial_hashes;
++static char *saved_plain;
++static char get_key_saved[PLAINTEXT_LENGTH + 1];
++#define MIN_KEYS_PER_CRYPT      MD5_NUM_KEYS
++#define MAX_KEYS_PER_CRYPT      MD5_NUM_KEYS
++static size_t global_work_size = MD5_NUM_KEYS;
++//static size_t local_work_size;
++
++static struct fmt_tests tests[] = {
++	{"098f6bcd4621d373cade4e832627b4f6", "test"},
++	{"d41d8cd98f00b204e9800998ecf8427e", ""},
++	{NULL}
++};
++
++static void find_best_workgroup(void)
++{
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i = 0;
++	size_t max_group_size;
++
++	clGetDeviceInfo(devices[gpu_id], CL_DEVICE_MAX_WORK_GROUP_SIZE,
++	    sizeof(max_group_size), &max_group_size, NULL);
++	queue_prof =
++	    clCreateCommandQueue(context[gpu_id], devices[gpu_id],
++	    CL_QUEUE_PROFILING_ENABLE, &ret_code);
++	printf("Max Group Work Size %d ", (int) max_group_size);
++	local_work_size = 1;
++
++	// Set keys
++	for (; i < MD5_NUM_KEYS; i++) {
++		memcpy(&(saved_plain[i * (PLAINTEXT_LENGTH + 1)]), "aaaaaaaa",
++		    PLAINTEXT_LENGTH + 1);
++		saved_plain[i * (PLAINTEXT_LENGTH + 1) + 8] = 0x80;
++	}
++	clEnqueueWriteBuffer(queue_prof, buffer_keys, CL_TRUE, 0,
++	    (PLAINTEXT_LENGTH + 1) * MD5_NUM_KEYS, saved_plain, 0, NULL, NULL);
++
++	// Find minimum time
++	for (my_work_group = 1; (int) my_work_group <= (int) max_group_size;
++	    my_work_group *= 2) {
++		ret_code =
++		    clEnqueueNDRangeKernel(queue_prof, crypt_kernel, 1, NULL,
++		    &global_work_size, &my_work_group, 0, NULL, &myEvent);
++		clFinish(queue_prof);
++
++		if (ret_code != CL_SUCCESS) {
++			printf("Errore %d\n", ret_code);
++			continue;
++		}
++
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_SUBMIT,
++		    sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END,
++		    sizeof(cl_ulong), &endTime, NULL);
++
++		if ((endTime - startTime) < kernelExecTimeNs) {
++			kernelExecTimeNs = endTime - startTime;
++			local_work_size = my_work_group;
++		}
++		//printf("%d time=%ld\n",(int) my_work_group, endTime-startTime);
++		//printf("wgS = %d\n",(int)my_work_group);
++	}
++	printf("Optimal Group work Size = %d\n", (int) local_work_size);
++	clReleaseCommandQueue(queue_prof);
++}
++
++static void fmt_MD5_init(struct fmt_main *pFmt)
++{
++	// opencl init (common stuff is taken care of here)
++	opencl_init("$JOHN/md5_opencl_kernel.cl", gpu_id);
++
++	// create kernel to execute
++	crypt_kernel = clCreateKernel(program[gpu_id], "md5", &ret_code);
++	HANDLE_CLERROR(ret_code,
++	    "Error creating kernel. Double-check kernel name?");
++
++	// create Page-Locked (Pinned) memory for higher bandwidth between host and device (Nvidia Best Practices)
++	pinned_saved_keys =
++	    clCreateBuffer(context[gpu_id],
++	    CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
++	    (PLAINTEXT_LENGTH + 1) * MD5_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++	pinned_partial_hashes =
++	    clCreateBuffer(context[gpu_id],
++	    CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, 4 * MD5_NUM_KEYS, NULL,
++	    &ret_code);
++
++	HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++	saved_plain =
++	    (char *) clEnqueueMapBuffer(queue[gpu_id], pinned_saved_keys,
++	    CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0,
++	    (PLAINTEXT_LENGTH + 1) * MD5_NUM_KEYS, 0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error mapping page-locked memory");
++	partial_hashes =
++	    (cl_uint *) clEnqueueMapBuffer(queue[gpu_id],
++	    pinned_partial_hashes, CL_TRUE, CL_MAP_READ, 0, 4 * MD5_NUM_KEYS,
++	    0, NULL, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error mapping page-locked memory");
++
++	// create and set arguments
++	buffer_keys =
++	    clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY,
++	    (PLAINTEXT_LENGTH + 1) * MD5_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating buffer argument");
++	buffer_out =
++	    clCreateBuffer(context[gpu_id], CL_MEM_WRITE_ONLY,
++	    BINARY_SIZE * MD5_NUM_KEYS, NULL, &ret_code);
++	HANDLE_CLERROR(ret_code, "Error creating buffer argument");
++
++	HANDLE_CLERROR(clSetKernelArg(crypt_kernel, 0, sizeof(buffer_keys),
++		(void *) &buffer_keys), "Error setting argument 1");
++	HANDLE_CLERROR(clSetKernelArg(crypt_kernel, 1, sizeof(buffer_out),
++		(void *) &buffer_out), "Error setting argument 2");
++
++	//local_work_size = 256; // TODO: detect dynamically
++	find_best_workgroup();
++}
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++	char *p, *q;
++
++	p = ciphertext;
++	if (!strncmp(p, "$MD5$", 5))
++		p += 5;
++
++	q = p;
++	while (atoi16[ARCH_INDEX(*q)] != 0x7F)
++		q++;
++	return !*q && q - p == CIPHERTEXT_LENGTH;
++}
++
++static char *split(char *ciphertext, int index)
++{
++	static char out[5 + CIPHERTEXT_LENGTH + 1];
++
++	if (!strncmp(ciphertext, "$MD5$", 5))
++		return ciphertext;
++
++	memcpy(out, "$MD5$", 5);
++	memcpy(out + 5, ciphertext, CIPHERTEXT_LENGTH + 1);
++	return out;
++}
++
++static void *get_binary(char *ciphertext)
++{
++	static unsigned char out[BINARY_SIZE];
++	char *p;
++	int i;
++
++	p = ciphertext + 5;
++	for (i = 0; i < sizeof(out); i++) {
++		out[i] =
++		    (atoi16[ARCH_INDEX(*p)] << 4) | atoi16[ARCH_INDEX(p[1])];
++		p += 2;
++	}
++
++	return out;
++}
++
++static int binary_hash_0(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xF;
++}
++
++static int binary_hash_1(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xFF;
++}
++
++static int binary_hash_2(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xFFF;
++}
++
++static int binary_hash_3(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xFFFF;
++}
++
++static int binary_hash_4(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xFFFFF;
++}
++
++static int binary_hash_5(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0xFFFFFF;
++}
++
++static int binary_hash_6(void *binary)
++{
++	return *(ARCH_WORD_32 *) binary & 0x7FFFFFF;
++}
++
++static int get_hash_0(int index)
++{
++#ifdef DEBUG
++	printf("* in get_hash0, index : %d, hash : ", index);
++	int i;
++	for (i = 0; i < 4; i++)
++		printf("%02x ", partial_hashes[i * MD5_NUM_KEYS + index]);
++	printf("\n");
++#endif
++	return partial_hashes[index] & 0x0F;
++}
++
++static int get_hash_1(int index)
++{
++	return partial_hashes[index] & 0xFF;
++}
++
++static int get_hash_2(int index)
++{
++	return partial_hashes[index] & 0xFFF;
++}
++
++static int get_hash_3(int index)
++{
++	return partial_hashes[index] & 0xFFFF;
++}
++
++static int get_hash_4(int index)
++{
++	return partial_hashes[index] & 0xFFFFF;
++}
++
++static int get_hash_5(int index)
++{
++	return partial_hashes[index] & 0xFFFFFF;
++}
++
++static int get_hash_6(int index)
++{
++	return partial_hashes[index] & 0x7FFFFFF;
++}
++
++static void set_salt(void *salt)
++{
++}
++
++static void set_key(char *key, int index)
++{
++	int length = -1;
++	int base = index * (PLAINTEXT_LENGTH + 1);
++	do {
++		length++;
++		saved_plain[base + length] = key[length];
++	}
++	while (key[length]);
++	memset(&saved_plain[base + length + 1], 0, 7);	// ugly hack which "should" work!
++}
++
++static char *get_key(int index)
++{
++	int length = -1;
++	int base = index * (PLAINTEXT_LENGTH + 1);
++	do {
++		length++;
++		get_key_saved[length] = saved_plain[base + length];
++	}
++	while (get_key_saved[length]);
++	get_key_saved[length] = 0;
++	return get_key_saved;
++}
++
++static void crypt_all(int count)
++{
++#ifdef DEBUGVERBOSE
++	int i, j;
++	unsigned char *p = (unsigned char *) saved_plain;
++	count--;
++	for (i = 0; i < count + 1; i++) {
++		printf("\npassword : ");
++		for (j = 0; j < 64; j++) {
++			printf("%02x ", p[i * 64 + j]);
++		}
++	}
++	printf("\n");
++#endif
++	cl_int code;
++	// copy keys to the device
++	code =
++	    clEnqueueWriteBuffer(queue[gpu_id], buffer_keys, CL_TRUE, 0,
++	    (PLAINTEXT_LENGTH + 1) * MD5_NUM_KEYS, saved_plain, 0, NULL, NULL);
++	if (code != CL_SUCCESS) {
++		printf("failed in clEnqueueWriteBuffer with code %d\n", code);
++		exit(-1);
++	}
++	// execute md4 kernel
++	code =
++	    clEnqueueNDRangeKernel(queue[gpu_id], crypt_kernel, 1, NULL,
++	    &global_work_size, &local_work_size, 0, NULL, NULL);
++	if (code != CL_SUCCESS) {
++		printf("failed in clEnqueueNDRangeKernel with code %d\n",
++		    code);
++		exit(-1);
++	}
++	clFinish(queue[gpu_id]);
++	// read back partial hashes
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE, 0,
++	    4 * MD5_NUM_KEYS, partial_hashes, 0, NULL, NULL);
++
++#ifdef DEBUGVERBOSE
++	p = (unsigned char *) partial_hashes;
++	for (i = 0; i < 2; i++) {
++		printf("\n\npartial_hashes : ");
++		for (j = 0; j < 16; j++)
++			printf("%02x ", p[i * 16 + j]);
++	}
++	printf("\n");;
++#endif
++}
++
++static int cmp_one(void *binary, int index)
++{
++	unsigned int *t = (unsigned int *) binary;
++	unsigned int a;
++	unsigned int c;
++	unsigned int d;
++
++	// b
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (1 * MD5_NUM_KEYS + index), sizeof(a),
++	    (void *) &a, 0, NULL, NULL);
++	if (t[1] != a)
++		return 0;
++	// c
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (2 * MD5_NUM_KEYS + index), sizeof(c),
++	    (void *) &c, 0, NULL, NULL);
++	if (t[2] != c)
++		return 0;
++	// d
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (3 * MD5_NUM_KEYS + index), sizeof(d),
++	    (void *) &d, 0, NULL, NULL);
++	return t[3] == d;
++
++}
++
++static int cmp_all(void *binary, int count)
++{
++	unsigned int i = 0;
++	unsigned int b = ((unsigned int *) binary)[0];
++	for (; i < count; i++)
++		if (b == partial_hashes[i])
++			return 1;
++	return 0;
++}
++
++static int cmp_exact(char *source, int index)
++{
++	return 1;
++}
++
++struct fmt_main fmt_opencl_rawMD5 = {
++	{
++		    FORMAT_LABEL,
++		    FORMAT_NAME,
++		    ALGORITHM_NAME,
++		    BENCHMARK_COMMENT,
++		    BENCHMARK_LENGTH,
++		    PLAINTEXT_LENGTH,
++		    BINARY_SIZE,
++		    SALT_SIZE,
++		    MIN_KEYS_PER_CRYPT,
++		    MAX_KEYS_PER_CRYPT,
++		    FMT_CASE | FMT_8_BIT,
++	    tests}, {
++		    fmt_MD5_init,
++		    fmt_default_prepare,
++		    valid,
++		    split,
++		    get_binary,
++		    fmt_default_salt,
++		    {
++				binary_hash_0,
++				binary_hash_1,
++				binary_hash_2,
++				binary_hash_3,
++				binary_hash_4,
++				binary_hash_5,
++			binary_hash_6},
++		    fmt_default_salt_hash,
++		    set_salt,
++		    set_key,
++		    get_key,
++		    fmt_default_clear_keys,
++		    crypt_all,
++		    {
++				get_hash_0,
++				get_hash_1,
++				get_hash_2,
++				get_hash_3,
++				get_hash_4,
++				get_hash_5,
++			get_hash_6},
++		    cmp_all,
++		    cmp_one,
++	    cmp_exact}
++};
+diff -urpN john-1.7.9-jumbo-5//src/rawSHA1_opencl_fmt.c john-1.7.9-jumbo-5-opencl-5//src/rawSHA1_opencl_fmt.c
+--- john-1.7.9-jumbo-5//src/rawSHA1_opencl_fmt.c	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/rawSHA1_opencl_fmt.c	2012-01-20 13:18:30.181387411 +0000
+@@ -0,0 +1,341 @@
++/*
++ * Copyright (c) 2011 Samuele Giovanni Tonon
++ * samu at linuxasylum dot net
++ * Released under GPL license 
++ */
++
++#include <string.h>
++
++#include "path.h"
++#include "arch.h"
++#include "misc.h"
++#include "common.h"
++#include "formats.h"
++#include "sha.h"
++#include "common-opencl.h"
++
++#define FORMAT_LABEL			"raw-sha1-opencl"
++#define FORMAT_NAME			"Raw SHA-1 OpenCL"
++#define ALGORITHM_NAME			"raw-sha1-opencl"
++#define SHA_TYPE                        "SHA-1"
++#define BENCHMARK_COMMENT		""
++#define BENCHMARK_LENGTH		0
++
++#define PLAINTEXT_LENGTH		32
++#define CIPHERTEXT_LENGTH		40
++
++#define BINARY_SIZE			20
++#define SALT_SIZE			0
++
++#define SHA_BLOCK           		16
++#define SSHA_NUM_KEYS               	1024*128
++
++#define MIN_KEYS_PER_CRYPT		SSHA_NUM_KEYS
++#define MAX_KEYS_PER_CRYPT		SSHA_NUM_KEYS
++
++#ifndef uint32_t
++#define uint32_t unsigned int
++#endif
++
++typedef struct {
++	uint32_t h0,h1,h2,h3,h4;
++} SHA_DEV_CTX;
++
++
++cl_command_queue queue_prof;
++cl_int ret_code;
++cl_kernel sha1_crypt_kernel;
++cl_mem pinned_saved_keys, pinned_partial_hashes, buffer_out, buffer_keys, buffer_hash, len_buffer, data_info;
++static cl_uint *outbuffer;
++static char *inbuffer;
++static size_t global_work_size = SSHA_NUM_KEYS;
++static unsigned int datai[2];
++
++static struct fmt_tests rawsha1_tests[] = {
++	{"a9993e364706816aba3e25717850c26c9cd0d89d", "abc"},
++	{"2fbf0eba37de1d1d633bc1ed943b907f9b360d4c", "azertyuiop1"},
++	{"f879f8090e92232ed07092ebed6dc6170457a21d", "azertyuiop2"},
++	{"1813c12f25e64931f3833b26e999e26e81f9ad24", "azertyuiop3"},
++	{NULL}
++};
++
++static char saved_key[SSHA_NUM_KEYS][PLAINTEXT_LENGTH];
++
++static void find_best_workgroup(void){
++	cl_event myEvent;
++	cl_ulong startTime, endTime, kernelExecTimeNs = CL_ULONG_MAX;
++	size_t my_work_group = 1;
++	cl_int ret_code;
++	int i = 0;
++	size_t max_group_size;
++
++	clGetDeviceInfo(devices[gpu_id],CL_DEVICE_MAX_WORK_GROUP_SIZE,sizeof(max_group_size),&max_group_size,NULL );
++	queue_prof = clCreateCommandQueue( context[gpu_id], devices[gpu_id], CL_QUEUE_PROFILING_ENABLE, &ret_code);
++	printf("Max Group Work Size %d ",(int)max_group_size);
++	local_work_size = 1;
++
++	// Set keys
++	for (; i < SSHA_NUM_KEYS; i++){
++		memcpy(&(inbuffer[i*SHA_BLOCK]),"aaaaaaaa",SHA_BLOCK);
++		inbuffer[i*SHA_BLOCK+8] = 0x80;
++	}
++        clEnqueueWriteBuffer(queue_prof, data_info, CL_TRUE, 0, sizeof(unsigned int)*2, datai, 0, NULL, NULL);
++	clEnqueueWriteBuffer(queue_prof, buffer_keys, CL_TRUE, 0, (SHA_BLOCK) * SSHA_NUM_KEYS, inbuffer, 0, NULL, NULL);
++
++	// Find minimum time
++	for(my_work_group=1 ;(int) my_work_group <= (int) max_group_size; my_work_group*=2){
++    		ret_code = clEnqueueNDRangeKernel( queue_prof, sha1_crypt_kernel, 1, NULL, &global_work_size, &my_work_group, 0, NULL, &myEvent);
++		clFinish(queue_prof);
++
++		if(ret_code != CL_SUCCESS){
++			printf("Errore %d\n",ret_code);
++			continue;
++		}
++
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &startTime, NULL);
++		clGetEventProfilingInfo(myEvent, CL_PROFILING_COMMAND_END  , sizeof(cl_ulong), &endTime  , NULL);
++
++		if((endTime-startTime) < kernelExecTimeNs) {
++			kernelExecTimeNs = endTime-startTime;
++			local_work_size = my_work_group;
++		}
++		//printf("%d time=%ld\n",(int) my_work_group, endTime-startTime);
++		//printf("wgS = %d\n",(int)my_work_group);
++	}
++	printf("Optimal Group work Size = %d\n",(int)local_work_size);
++	clReleaseCommandQueue(queue_prof);
++}
++
++static int valid(char *ciphertext, struct fmt_main *pFmt)
++{
++	int i;
++
++	if (strlen(ciphertext) != CIPHERTEXT_LENGTH) return 0;
++	for (i = 0; i < CIPHERTEXT_LENGTH; i++){
++		if (!((('0' <= ciphertext[i]) && (ciphertext[i] <= '9')) ||
++			(('a' <= ciphertext[i]) && (ciphertext[i] <= 'f'))
++			|| (('A' <= ciphertext[i]) && (ciphertext[i] <= 'F'))))
++			return 0;
++	}
++	return 1;
++}
++
++static void rawsha1_set_salt(void *salt)
++{
++}
++
++static void rawsha1_opencl_init(struct fmt_main *pFmt)
++{
++    opencl_init("$JOHN/sha1_opencl_kernel.cl", gpu_id);
++
++    // create kernel to execute
++    sha1_crypt_kernel = clCreateKernel(program[gpu_id], "sha1_crypt_kernel", &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating kernel. Double-check kernel name?");
++
++    // create Page-Locked (Pinned) memory for higher bandwidth between host and device (Nvidia Best Practices)
++    pinned_saved_keys = clCreateBuffer(context[gpu_id], CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, (SHA_BLOCK)*SSHA_NUM_KEYS, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++    inbuffer = (char*)clEnqueueMapBuffer(queue[gpu_id], pinned_saved_keys, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, (SHA_BLOCK)*SSHA_NUM_KEYS, 0, NULL, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error mapping page-locked memory inbuffer");
++
++    memset(inbuffer, 0, SHA_BLOCK * SSHA_NUM_KEYS);
++
++    pinned_partial_hashes = clCreateBuffer(context[gpu_id], CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(cl_uint) * SSHA_NUM_KEYS, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating page-locked memory");
++
++    outbuffer = (cl_uint *) clEnqueueMapBuffer(queue[gpu_id], pinned_partial_hashes, CL_TRUE, CL_MAP_READ, 0, sizeof(cl_uint) * SSHA_NUM_KEYS, 0, NULL, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error mapping page-locked memory outbuffer");
++
++    // create and set arguments
++    buffer_keys = clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, (SHA_BLOCK) * SSHA_NUM_KEYS, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating buffer keys argument");
++
++    buffer_out = clCreateBuffer(context[gpu_id], CL_MEM_WRITE_ONLY, sizeof(cl_uint) * 5 * SSHA_NUM_KEYS, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating buffer out argument");
++
++    data_info = clCreateBuffer(context[gpu_id], CL_MEM_READ_ONLY, sizeof(unsigned int) * 2, NULL, &ret_code);
++    HANDLE_CLERROR(ret_code, "Error creating data_info out argument");
++
++    HANDLE_CLERROR(clSetKernelArg(sha1_crypt_kernel, 0, sizeof(data_info), (void *) &data_info),
++		"Error setting argument 0");
++
++    HANDLE_CLERROR(clSetKernelArg(sha1_crypt_kernel, 1, sizeof(buffer_keys), (void *) &buffer_keys),
++		 "Error setting argument 1");
++
++    HANDLE_CLERROR(clSetKernelArg(sha1_crypt_kernel, 2, sizeof(buffer_out), (void *) &buffer_out),
++		 "Error setting argument 2");
++
++    //local_work_size = 256;	// TODO: detect dynamically
++
++    datai[0] = SHA_BLOCK;
++    datai[1] = SSHA_NUM_KEYS;
++    find_best_workgroup();
++}
++
++static void rawsha1_set_key(char *key, int index)
++{
++	int lenpwd;
++
++	memset(saved_key[index], 0, PLAINTEXT_LENGTH);
++
++	strnzcpy(saved_key[index], key, PLAINTEXT_LENGTH);
++	lenpwd = strlen(saved_key[index]);
++
++	memcpy(&(inbuffer[index * SHA_BLOCK]), saved_key[index], lenpwd);
++	inbuffer[index * SHA_BLOCK + lenpwd] = 0x80;
++}
++
++static char *rawsha1_get_key(int index)
++{
++	return saved_key[index];
++}
++
++static int rawsha1_cmp_all(void *binary, int count)
++{
++	unsigned int i = 0;
++	unsigned int b = ((unsigned int *) binary)[0];
++
++	for (; i < count; i++)
++		if (b == outbuffer[i])
++			return 1;
++	return 0;
++}
++
++static int rawsha1_cmp_exact(char *source, int count)
++{
++	return (1);
++}
++
++static int rawsha1_cmp_one(void *binary, int index)
++{
++	unsigned int *t = (unsigned int *) binary;
++	unsigned int a;
++	unsigned int b;
++	unsigned int c;
++	unsigned int d;
++
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (1 * SSHA_NUM_KEYS + index), sizeof(a),
++	    (void *) &a, 0, NULL, NULL);
++	if (t[1] != a)
++		return 0;
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (2 * SSHA_NUM_KEYS + index), sizeof(b),
++	    (void *) &b, 0, NULL, NULL);
++	if (t[2] != b)
++		return 0;
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (3 * SSHA_NUM_KEYS + index), sizeof(c),
++	    (void *) &c, 0, NULL, NULL);
++	if (t[3] != c)
++		return 0;
++	clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE,
++	    sizeof(cl_uint) * (4 * SSHA_NUM_KEYS + index), sizeof(d),
++	    (void *) &d, 0, NULL, NULL);
++	return t[4] == d;
++
++}
++
++static void rawsha1_crypt_all(int count)
++{
++	HANDLE_CLERROR(
++	    clEnqueueWriteBuffer(queue[gpu_id], data_info, CL_TRUE, 0,
++	    sizeof(unsigned int) * 2, datai, 0, NULL, NULL),
++	    "failed in clEnqueueWriteBuffer");
++	HANDLE_CLERROR(
++	    clEnqueueWriteBuffer(queue[gpu_id], buffer_keys, CL_TRUE, 0,
++	    (SHA_BLOCK) * SSHA_NUM_KEYS, inbuffer, 0, NULL, NULL),
++	     "failed in clEnqueueWriteBuffer");
++	     
++	HANDLE_CLERROR(
++	    clEnqueueNDRangeKernel(queue[gpu_id], sha1_crypt_kernel, 1, NULL,
++	    &global_work_size, &local_work_size, 0, NULL, NULL),
++	      "failed in clEnqueueNDRangeKernel");
++	      
++	HANDLE_CLERROR(clFinish(queue[gpu_id]),"failed in clFinnish");
++	// read back partial hashes
++	HANDLE_CLERROR(clEnqueueReadBuffer(queue[gpu_id], buffer_out, CL_TRUE, 0,
++	    sizeof(cl_uint) * SSHA_NUM_KEYS, outbuffer, 0, NULL, NULL),
++	      "failed in reading data back");
++}
++
++static void *rawsha1_binary(char *ciphertext)
++{
++	static char realcipher[BINARY_SIZE];
++	int i;
++
++	for (i = 0; i < BINARY_SIZE; i++) {
++		realcipher[i] =
++		    atoi16[ARCH_INDEX(ciphertext[i * 2])] * 16 +
++		    atoi16[ARCH_INDEX(ciphertext[i * 2 + 1])];
++	}
++	return (void *) realcipher;
++}
++
++static int binary_hash_0(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xf; }
++static int binary_hash_1(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xff; }
++static int binary_hash_2(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xfff; }
++static int binary_hash_3(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xffff; }
++static int binary_hash_4(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xfffff; }
++static int binary_hash_5(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0xffffff; }
++static int binary_hash_6(void * binary) { return ((ARCH_WORD_32 *)binary)[0] & 0x7ffffff; }
++
++static int get_hash_0(int index) { return outbuffer[index] & 0xF; }
++static int get_hash_1(int index) { return outbuffer[index] & 0xFF; }
++static int get_hash_2(int index) { return outbuffer[index] & 0xFFF; }
++static int get_hash_3(int index) { return outbuffer[index] & 0xFFFF; }
++static int get_hash_4(int index) { return outbuffer[index] & 0xFFFFF; }
++static int get_hash_5(int index) { return outbuffer[index] & 0xFFFFFF; }
++static int get_hash_6(int index) { return outbuffer[index] & 0x7FFFFFF; }
++
++struct fmt_main fmt_opencl_rawSHA1 = {
++	{
++		FORMAT_LABEL,
++		FORMAT_NAME,
++		ALGORITHM_NAME,
++		BENCHMARK_COMMENT,
++		BENCHMARK_LENGTH,
++		PLAINTEXT_LENGTH,
++		BINARY_SIZE,
++		SALT_SIZE,
++		MIN_KEYS_PER_CRYPT,
++		MAX_KEYS_PER_CRYPT,
++		FMT_CASE | FMT_8_BIT,
++		rawsha1_tests
++	}, {
++		rawsha1_opencl_init,
++		fmt_default_prepare,
++		valid,
++		fmt_default_split,
++		rawsha1_binary,
++		fmt_default_salt,
++		{
++		     	binary_hash_0,
++			binary_hash_1,
++			binary_hash_2,
++			binary_hash_3,
++			binary_hash_4,
++			binary_hash_5,
++			binary_hash_6
++		},
++		fmt_default_salt_hash,
++		rawsha1_set_salt,
++		rawsha1_set_key,
++		rawsha1_get_key,
++		fmt_default_clear_keys,
++		rawsha1_crypt_all,
++		{
++			get_hash_0,
++			get_hash_1,
++			get_hash_2,
++			get_hash_3,
++			get_hash_4,
++			get_hash_5,
++			get_hash_6
++		},
++		rawsha1_cmp_all,
++		rawsha1_cmp_one,
++		rawsha1_cmp_exact
++	}
++
++};
+diff -urpN john-1.7.9-jumbo-5//src/setup-opencl-stuff.sh john-1.7.9-jumbo-5-opencl-5//src/setup-opencl-stuff.sh
+--- john-1.7.9-jumbo-5//src/setup-opencl-stuff.sh	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/setup-opencl-stuff.sh	2012-01-05 14:02:59.579170095 +0000
+@@ -0,0 +1,5 @@
++#!/usr/bin/env bash
++for kernel in `ls *.cl`
++do 
++    cat opencl-tweaks.h "$kernel" > ../run/"$kernel"
++done
+diff -urpN john-1.7.9-jumbo-5//src/sha1_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/sha1_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/sha1_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/sha1_opencl_kernel.cl	2012-01-17 10:40:55.351404553 +0000
+@@ -0,0 +1,202 @@
++/* 
++   This code was taken and merged from pyrit opencl sha1 routines royger's sample ( http://royger.org/opencl/?p=12) 
++   and largely inspired from md5_opencl_kernel.cl 
++   by Samuele Giovanni Tonon samu at linuxasylum dot net
++*/
++
++#define K0  0x5A827999
++#define K1  0x6ED9EBA1
++#define K2  0x8F1BBCDC
++#define K3  0xCA62C1D6
++
++#define H1 0x67452301
++#define H2 0xEFCDAB89
++#define H3 0x98BADCFE
++#define H4 0x10325476
++#define H5 0xC3D2E1F0
++
++#ifndef uint32_t
++#define uint32_t unsigned int
++#endif
++
++void prepare_msg(__global uchar *s, char *dest, int blocksize) {
++    int i;
++    uint ulen;
++
++    for(i = 0; i < blocksize && s[i] != 0x80 ; i++){
++        dest[i] = s[i];
++    }
++    ulen = (i * 8) & 0xFFFFFFFF;
++    dest[i] = (char) 0x80;
++    i=i+1;
++    for(;i<60;i++){
++	dest[i] = (char) 0;
++    }
++    dest[60] = ulen >> 24;
++    dest[61] = ulen >> 16;
++    dest[62] = ulen >> 8;
++    dest[63] = ulen;
++    
++    return;
++}
++
++__kernel void sha1_crypt_kernel(__global uint *data_info,__global const char *plain_key,  __global uint *digest){
++    int t, gid, msg_pad;
++    uint W[80], temp, A,B,C,D,E;
++    uint num_keys = data_info[1];
++    
++    gid = get_global_id(0);
++    uchar msg[64];
++    msg_pad = gid * data_info[0];
++
++    A = H1;
++    B = H2;
++    C = H3;
++    D = H4;
++    E = H5;
++    
++    prepare_msg((__global uchar*)&plain_key[msg_pad],(char*)msg,data_info[0]);
++    
++    for (t = 0; t < 16; t++){
++        W[t] = ((uchar) msg[ t * 4]) << 24;
++        W[t] |= ((uchar) msg[ t * 4 + 1]) << 16;
++        W[t] |= ((uchar) msg[ t * 4 + 2]) << 8;
++        W[t] |= (uchar) msg[ t * 4 + 3];
++    }
++
++#undef R
++#define R(t)                                              \
++(                                                         \
++    temp = W[(t -  3) & 0x0F] ^ W[(t - 8) & 0x0F] ^       \
++           W[(t - 14) & 0x0F] ^ W[ t      & 0x0F],        \
++    ( W[t & 0x0F] = rotate((int)temp,1) )                 \
++)
++
++#undef P
++#define P(a,b,c,d,e,x)                                    \
++{                                                         \
++    e += rotate((int)a,5) + F(b,c,d) + K + x; b = rotate((int)b,30);\
++}
++
++#define F(x,y,z) (z ^ (x & (y ^ z)))
++#define K 0x5A827999
++  
++  P( A, B, C, D, E, W[0]  );
++  P( E, A, B, C, D, W[1]  );
++  P( D, E, A, B, C, W[2]  );
++  P( C, D, E, A, B, W[3]  );
++  P( B, C, D, E, A, W[4]  );
++  P( A, B, C, D, E, W[5]  );
++  P( E, A, B, C, D, W[6]  );
++  P( D, E, A, B, C, W[7]  );
++  P( C, D, E, A, B, W[8]  );
++  P( B, C, D, E, A, W[9]  );
++  P( A, B, C, D, E, W[10] );
++  P( E, A, B, C, D, W[11] );
++  P( D, E, A, B, C, W[12] );
++  P( C, D, E, A, B, W[13] );
++  P( B, C, D, E, A, W[14] );
++  P( A, B, C, D, E, W[15] );
++  P( E, A, B, C, D, R(16) );
++  P( D, E, A, B, C, R(17) );
++  P( C, D, E, A, B, R(18) );
++  P( B, C, D, E, A, R(19) );
++
++#undef K
++#undef F
++
++#define F(x,y,z) (x ^ y ^ z)
++#define K 0x6ED9EBA1
++  
++  P( A, B, C, D, E, R(20) );
++  P( E, A, B, C, D, R(21) );
++  P( D, E, A, B, C, R(22) );
++  P( C, D, E, A, B, R(23) );
++  P( B, C, D, E, A, R(24) );
++  P( A, B, C, D, E, R(25) );
++  P( E, A, B, C, D, R(26) );
++  P( D, E, A, B, C, R(27) );
++  P( C, D, E, A, B, R(28) );
++  P( B, C, D, E, A, R(29) );
++  P( A, B, C, D, E, R(30) );
++  P( E, A, B, C, D, R(31) );
++  P( D, E, A, B, C, R(32) );
++  P( C, D, E, A, B, R(33) );
++  P( B, C, D, E, A, R(34) );
++  P( A, B, C, D, E, R(35) );
++  P( E, A, B, C, D, R(36) );
++  P( D, E, A, B, C, R(37) );
++  P( C, D, E, A, B, R(38) );
++  P( B, C, D, E, A, R(39) );
++  
++#undef K
++#undef F
++  
++#define F(x,y,z) ((x & y) | (z & (x | y)))
++#define K 0x8F1BBCDC
++  
++  P( A, B, C, D, E, R(40) );
++  P( E, A, B, C, D, R(41) );
++  P( D, E, A, B, C, R(42) );
++  P( C, D, E, A, B, R(43) );
++  P( B, C, D, E, A, R(44) );
++  P( A, B, C, D, E, R(45) );
++  P( E, A, B, C, D, R(46) );
++  P( D, E, A, B, C, R(47) );
++  P( C, D, E, A, B, R(48) );
++  P( B, C, D, E, A, R(49) );
++  P( A, B, C, D, E, R(50) );
++  P( E, A, B, C, D, R(51) );
++  P( D, E, A, B, C, R(52) );
++  P( C, D, E, A, B, R(53) );
++  P( B, C, D, E, A, R(54) );
++  P( A, B, C, D, E, R(55) );
++  P( E, A, B, C, D, R(56) );
++  P( D, E, A, B, C, R(57) );
++  P( C, D, E, A, B, R(58) );
++  P( B, C, D, E, A, R(59) );
++  
++#undef K
++#undef F
++
++#define F(x,y,z) (x ^ y ^ z)
++#define K 0xCA62C1D6
++  
++  P( A, B, C, D, E, R(60) );
++  P( E, A, B, C, D, R(61) );
++  P( D, E, A, B, C, R(62) );
++  P( C, D, E, A, B, R(63) );
++  P( B, C, D, E, A, R(64) );
++  P( A, B, C, D, E, R(65) );
++  P( E, A, B, C, D, R(66) );
++  P( D, E, A, B, C, R(67) );
++  P( C, D, E, A, B, R(68) );
++  P( B, C, D, E, A, R(69) );
++  P( A, B, C, D, E, R(70) );
++  P( E, A, B, C, D, R(71) );
++  P( D, E, A, B, C, R(72) );
++  P( C, D, E, A, B, R(73) );
++  P( B, C, D, E, A, R(74) );
++  P( A, B, C, D, E, R(75) );
++  P( E, A, B, C, D, R(76) );
++  P( D, E, A, B, C, R(77) );
++  P( C, D, E, A, B, R(78) );
++  P( B, C, D, E, A, R(79) );
++
++#undef K
++#undef F
++  digest[gid] = as_uint(as_uchar4(A + H1).wzyx);
++  digest[gid+1*num_keys] = as_uint(as_uchar4(B + H2).wzyx);
++  digest[gid+2*num_keys] = as_uint(as_uchar4(C + H3).wzyx);
++  digest[gid+3*num_keys] = as_uint(as_uchar4(D + H4).wzyx);
++  digest[gid+4*num_keys] = as_uint(as_uchar4(E + H5).wzyx);
++/*
++  if (  (as_uint(as_uchar4(B + H2).wzyx) == ckey[1] ) && (as_uint(as_uchar4(C + H3).wzyx) == ckey[2] ) &&
++        (as_uint(as_uchar4(D + H4).wzyx) == ckey[3] ) && (as_uint(as_uchar4(E + H5).wzyx) == ckey[4] ) ){
++     digest[gid+num_keys] = 1;
++} else {
++     digest[gid+num_keys] = 0xFF;
++}
++*/
++
++}
+diff -urpN john-1.7.9-jumbo-5//src/ssha_opencl_kernel.cl john-1.7.9-jumbo-5-opencl-5//src/ssha_opencl_kernel.cl
+--- john-1.7.9-jumbo-5//src/ssha_opencl_kernel.cl	1970-01-01 00:00:00.000000000 +0000
++++ john-1.7.9-jumbo-5-opencl-5//src/ssha_opencl_kernel.cl	2012-01-17 10:29:45.434404832 +0000
+@@ -0,0 +1,273 @@
++/* Keep values shared by code and the OpenCL kernels here. This file is
++ * prepended to the OpenCL kernels during make. */
++
++#define MD4_NUM_KEYS          1024*2048
++#define MD4_PLAINTEXT_LENGTH  15
++#ifdef MD4
++#define PLAINTEXT_LENGTH      15
++#endif
++
++#define MD5_NUM_KEYS          1024*2048
++#define MD5_PLAINTEXT_LENGTH  15
++#ifdef MD5
++#define PLAINTEXT_LENGTH      15
++#endif
++
++/* 
++   This code was taken and merged from pyrit opencl sha1 routines royger's sample ( http://royger.org/opencl/?p=12) 
++   and largely inspired from md5_opencl_kernel.cl 
++   by Samuele Giovanni Tonon samu at linuxasylum dot net
++*/
++
++#define K0  0x5A827999
++#define K1  0x6ED9EBA1
++#define K2  0x8F1BBCDC
++#define K3  0xCA62C1D6
++
++#define H1 0x67452301
++#define H2 0xEFCDAB89
++#define H3 0x98BADCFE
++#define H4 0x10325476
++#define H5 0xC3D2E1F0
++
++#ifndef uint32_t
++#define uint32_t unsigned int
++#endif
++
++void prepare_msg(__global uchar *s, char *dest, __global uchar *salt, int blocksize) {
++    int i,k;
++    uint ulen;
++
++    for(i = 0; i < blocksize && s[i] != 0x80 ; i++){
++        dest[i] = s[i];
++    }
++    for(k=0; k<8;k++){
++        dest[i+k] = salt[k];
++    }
++    i = i+k;
++    ulen = (i * 8) & 0xFFFFFFFF;
++    dest[i] = (char) 0x80;
++    i=i+1;
++    for(;i<60;i++){
++	dest[i] = (char) 0;
++    }
++    dest[60] = ulen >> 24;
++    dest[61] = ulen >> 16;
++    dest[62] = ulen >> 8;
++    dest[63] = ulen;
++    
++    return;
++}
++
++__kernel void sha1_crypt_kernel(__global uint *data_info, __global uchar *salt, __global char *plain_key,  __global uint *digest){
++    int t, gid, msg_pad;
++    int i, stop, mmod;
++    uint ulen;
++    uint W[80], temp, A,B,C,D,E;
++    uint num_keys = data_info[1];
++    
++    gid = get_global_id(0);
++    msg_pad = gid * data_info[0];
++
++    A = H1;
++    B = H2;
++    C = H3;
++    D = H4;
++    E = H5;
++    
++//    prepare_msg(&plain_key[msg_pad],msg, salt, data_info[0]);
++
++
++/*
++Da completare, devo capire come passare la password e il salt direttamente a
++W[t] senza rompermi le balle, manca la parte di padding di quando la password
++non occupa esattamente due registri
++
++*/
++    for (t = 2; t < 15; t++){
++	W[t] = 0x00000000;
++    }
++    for(i = 0; i < data_info[0] && ((uchar) plain_key[msg_pad + i]) != 0x80 ; i++){
++    }
++
++    stop = i / 4 ;
++    for (t = 0 ; t < stop ; t++){
++        W[t] = ((uchar)  plain_key[msg_pad + t * 4]) << 24;
++        W[t] |= ((uchar) plain_key[msg_pad + t * 4 + 1]) << 16;
++        W[t] |= ((uchar) plain_key[msg_pad + t * 4 + 2]) << 8;
++        W[t] |= (uchar)  plain_key[msg_pad + t * 4 + 3];
++    }
++    mmod = i % 4;
++    if ( mmod == 3){
++        W[t] = ((uchar)  plain_key[msg_pad + t * 4]) << 24;
++        W[t] |= ((uchar) plain_key[msg_pad + t * 4 + 1]) << 16;
++        W[t] |= ((uchar) plain_key[msg_pad + t * 4 + 2]) << 8;
++        W[t] |= (uchar)  salt[0];
++	W[t+2] = ((uchar) salt[5]) << 24;
++        W[t+2] |=  ((uchar)  salt[6]) << 16;
++        W[t+2] |=  ((uchar)  salt[7]) << 8;
++        W[t+2] |=  ((uchar) 0x80) ;
++    	mmod = 4 - mmod;
++    } else if (mmod == 2) {
++        W[t] = ((uchar)  plain_key[msg_pad + t * 4]) << 24;
++        W[t] |= ((uchar) plain_key[msg_pad + t * 4 + 1]) << 16;
++        W[t] |= ((uchar)  salt[0]) << 8;
++        W[t] |= (uchar)  salt[1];
++        W[t+2] =  ((uchar)  salt[6]) << 24;
++        W[t+2] |=  ((uchar)  salt[7]) << 16;
++        W[t+2] |=  0x8000 ;
++    	mmod = 4 - mmod;
++    } else if (mmod == 1) {
++        W[t] = ((uchar)  plain_key[msg_pad + t * 4]) << 24;
++        W[t] |= ((uchar)  salt[0]) << 16;
++        W[t] |= ((uchar)  salt[1]) << 8;
++        W[t] |= (uchar)  salt[2];
++        W[t+2] =  ((uchar)  salt[7]) << 24;
++        W[t+2] |=  0x800000 ;
++    	mmod = 4 - mmod;
++    } else if (mmod == 0){
++        W[t+2] =  0x80000000 ;
++	t = t-1;
++    }
++    t = t+1;
++    for(; t < (stop + 2) && mmod < 8 ; t++ ){
++        W[t] = ((uchar)  salt[mmod]) << 24;
++        W[t] |= ((uchar)  salt[mmod + 1]) << 16;
++        W[t] |= ((uchar)  salt[mmod + 2]) << 8;
++        W[t] |= ((uchar)  salt[mmod + 3]);
++        mmod = mmod + 4;
++    }
++
++    i = i+8;
++    ulen = (i * 8) & 0xFFFFFFFF;
++    W[15] =  ulen ;   
++
++
++#undef R
++#define R(t)                                              \
++(                                                         \
++    temp = W[(t -  3) & 0x0F] ^ W[(t - 8) & 0x0F] ^       \
++           W[(t - 14) & 0x0F] ^ W[ t      & 0x0F],        \
++    ( W[t & 0x0F] = rotate((int)temp,1) )                 \
++)
++
++#undef P
++#define P(a,b,c,d,e,x)                                    \
++{                                                         \
++    e += rotate((int)a,5) + F(b,c,d) + K + x; b = rotate((int)b,30);\
++}
++
++#define F(x,y,z) (z ^ (x & (y ^ z)))
++#define K 0x5A827999
++  
++  P( A, B, C, D, E, W[0]  );
++  P( E, A, B, C, D, W[1]  );
++  P( D, E, A, B, C, W[2]  );
++  P( C, D, E, A, B, W[3]  );
++  P( B, C, D, E, A, W[4]  );
++  P( A, B, C, D, E, W[5]  );
++  P( E, A, B, C, D, W[6]  );
++  P( D, E, A, B, C, W[7]  );
++  P( C, D, E, A, B, W[8]  );
++  P( B, C, D, E, A, W[9]  );
++  P( A, B, C, D, E, W[10] );
++  P( E, A, B, C, D, W[11] );
++  P( D, E, A, B, C, W[12] );
++  P( C, D, E, A, B, W[13] );
++  P( B, C, D, E, A, W[14] );
++  P( A, B, C, D, E, W[15] );
++  P( E, A, B, C, D, R(16) );
++  P( D, E, A, B, C, R(17) );
++  P( C, D, E, A, B, R(18) );
++  P( B, C, D, E, A, R(19) );
++
++#undef K
++#undef F
++
++#define F(x,y,z) (x ^ y ^ z)
++#define K 0x6ED9EBA1
++  
++  P( A, B, C, D, E, R(20) );
++  P( E, A, B, C, D, R(21) );
++  P( D, E, A, B, C, R(22) );
++  P( C, D, E, A, B, R(23) );
++  P( B, C, D, E, A, R(24) );
++  P( A, B, C, D, E, R(25) );
++  P( E, A, B, C, D, R(26) );
++  P( D, E, A, B, C, R(27) );
++  P( C, D, E, A, B, R(28) );
++  P( B, C, D, E, A, R(29) );
++  P( A, B, C, D, E, R(30) );
++  P( E, A, B, C, D, R(31) );
++  P( D, E, A, B, C, R(32) );
++  P( C, D, E, A, B, R(33) );
++  P( B, C, D, E, A, R(34) );
++  P( A, B, C, D, E, R(35) );
++  P( E, A, B, C, D, R(36) );
++  P( D, E, A, B, C, R(37) );
++  P( C, D, E, A, B, R(38) );
++  P( B, C, D, E, A, R(39) );
++  
++#undef K
++#undef F
++  
++#define F(x,y,z) ((x & y) | (z & (x | y)))
++#define K 0x8F1BBCDC
++  
++  P( A, B, C, D, E, R(40) );
++  P( E, A, B, C, D, R(41) );
++  P( D, E, A, B, C, R(42) );
++  P( C, D, E, A, B, R(43) );
++  P( B, C, D, E, A, R(44) );
++  P( A, B, C, D, E, R(45) );
++  P( E, A, B, C, D, R(46) );
++  P( D, E, A, B, C, R(47) );
++  P( C, D, E, A, B, R(48) );
++  P( B, C, D, E, A, R(49) );
++  P( A, B, C, D, E, R(50) );
++  P( E, A, B, C, D, R(51) );
++  P( D, E, A, B, C, R(52) );
++  P( C, D, E, A, B, R(53) );
++  P( B, C, D, E, A, R(54) );
++  P( A, B, C, D, E, R(55) );
++  P( E, A, B, C, D, R(56) );
++  P( D, E, A, B, C, R(57) );
++  P( C, D, E, A, B, R(58) );
++  P( B, C, D, E, A, R(59) );
++  
++#undef K
++#undef F
++
++#define F(x,y,z) (x ^ y ^ z)
++#define K 0xCA62C1D6
++  
++  P( A, B, C, D, E, R(60) );
++  P( E, A, B, C, D, R(61) );
++  P( D, E, A, B, C, R(62) );
++  P( C, D, E, A, B, R(63) );
++  P( B, C, D, E, A, R(64) );
++  P( A, B, C, D, E, R(65) );
++  P( E, A, B, C, D, R(66) );
++  P( D, E, A, B, C, R(67) );
++  P( C, D, E, A, B, R(68) );
++  P( B, C, D, E, A, R(69) );
++  P( A, B, C, D, E, R(70) );
++  P( E, A, B, C, D, R(71) );
++  P( D, E, A, B, C, R(72) );
++  P( C, D, E, A, B, R(73) );
++  P( B, C, D, E, A, R(74) );
++  P( A, B, C, D, E, R(75) );
++  P( E, A, B, C, D, R(76) );
++  P( D, E, A, B, C, R(77) );
++  P( C, D, E, A, B, R(78) );
++  P( B, C, D, E, A, R(79) );
++
++#undef K
++#undef F
++  digest[gid] = as_uint(as_uchar4(A + H1).wzyx);
++  digest[gid+1*num_keys] = as_uint(as_uchar4(B + H2).wzyx);
++  digest[gid+2*num_keys] = as_uint(as_uchar4(C + H3).wzyx);
++  digest[gid+3*num_keys] = as_uint(as_uchar4(D + H4).wzyx);
++  digest[gid+4*num_keys] = as_uint(as_uchar4(E + H5).wzyx);
++
++}
