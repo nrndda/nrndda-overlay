@@ -3,11 +3,11 @@
 # $Header: /var/cvsroot/gentoo-x86/net-libs/libtorrent/libtorrent-0.12.7.ebuild,v 1.3 2011/04/13 21:30:46 sochotnicky Exp $
 
 EAPI=4
-inherit autotools eutils subversion toolchain-funcs
+inherit autotools eutils git-2 toolchain-funcs
 
 DESCRIPTION="BitTorrent library written in C++ for *nix"
 HOMEPAGE="http://libtorrent.rakshasa.no/"
-ESVN_REPO_URI="svn://rakshasa.no/libtorrent/trunk/libtorrent"
+EGIT_REPO_URI="git://github.com/rakshasa/libtorrent.git"
 
 LICENSE="GPL-2"
 SLOT="0"

@@ -17,7 +17,7 @@ KEYWORDS=""
 IUSE="debug ipv6 logwatch madwifi +ssl +wps"
 
 DEPEND="ssl? ( dev-libs/openssl )
-	>=dev-libs/libnl-1.1
+	dev-libs/libnl:1.1
 	madwifi? ( ||
 		( >net-wireless/madwifi-ng-tools-0.9.3
 		net-wireless/madwifi-old ) )"

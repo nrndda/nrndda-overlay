@@ -4,11 +4,11 @@
 
 EAPI=4
 
-inherit autotools eutils subversion
+inherit autotools eutils git-2
 
 DESCRIPTION="BitTorrent Client using libtorrent"
 HOMEPAGE="http://libtorrent.rakshasa.no/"
-ESVN_REPO_URI="svn://rakshasa.no/libtorrent/trunk/rtorrent"
+EGIT_REPO_URI="git://github.com/rakshasa/rtorrent.git"
 
 LICENSE="GPL-2"
 SLOT="0"
