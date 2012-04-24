@@ -1,3 +1,7 @@
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
 EAPI=4
 
 inherit eutils
@@ -10,6 +14,7 @@ HOMEPAGE="ftp://scon155.phys.msu.su/pub/russian/psfonts/"
 SRC_URI="ftp://scon155.phys.msu.su/pub/russian/psfonts/0.4d-beta/${MY_P}-tex.tar.gz
 ftp://scon155.phys.msu.su/pub/russian/psfonts/0.4d-beta/${MY_P}-type1.tar.gz"
 RESTRICT="mirror"
+IUSE=""
 
 LICENSE="LPPL-1.2"
 SLOT="0"
@@ -22,7 +27,7 @@ src_prepare() {
 
 src_install() {
 	dodir /usr/share/texmf-site
-	mv fonts tex ${D}/usr/share/texmf-site
+	mv fonts tex "${D}"/usr/share/texmf-site
 	insinto /usr/share/texmf-site/fonts/enc/dvips/pscyr
 	doins dvips/pscyr/{t2a,t2d}.enc
 	insinto /usr/share/texmf-site/fonts/map/dvips/pscyr
@@ -41,4 +46,3 @@ pkg_postinst() {
 pkg_postrm() {
 	/usr/sbin/texmf-update
 }
-
