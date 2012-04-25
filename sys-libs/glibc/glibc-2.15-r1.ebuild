@@ -177,6 +177,15 @@ eblit-run() {
 }
 
 src_unpack()  { eblit-run src_unpack  ; }
+src_prepare() {
+	#Fix cimpiling with crossdev.
+	#The .ctors/.dtors configure test that came in with a recent merge from FSF 
+	#glibc was another instance of a configure test that assumes by using 
+	#AC_TRY_LINK that you have a previous libc installation available for 
+	#configure tests to link with.  I've applied this patch to fix it similarly 
+	#to other tests to use nostartfiles -nostdlib and avoid that dependency.
+	epatch "${FILESDIR}"/2.15/ctors_dtors_fix.patch
+}
 src_compile() { eblit-run src_compile ; }
 src_test()    { eblit-run src_test    ; }
 src_install() { eblit-run src_install ; }
@@ -202,14 +211,6 @@ eblit-src_unpack-post() {
 		gcc-specs-pie && epatch "${FILESDIR}"/2.12/glibc-2.12-hardened-pie.patch
 		epatch "${FILESDIR}"/2.10/glibc-2.10-hardened-configure-picdefault.patch
 		epatch "${FILESDIR}"/2.10/glibc-2.10-hardened-inittls-nosysenter.patch
-
-		#Fix cimpiling with crossdev.
-		#The .ctors/.dtors configure test that came in with a recent merge from FSF 
-		#glibc was another instance of a configure test that assumes by using 
-		#AC_TRY_LINK that you have a previous libc installation available for 
-		#configure tests to link with.  I've applied this patch to fix it similarly 
-		#to other tests to use nostartfiles -nostdlib and avoid that dependency.
-		epatch "${FILESDIR}"/2.15/ctors_dtors_fix.patch
 
 		einfo "Installing Hardened Gentoo SSP and FORTIFY_SOURCE handler"
 		cp -f "${FILESDIR}"/2.6/glibc-2.6-gentoo-stack_chk_fail.c \
