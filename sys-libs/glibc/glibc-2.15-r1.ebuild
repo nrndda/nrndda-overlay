@@ -176,8 +176,8 @@ eblit-run() {
 	eblit-run-maybe eblit-$1-post
 }
 
-src_unpack()  { eblit-run src_unpack  ; }
-src_prepare() {
+src_unpack()  { eblit-run src_unpack  ;
+	cd "${S}"
 	#Fix cimpiling with crossdev.
 	#The .ctors/.dtors configure test that came in with a recent merge from FSF 
 	#glibc was another instance of a configure test that assumes by using 
