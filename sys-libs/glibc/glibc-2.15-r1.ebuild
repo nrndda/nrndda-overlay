@@ -177,15 +177,12 @@ eblit-run() {
 }
 
 #src_unpack()  { eblit-run src_unpack  ; }
-src_unpack()  { eblit-run src_unpack  ;
+src_unpack()  { 
+	eblit-run 
+	src_unpack
 	cd "${S}"
-	#Fix cimpiling with crossdev.
-	#The .ctors/.dtors configure test that came in with a recent merge from FSF 
-	#glibc was another instance of a configure test that assumes by using 
-	#AC_TRY_LINK that you have a previous libc installation available for 
-	#configure tests to link with.  I've applied this patch to fix it similarly 
-	#to other tests to use nostartfiles -nostdlib and avoid that dependency.
-	epatch "${FILESDIR}"/2.15/095_all_glibc-2.15-ctors-dtors-test.patch0095_all_glibc-2.15-ctors-dtors-test.patch
+	#Fix .ctors/.dtors header configure test for bootstrapping..
+	epatch "${FILESDIR}"/2.15/095_all_glibc-2.15-ctors-dtors-test.patch
 }
 src_compile() { eblit-run src_compile ; }
 src_test()    { eblit-run src_test    ; }
