@@ -177,9 +177,7 @@ eblit-run() {
 }
 
 #src_unpack()  { eblit-run src_unpack  ; }
-src_unpack()  { 
-	eblit-run 
-	src_unpack
+src_unpack()  { eblit-run src_unpack  ;
 	cd "${S}"
 	#Fix .ctors/.dtors header configure test for bootstrapping..
 	epatch "${FILESDIR}"/2.15/095_all_glibc-2.15-ctors-dtors-test.patch
