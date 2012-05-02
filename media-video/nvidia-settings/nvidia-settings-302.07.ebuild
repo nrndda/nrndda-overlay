@@ -33,7 +33,6 @@ DEPEND="${RDEPEND}
 	x11-proto/xproto"
 
 src_prepare() {
-	epatch "${FILESDIR}/0001-Makefile-improvements.patch"
 	epatch "${FILESDIR}/0002-Build-libNVCtrl-with-PIC.patch"
 
 	# The PM does it for us
