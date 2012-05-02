@@ -10,3 +10,4 @@
 
 #Beta version
 =x11-drivers/nvidia-drivers-302.07
+=media-video/nvidia-settings-302.07
