@@ -5,4 +5,8 @@
 ~net-libs/xulrunner-9999
 ~www-client/firefox-9999
 
+#Doesn't compile
 =x11-libs/cairo-1.12.2
+
+#Beta version
+=x11-drivers/nvidia-drivers-302.07
