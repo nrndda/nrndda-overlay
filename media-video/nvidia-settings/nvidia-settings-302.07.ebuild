@@ -33,8 +33,6 @@ DEPEND="${RDEPEND}
 	x11-proto/xproto"
 
 src_prepare() {
-	epatch "${FILESDIR}/0002-Build-libNVCtrl-with-PIC.patch"
-
 	# The PM does it for us
 	sed -i -e 's:^\(MANPAGE_GZIP ?=\) 1:\1 0:' Makefile || die
 }
