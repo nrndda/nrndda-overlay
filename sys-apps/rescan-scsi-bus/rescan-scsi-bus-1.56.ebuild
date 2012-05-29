@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/sys-apps/rescan-scsi-bus/rescan-scsi-bus-1.48.ebuild,v 1.1 2011/02/02 09:30:32 robbat2 Exp $
 
-inherit eutils
-
 EAPI=4
+
+inherit eutils
 
 DESCRIPTION="Script to rescan the SCSI bus without rebooting"
 HOMEPAGE="http://www.garloff.de/kurt/linux/"
