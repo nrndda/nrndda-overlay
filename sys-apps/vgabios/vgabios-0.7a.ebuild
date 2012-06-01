@@ -2,11 +2,11 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/sys-apps/vgabios/vgabios-0.7a.ebuild,v 1.5 2012/01/25 08:16:41 cardoe Exp $
 
+EAPI=4
+
 # Can't really call them backports when they're fixes that upstream
 # won't carry
 FIXES=1
-
-EAPI=4
 
 inherit eutils
 
