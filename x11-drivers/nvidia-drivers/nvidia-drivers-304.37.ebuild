@@ -300,7 +300,7 @@ src_prepare() {
 
 	if use kernel_linux; then
 		# Fix CVE-2012-xxxx VGA window resize vulnerability
-		epatch "${FILESDIR}"/nvidia-blacklist-vga-pmu-registers-256-304.diff
+		#epatch "${FILESDIR}"/nvidia-blacklist-vga-pmu-registers-256-304.diff
 
 		# Quiet down warnings the user does not need to see
 		sed -i \
