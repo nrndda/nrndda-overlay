@@ -1,0 +1,6 @@
+# Distributed under the terms of the GNU General Public License v2
+# $Header: Exp $
+
+#Example:
+#CONFIGS="/usr/share/phantom/foo.conf /usr/share/phantom/bar.conf"
+CONFIGS=""

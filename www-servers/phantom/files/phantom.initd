@@ -1,0 +1,49 @@
+#!/sbin/runscript
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: Exp $
+
+PROGNAME=${SVCNAME#*.}
+
+PHANTOM_EXEC=/usr/bin/phantom
+PIDPATH=/var/run/phantom
+LOGPATH=/var/log/phantom
+
+depend() {
+	need net
+}
+
+start() {
+	local OPTIONS
+
+	local ERR=0
+	ebegin "Starting Phantom instances"
+	if [ -z "${CONFIGS}" ]; then
+		eerror "No configs specified in conf.d/phantom"
+		eend 1
+		exit 1
+	fi
+	mkdir -p "${PIDPATH}"
+	mkdir -p "${LOGPATH}"
+	for I in ${CONFIGS}; do
+		ebegin "Starting ${I}"
+		start-stop-daemon --background -1 "${LOGPATH}"/$(basename ${I}).stdout.log -2 /dev/null --start --make-pidfile --pidfile  "${PIDPATH}/$(basename ${I}).pid" --exec "${PHANTOM_EXEC}" -- run ${I}
+		local STATUS=$?
+		let ERR+=${STATUS}
+		eend ${STATUS}
+	done
+	eend ${ERR}
+}
+
+stop() {
+	local ERR=0
+	ebegin "Stopping Phantom instances"
+	for I in ${CONFIGS}; do
+		ebegin "Stopping ${I}"
+		start-stop-daemon --stop "${PHANTOM_EXEC}" --pidfile "${PIDPATH}/$(basename ${I}).pid"
+		local STATUS=$?
+		let ERR+=${STATUS}
+		eend ${STATUS}
+	done
+	eend ${STATUS}
+}

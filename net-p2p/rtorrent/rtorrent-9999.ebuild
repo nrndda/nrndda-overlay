@@ -27,7 +27,7 @@ DEPEND="${COMMON_DEPEND}
 	dev-util/pkgconfig"
 
 src_prepare() {
-	use color && EPATCH_OPTS="-p1" epatch "${FILESDIR}"/${P}-canvas-fix.patch
+#	use color && EPATCH_OPTS="-p1" epatch "${FILESDIR}"/${P}-canvas-fix.patch
 	eautoreconf
 }
 
@@ -41,7 +41,7 @@ src_configure() {
 
 src_install() {
 	emake DESTDIR="${D}" install || die
-	dodoc AUTHORS README TODO doc/rtorrent.rc
+	dodoc AUTHORS README doc/rtorrent.rc
 
 	if use daemon; then
 		newinitd "${FILESDIR}/rtorrentd.init" rtorrentd || die "newinitd failed"
