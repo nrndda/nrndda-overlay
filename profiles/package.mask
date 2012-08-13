@@ -10,4 +10,5 @@
 
 #Beta version
 =x11-drivers/nvidia-drivers-304.30
+=x11-drivers/nvidia-drivers-304.22
 #=media-video/nvidia-settings-302.07
