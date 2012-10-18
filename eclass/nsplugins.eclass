@@ -1,6 +1,6 @@
-# Copyright 1999-2009 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/nsplugins.eclass,v 1.27 2011/11/21 16:31:49 anarchy Exp $
+# $Header: /var/cvsroot/gentoo-x86/eclass/nsplugins.eclass,v 1.31 2012/09/15 16:16:53 zmedico Exp $
 #
 # @ECLASS: nsplugins.eclass
 # @MAINTAINER:
@@ -12,9 +12,7 @@
 # Reusable functions that promote sharing of netscape/moz plugins, also provides
 # share_plugins_dir function for mozilla applications.
 
-inherit eutils
-
-DESCRIPTION="Based on the ${ECLASS} eclass"
+inherit eutils multilib
 
 PLUGINS_DIR="nsbrowser/plugins"
 
@@ -50,6 +48,11 @@ pkg_mv_plugins() {
 # This function installs a plugin with dosym to PLUGINS_DIR.
 # First argument should be the plugin file.
 inst_plugin() {
+	if [[ -z "${1}" ]]; then
+		eerror "The plugin file \"${1}\" does not exist."
+		die "No such file or directory."
+	fi
+
 	dodir /usr/$(get_libdir)/${PLUGINS_DIR}
 	dosym ${1} /usr/$(get_libdir)/${PLUGINS_DIR}/$(basename ${1})
 }
