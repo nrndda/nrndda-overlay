@@ -9,6 +9,6 @@
 =x11-libs/cairo-1.12.2
 
 #Beta version
-=x11-drivers/nvidia-drivers-304.30
+=x11-drivers/nvidia-drivers-310.14
 #=x11-drivers/nvidia-drivers-302.07
 #=media-video/nvidia-settings-302.07
