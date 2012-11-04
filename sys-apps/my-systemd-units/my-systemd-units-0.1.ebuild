@@ -30,7 +30,7 @@ DEPEND="sys-apps/systemd
 	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )"
 
-install_dir="/etc/systems/system/"
+install_dir="/etc/systemd/system/"
 
 src_install() {
 	insinto "${install_dir}"
