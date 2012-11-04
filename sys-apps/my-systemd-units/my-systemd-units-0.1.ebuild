@@ -35,13 +35,23 @@ install_dir="/etc/systems/system/"
 src_install() {
 	insinto "${install_dir}"
 
-	for i in auditd_stub eth0 wlan0 br0 hostapd hwclock microcode_ctl \
-	  ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng \
-	  vixie-cron zram ; do
+	for i in eth0 wlan0 br0 hostapd hwclock microcode_ctl ntp-client syslog-ng vixie-cron zram ; do
 		if use $i; then
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
 	done
+	
+	if use auditd_stub ; do
+		doins "${FILESDIR}"/auditd.service || die "doins failed"
+	fi
+
+	if use plymouth-quit-wait_stub ; do
+		doins "${FILESDIR}"/plymouth-quit-wait.service || die "doins failed"
+	fi
+
+	if use plymouth-start_stub ; do
+		doins "${FILESDIR}"/plymouth-start.service || die "doins failed"
+	fi
 
 	if use distccd ; then
 		doins "${FILESDIR}"/distccd.service || die "doins failed"
