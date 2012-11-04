@@ -41,15 +41,15 @@ src_install() {
 		fi
 	done
 	
-	if use auditd_stub ; do
+	if use auditd_stub ; then
 		doins "${FILESDIR}"/auditd.service || die "doins failed"
 	fi
 
-	if use plymouth-quit-wait_stub ; do
+	if use plymouth-quit-wait_stub ; then
 		doins "${FILESDIR}"/plymouth-quit-wait.service || die "doins failed"
 	fi
 
-	if use plymouth-start_stub ; do
+	if use plymouth-start_stub ; then
 		doins "${FILESDIR}"/plymouth-start.service || die "doins failed"
 	fi
 
