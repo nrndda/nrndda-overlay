@@ -33,7 +33,7 @@ DEPEND="sys-apps/systemd
 install_dir="/etc/systems/system/"
 
 src_install() {
-	insinto "${dir}"
+	insinto "${install_dir}"
 
 	for i in auditd_stub eth0 wlan0 br0 hostapd hwclock microcode_ctl \
 	  ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng \
