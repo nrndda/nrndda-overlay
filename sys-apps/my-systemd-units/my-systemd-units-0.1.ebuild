@@ -35,7 +35,7 @@ install_dir="/etc/systemd/system/"
 src_install() {
 	insinto "${install_dir}"
 
-	for i in eth0 wlan0 br0 hostapd hwclock microcode_ctl ntp-client syslog-ng vixie-cron zram ; do
+	for i in eth0 wlan0 br0 hostapd hwclock microcode_ctl ntp-client kdm syslog-ng vixie-cron zram ; do
 		if use $i; then
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
