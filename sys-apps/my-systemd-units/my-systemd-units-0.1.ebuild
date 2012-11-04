@@ -14,13 +14,13 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+auditd_stub +dbus +distccd +eth0 +wlan0 +br0 +hostapd +hwclock +kdm +microcode_ctl \
-	+ntp-client +plymouth-quit-wait_stub +plymouth-start_stub +syslog-ng \
-	+vixie-cron +zram"
+IUSE="auditd_stub dbus distccd eth0 wlan0 br0 hostapd hwclock kdm microcode_ctl \
+	ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng \
+	vixie-cron zram"
 
 DEPEND="sys-apps/systemd
 	dbus? ( sys-apps/dbus )
-	distccd? ( distccdsys-devel/distcc )
+	distccd? ( sys-devel/distcc )
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	hwclock? ( sys-apps/util-linux )
