@@ -1,0 +1,11 @@
+[Unit]
+Description=CPU microcode updater
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/bash -c " /bin/grep -qs ' microcode$' /proc/misc || /usr/bin/modprobe -q microcode "
+ExecStart=/usr/sbin/microcode_ctl -qu -f /lib/firmware/microcode.dat
+
+[Install]
+WantedBy=multi-user.target

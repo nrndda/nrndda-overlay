@@ -1,0 +1,15 @@
+[Unit]
+Description=ZRAM
+#DefaultDependencies=no
+#Requires=udev-settle.service
+#After=udev-settle.service
+#Before=shutdown.target local-fs.target
+
+[Service]
+Type=oneshot
+#RemainAfterExit=yes
+#ExecStart=/usr/local/sbin/zram.sh start
+#ExecStop=/usr/local/sbin/zram.sh stop
+
+[Install]
+WantedBy=sysinit.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Hostapd wifi ap
+After=br0.service wlan0.service
+Requires=br0.service wlan0.service
+
+[Service]
+Type=forking
+ExecStartPre=/bin/mkdir -p /run/hostapd/
+ExecStartPre=/bin/chown root:wheel run/hostapd
+ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd.pid /etc/hostapd/hostapd.conf
+#ExecStop=/bin/kill $(cat /run/hostapd/hostapd.pid)
+ExecReload=/bin/kill -HUP $(cat /run/hostapd/hostapd.pid) > /dev/null 2>&1
+PIDFile=/run/hostapd/hostapd.pid
+
+[Install]
+WantedBy=multi-user.target

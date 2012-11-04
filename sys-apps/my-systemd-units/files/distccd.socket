@@ -1,0 +1,10 @@
+[Unit]
+Description=Distccd Socket
+Conflicts=distccd.service
+
+[Socket]
+ListenStream=3632
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

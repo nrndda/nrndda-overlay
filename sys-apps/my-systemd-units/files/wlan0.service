@@ -1,0 +1,11 @@
+[Unit]
+Description=wlan0 Network Connectivity
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/ifconfig wlan0 0.0.0.0 up
+ExecStop=/bin/ifconfig wlan0 down
+
+[Install]
+WantedBy=network.target

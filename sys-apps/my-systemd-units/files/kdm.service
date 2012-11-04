@@ -1,0 +1,12 @@
+[Unit]
+Description=Display Manager
+After=syslog.target dbus.target
+#StandardOutput=syslog
+
+[Service]
+ExecStart=/usr/bin/kdm -nodaemon
+
+[Install]
+Alias=display-manager.service
+WantedBy=graphical.target
+

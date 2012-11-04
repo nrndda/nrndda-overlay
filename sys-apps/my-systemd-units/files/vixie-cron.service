@@ -1,0 +1,13 @@
+[Unit]
+Description=vixie-cron
+After=local-fs.target
+Requires=local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/cron
+PIDFile=/run/cron.pid
+
+[Install]
+Alias=cron.service
+WantedBy=multi-user.target
