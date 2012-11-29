@@ -1,6 +1,7 @@
 [Unit]
 Description=Display Manager
-After=syslog.target dbus.target
+After=syslog.target dbus.target systemd-logind.service network.target
+Requires=syslog.target dbus.target systemd-logind.service network.target
 #StandardOutput=syslog
 
 [Service]

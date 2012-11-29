@@ -1,7 +1,7 @@
 [Unit]
 Description=vixie-cron
-After=local-fs.target
-Requires=local-fs.target
+After=local-fs.target syslog.service
+Requires=local-fs.target syslog.service
 
 [Service]
 Type=forking

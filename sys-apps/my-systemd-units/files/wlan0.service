@@ -1,5 +1,6 @@
 [Unit]
 Description=wlan0 Network Connectivity
+After=systemd-modules-load.service systemd-udev-trigger.service
 
 [Service]
 Type=oneshot

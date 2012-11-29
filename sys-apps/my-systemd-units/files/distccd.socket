@@ -1,6 +1,8 @@
 [Unit]
 Description=Distccd Socket
 Conflicts=distccd.service
+After=network.target syslog.service
+Requires=network.target syslog.service
 
 [Socket]
 ListenStream=3632

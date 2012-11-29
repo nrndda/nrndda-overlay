@@ -1,5 +1,7 @@
 [Unit]
 Description=distcc per connection
+After=network.target syslog.service
+Requires=network.target syslog.service
 
 [Service]
 ExecStartPre=/bin/mkdir -p /run/distccd
