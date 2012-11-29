@@ -40,9 +40,15 @@ src_install() {
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
 	done
-	dosym br0_static.service br0.service
-	dosym vixie-cron.service cron.service
-	dosym syslog-ng.service syslog.service
+	if use br0_static; then
+		dosym br0_static.service br0.service
+	fi
+	if use vixie-cron; then
+		dosym vixie-cron.service cron.service
+	fi
+	if use syslog-ng; then
+		dosym syslog-ng.service syslog.service
+	fi
 	
 	if use auditd_stub ; then
 		doins "${FILESDIR}"/auditd.service || die "doins failed"
