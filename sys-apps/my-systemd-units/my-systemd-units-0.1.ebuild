@@ -14,19 +14,23 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="auditd_stub dbus distccd eth0 wlan0 br0 hostapd hwclock kdm microcode_ctl \
-	ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng \
+IUSE="auditd_stub dbus distccd dnsmasq eth0 wlan0 br0 hostapd hwclock kdm lvm microcode_ctl \
+	ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng samba nmbd \
 	vixie-cron zram"
 
 DEPEND="sys-apps/systemd
 	dbus? ( sys-apps/dbus )
 	distccd? ( sys-devel/distcc )
+	dnsmasq? ( net-dns/dnsmasq )
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	hwclock? ( sys-apps/util-linux )
 	kdm? ( kde-base/kdm )
+	lvm? ( sys-fs/lvm2 )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	ntp-client? ( net-misc/ntp )
+	samba? ( net-fs/samba )
+	nmbd? ( net-fs/samba )
 	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )"
 
@@ -35,7 +39,7 @@ install_dir="/etc/systemd/system/"
 src_install() {
 	insinto "${install_dir}"
 
-	for i in eth0 wlan0 br0_dynamic br0_static hostapd hwclock microcode_ctl ntp-client kdm syslog-ng vixie-cron zram ; do
+	for i in eth0 wlan0 br0_dynamic br0_static dnsmasq hostapd hwclock microcode_ctl ntp-client kdm lvm syslog-ng vixie-cron zram ; do
 		if use $i; then
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi

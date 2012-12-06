@@ -1,11 +1,15 @@
 [Unit]
 Description=Display Manager
-After=syslog.target dbus.target systemd-logind.service network.target
-Requires=syslog.target dbus.target systemd-logind.service network.target
+Conflicts=getty@tty1.service
+After=systemd-user-sessions.service getty@tty1.service plymouth-quit.service 
+#After=syslog.target dbus.target systemd-logind.service network.target
+#Requires=syslog.target dbus.target systemd-logind.service network.target
 #StandardOutput=syslog
 
 [Service]
 ExecStart=/usr/bin/kdm -nodaemon
+Restart=always
+IgnoreSIGPIPE=no
 
 [Install]
 Alias=display-manager.service
