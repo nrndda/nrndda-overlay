@@ -1,9 +1,0 @@
---- linuxigd-1.0_old/gatedevice.c       2012-01-16 23:11:58.677860838 +0400
-+++ linuxigd-1.0/gatedevice.c   2012-01-16 23:11:49.870990018 +0400
-@@ -1,5 +1,6 @@
- #include <syslog.h>
- #include <stdlib.h>
-+#include <stdio.h>
- #include <upnp/ixml.h>
- #include <string.h>
- #include <time.h>
