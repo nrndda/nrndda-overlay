@@ -67,6 +67,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-thumb-cache.patch
 	epatch "${FILESDIR}"/${P}-libav9.patch
 	epatch "${FILESDIR}"/${P}-no-thumbnail.patch
+	epatch "${FILESDIR}"/${P}-avformatcontext-pointer.patch
 
 	#Fix for samsung smart tv 2012
 	epatch "${FILESDIR}"/${P}-urifix.patch
