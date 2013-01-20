@@ -1,5 +1,5 @@
---- metadata/ffmpeg_handler.cc-old	2012-12-30 01:56:06.000000000 -0600
-+++ metadata/ffmpeg_handler.cc	2012-12-30 01:52:38.000000000 -0600
+--- mediatomb-0.12.1_old/src/metadata/ffmpeg_handler.cc	2012-12-30 01:56:06.000000000 -0600
++++ mediatomb-0.12.1/src/metadata/ffmpeg_handler.cc	2012-12-30 01:52:38.000000000 -0600
 @@ -281,7 +281,7 @@
      int x = 0;
      int y = 0;
