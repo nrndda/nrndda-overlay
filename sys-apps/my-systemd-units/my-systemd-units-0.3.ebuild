@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
-	 zram ${IUSE_STUBS}"
+	 zram php-fpm mediatomb ${IUSE_STUBS}"
 
 #REQUIRED_USE="
 #        ?? ( br0_dynamic br0_static )
@@ -33,6 +33,7 @@ DEPEND="sys-apps/systemd
 	kdm? ( kde-base/kdm )
 	lvm? ( sys-fs/lvm2 )
 	iptables? ( net-firewall/iptables )
+	mediatomb? ( net-misc/mediatomb )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	ntp? ( || ( net-misc/ntp net-misc/openntpd sys-apps/busybox ) )
 	samba? ( net-fs/samba )
@@ -48,7 +49,7 @@ src_install() {
 	insinto "${install_dir}"
 	dodir "${install_dir}"
 
-	for i in  br0_dynamic br0_static hostapd hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram ; do
+	for i in mediatomb php-fpm br0_dynamic br0_static hostapd hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram ; do
 		if use $i; then
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
@@ -87,7 +88,9 @@ src_install() {
 		doins "${FILESDIR}"/rpc.mountd.service || die "doins failed"
 		doins "${FILESDIR}"/rpc.statd.service || die "doins failed"
 		doins "${FILESDIR}"/sm-notify.service || die "doins failed"
-		doins "${FILESDIR}"/var-lib-nfs-rpc_pipefs.mount || die "doins failed"
+
+		doins "${FILESDIR}"/nfs3_client.target || die "doins failed"
+		doins "${FILESDIR}"/nfs4_client.target || die "doins failed"
 	fi
 	if use rtorrent ; then
 		doins "${FILESDIR}"/rtorrent.service || die "doins failed"

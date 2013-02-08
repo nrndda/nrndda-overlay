@@ -1,0 +1,11 @@
+[Unit]
+Description=MediaTomb Daemon
+After=network.target mysql.target
+
+[Service]
+EnvironmentFile=/etc/conf.d/mediatomb
+ExecStart=/usr/bin/mediatomb --logfile $MEDIATOMB_LOGFILE --user $MEDIATOMB_USER --group $MEDIATOMB_GROUP --config $MEDIATOMB_CONFIG --port $MEDIATOMB_PORT
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

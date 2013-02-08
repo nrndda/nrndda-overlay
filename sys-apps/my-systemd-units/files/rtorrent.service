@@ -2,6 +2,9 @@
 Description=rtorrent Service
 
 [Service]
-Type=oneshot
-ExecStart=/usr/bin/sudo -u myuser /usr/bin/screen -d -RR -X chdir /music
-ExecStart=/usr/bin/sudo -u myuser /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
+#Type=oneshot
+EnvironmentFile=/etc/conf.d/rtorrentd
+Restart=always
+#ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X chdir /music
+#ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
+ExecStart=/usr/bin/sudo -u $USER/usr/bin/screen -- -D -m -S rtorrentd /usr/bin/rtorrent
