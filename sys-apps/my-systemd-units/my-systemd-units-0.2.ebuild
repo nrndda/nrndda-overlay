@@ -50,23 +50,6 @@ src_install() {
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
 	done
-	if use br0_dynamic && use br0_static; then
-		eerror "Only one use (br0_dynamic,br0_static) allowed."
-	fi
-	for i in br0_dynamic br0_static ; do
-		if use $i; then
-			dosym "${install_dir}"/$i.service br0.service || die "dosym failed"
-		fi
-	done
-
-	if use vixie-cron; then
-		dosym "${install_dir}"/vixie-cron.service cron.service || die "dosym failed"
-	fi
-
-	if use syslog-ng; then
-		dosym "${install_dir}"/syslog-ng.service syslog.service || die "dosym failed"
-	fi
-	
 	if use plymouth ; then
 		doins "${FILESDIR}"/plymouth-quit-wait.service || die "doins failed"
 		doins "${FILESDIR}"/plymouth-start.service || die "doins failed"
@@ -82,6 +65,24 @@ src_install() {
 		doins "${FILESDIR}"/dbus.target || die "doins failed"
 	fi
 
+	if use br0_dynamic && use br0_static; then
+		eerror "Only one use (br0_dynamic,br0_static) allowed."
+	fi
+
+	for i in br0_dynamic br0_static ; do
+		if use $i; then
+			dosym "${install_dir}"/$i.service "${install_dir}"/br0.service || die "dosym failed"
+		fi
+	done
+
+	if use vixie-cron; then
+		dosym "${install_dir}"/vixie-cron.service "${install_dir}"/cron.service || die "dosym failed"
+	fi
+
+	if use syslog-ng; then
+		dosym "${install_dir}"/syslog-ng.service "${install_dir}"/syslog.service || die "dosym failed"
+	fi
+	
 	einfo
 	einfo "For enable unit type:"
 	einfo "systemctl enable unit.service"
