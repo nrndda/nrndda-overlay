@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI="3"
+EAPI="5"
 
 inherit eutils
 
@@ -14,15 +14,19 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="auditd_stub dbus distccd dnsmasq eth0 wlan0 br0 hostapd hwclock kdm lvm microcode_ctl \
-	ntp-client plymouth-quit-wait_stub plymouth-start_stub syslog-ng samba nmbd \
-	vixie-cron zram"
+IUSE="-auditd -dbus distccd dnsmasq eth0 wlan0 br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
+	ntp-client -plymouth syslog-ng samba nmbd vixie-cron zram"
+
+REQUIRED_USE="
+        ^^ ( br0_dynamic br0_static )
+"
 
 DEPEND="sys-apps/systemd
 	dbus? ( sys-apps/dbus )
 	distccd? ( sys-devel/distcc )
 	dnsmasq? ( net-dns/dnsmasq )
-	br0? ( net-misc/bridge-utils )
+	br0_dynamic? ( net-misc/bridge-utils )
+	br0_static? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	hwclock? ( sys-apps/util-linux )
 	kdm? ( kde-base/kdm )
@@ -39,30 +43,28 @@ install_dir="/etc/systemd/system/"
 src_install() {
 	insinto "${install_dir}"
 
-	for i in eth0 wlan0 br0_dynamic br0_static dnsmasq hostapd hwclock microcode_ctl ntp-client kdm lvm syslog-ng vixie-cron zram ; do
+	for i in auditd eth0 wlan0 br0_dynamic br0_static dnsmasq hostapd hwclock microcode_ctl ntp-client kdm lvm syslog-ng vixie-cron zram ; do
 		if use $i; then
 			doins "${FILESDIR}"/$i.service || die "doins failed"
 		fi
 	done
-	if use br0_static; then
-		dosym br0_static.service "${install_dir}"/br0.service
-	fi
+
+	for i in br0_dynamic br0_static ; do
+		if use $i; then
+			dosym $i.service "${install_dir}"/br0.service
+		fi
+	done
+
 	if use vixie-cron; then
 		dosym vixie-cron.service "${install_dir}"/cron.service
 	fi
+
 	if use syslog-ng; then
 		dosym syslog-ng.service "${install_dir}"/syslog.service
 	fi
 	
-	if use auditd_stub ; then
-		doins "${FILESDIR}"/auditd.service || die "doins failed"
-	fi
-
-	if use plymouth-quit-wait_stub ; then
+	if use plymouth ; then
 		doins "${FILESDIR}"/plymouth-quit-wait.service || die "doins failed"
-	fi
-
-	if use plymouth-start_stub ; then
 		doins "${FILESDIR}"/plymouth-start.service || die "doins failed"
 	fi
 
