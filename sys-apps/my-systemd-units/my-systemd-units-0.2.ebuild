@@ -60,7 +60,7 @@ src_install() {
 	done
 
 	if use vixie-cron; then
-		dosym ""${install_dir}"/vixie-cron.service cron.service || die "dosym failed"
+		dosym "${install_dir}"/vixie-cron.service cron.service || die "dosym failed"
 	fi
 
 	if use syslog-ng; then
