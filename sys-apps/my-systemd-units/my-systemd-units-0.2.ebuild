@@ -4,11 +4,11 @@
 
 EAPI="3"
 
-inherit eutils systemd distutils
+inherit eutils
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
-SRC_URI=""
+#SRC_URI=""
 #SRC_URI="ftp://nrndda.mine.nu/Apps/my_systemd_units-0.1.tar.gz
 #	ftp://10.0.0.2/Apps/my_systemd_units-0.1.tar.gz"
 
