@@ -1,7 +1,7 @@
 [Unit]
 Description=Syslog-ng
-After=local-fs.target var-log.mount
-Requires=local-fs.target var-log.mount
+After=local-fs.target
+Requires=local-fs.target
 DefaultDependencies=false
 
 [Service]
