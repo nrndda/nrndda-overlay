@@ -4,11 +4,11 @@
 
 EAPI="5"
 
-inherit eutils systemd
+inherit eutils systemd distutils
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
-#SRC_URI=""
+SRC_URI=""
 #SRC_URI="ftp://nrndda.mine.nu/Apps/my_systemd_units-0.1.tar.gz
 #	ftp://10.0.0.2/Apps/my_systemd_units-0.1.tar.gz"
 
@@ -40,6 +40,10 @@ DEPEND="sys-apps/systemd
 	vixie-cron? ( sys-process/vixie-cron )"
 
 install_dir="/etc/systemd/system/"
+
+src_prepare() {
+	mkdir -p "${S}"
+}
 
 src_install() {
 	insinto "${install_dir}"
