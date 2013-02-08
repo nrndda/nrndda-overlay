@@ -9,9 +9,9 @@ EnvironmentFile=/etc/conf.d/distccd
 ExecStartPre=/bin/mkdir -p /run/distccd
 ExecStartPre=/bin/chown distcc:daemon /run/distccd
 ExecStartPre=/bin/bash -c eval "$(gcc-config -E)"
-ExecStart=$DISTCCD_EXEC --user distcc --pid-file $DISTCCD_PIDFILE --daemon $DISTCCD_OPTS
+ExecStart=/usr/bin/distccd --user distcc --pid-file /run/distccd/distccd.pid --daemon --port 3632 --log-level error --log-file /var/log/distccd.log --allow 10.0.0.0/24 --allow ::ffff:10.0.0.0/24 --listen 10.0.0.3 --zeroconf
 #ExecStop=/bin/kill $(cat /run/distccd/distccd.pid)
-PIDFile=$DISTCCD_PIDFILE
+PIDFile=/run/distccd/distccd.pid
 
 [Install]
 WantedBy=multi-user.target
