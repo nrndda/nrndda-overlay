@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
-	 zram php-fpm mediatomb ${IUSE_STUBS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb ${IUSE_STUBS}"
 
 #REQUIRED_USE="
 #        ?? ( br0_dynamic br0_static )
@@ -43,7 +43,7 @@ DEPEND="sys-apps/systemd
 	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )"
 
-install_dir="/etc/systemd/system/"
+install_dir="/etc/systemd/system"
 
 src_install() {
 	insinto "${install_dir}"
@@ -105,7 +105,6 @@ src_install() {
 	fi
 
 
-
 	if use stub_dbus ; then
 		doins "${FILESDIR}"/dbus.target || die "doins failed"
 	fi
@@ -117,6 +116,9 @@ src_install() {
 		doins "${FILESDIR}"/plymouth-start.service || die "doins failed"
 	fi
 
+	if use no_tmp_as_tmpfs ; then 
+		dosym /dev/null "${install_dir}"/tmp.mount
+	fi
 
 	if use br0_dynamic && use br0_static; then
 		eerror "Only one use (br0_dynamic,br0_static) allowed."
