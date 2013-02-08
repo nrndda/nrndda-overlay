@@ -18,7 +18,7 @@ IUSE="-auditd -dbus distccd dnsmasq eth0 wlan0 br0_dynamic br0_static hostapd hw
 	ntp-client -plymouth syslog-ng samba nmbd vixie-cron zram"
 
 REQUIRED_USE="
-        ^^ ( br0_dynamic br0_static )
+        ?? ( br0_dynamic br0_static )
 "
 
 DEPEND="sys-apps/systemd
