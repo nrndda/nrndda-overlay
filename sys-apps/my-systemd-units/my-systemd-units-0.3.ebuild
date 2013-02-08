@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
-	ntp syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
+	ntp git syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ${IUSE_STUBS}"
 
 #REQUIRED_USE="
@@ -26,6 +26,7 @@ IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
+	git? ( dev-vcs/git )
 	br0_dynamic? ( net-misc/bridge-utils )
 	br0_static? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
@@ -58,6 +59,9 @@ src_install() {
 		doins "${FILESDIR}"/distccd.service || die "doins failed"
 		doins "${FILESDIR}"/distccd@.service || die "doins failed"
 		doins "${FILESDIR}"/distccd.socket || die "doins failed"
+	fi
+	if use git ; then
+		doins  "${FILESDIR}"/git-daemon@.service || die "doins failed"
 	fi
 	if use ntp ; then
 		doins "${FILESDIR}"/busybox_ntpd_client.service || die "doins failed"
