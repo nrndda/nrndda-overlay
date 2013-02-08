@@ -41,10 +41,6 @@ DEPEND="sys-apps/systemd
 
 install_dir="/etc/systemd/system/"
 
-src_prepare() {
-	mkdir -p "${S}"
-}
-
 src_install() {
 	insinto "${install_dir}"
 
