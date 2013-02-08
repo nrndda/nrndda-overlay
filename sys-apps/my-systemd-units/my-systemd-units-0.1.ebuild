@@ -45,13 +45,13 @@ src_install() {
 		fi
 	done
 	if use br0_static; then
-		dosym br0_static.service br0.service
+		dosym br0_static.service "${install_dir}"/br0.service
 	fi
 	if use vixie-cron; then
-		dosym vixie-cron.service cron.service
+		dosym vixie-cron.service "${install_dir}"/cron.service
 	fi
 	if use syslog-ng; then
-		dosym syslog-ng.service syslog.service
+		dosym syslog-ng.service "${install_dir}"/syslog.service
 	fi
 	
 	if use auditd_stub ; then
