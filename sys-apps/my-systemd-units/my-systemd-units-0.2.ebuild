@@ -52,16 +52,16 @@ src_install() {
 
 	for i in br0_dynamic br0_static ; do
 		if use $i; then
-			dosym "${FILESDIR}"/$i.service "${install_dir}"/br0.service
+			dosym "${FILESDIR}"/$i.service br0.service
 		fi
 	done
 
 	if use vixie-cron; then
-		dosym "${FILESDIR}"/vixie-cron.service "${install_dir}"/cron.service
+		dosym "${FILESDIR}"/vixie-cron.service cron.service
 	fi
 
 	if use syslog-ng; then
-		dosym "${FILESDIR}"/syslog-ng.service "${install_dir}"/syslog.service
+		dosym "${FILESDIR}"/syslog-ng.service syslog.service
 	fi
 	
 	if use plymouth ; then
