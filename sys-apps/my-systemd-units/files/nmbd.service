@@ -4,9 +4,7 @@ After=syslog.target
 After=network.target
 
 [Service]
-Group=samba
-
-ExecStart=/usr/sbin/smbd --pid-file=/var/run/samba/nmbd.pid
+ExecStart=/usr/sbin/smbd --piddir=/var/run/samba
 ExecStop=/bin/kill -15 $MAINPID
 PIDFile=/var/run/samba/nmbd.pid
 

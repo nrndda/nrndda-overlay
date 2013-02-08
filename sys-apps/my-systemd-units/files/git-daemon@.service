@@ -1,0 +1,9 @@
+[Unit]
+Description=Git Daemon Instance
+
+[Service]
+EnvironmentFile=/etc/conf.d/git-daemon
+ExecStart=/usr/bin/git daemon --inetd --syslog --verbose --base-path=/var/lib/gitolite/repositories
+StandardInput=socket
+StandardOutput=inherit
+StandardError=journal
