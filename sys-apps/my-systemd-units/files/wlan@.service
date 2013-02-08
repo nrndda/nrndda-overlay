@@ -1,0 +1,12 @@
+[Unit]
+Description=wlan%i Network Connectivity
+After=systemd-modules-load.service systemd-udev-trigger.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/ifconfig wlan%i 0.0.0.0 up
+ExecStop=/bin/ifconfig wlan%i down
+
+[Install]
+WantedBy=network.target

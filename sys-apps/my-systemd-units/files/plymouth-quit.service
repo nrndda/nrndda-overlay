@@ -1,0 +1,8 @@
+[Unit]
+Description=Plymouth stub
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
+

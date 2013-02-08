@@ -1,0 +1,27 @@
+#!/bin/sh
+# Copyright 1999-2011 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+iptables_proc="/proc/net/ip_tables_names"
+iptables_bin="/sbin/iptables"
+
+set_table_policy() {
+	local chains table=$1 policy=$2
+	case ${table} in
+		nat)    return;;
+		mangle) chains="PREROUTING INPUT FORWARD OUTPUT POSTROUTING";;
+		filter) chains="INPUT FORWARD OUTPUT";;
+		*)      chains="";;
+	esac
+	local chain
+	for chain in ${chains} ; do
+		${iptables_bin} -t ${table} -P ${chain} ${policy}
+	done
+}
+
+for a in $(cat ${iptables_proc}) ; do
+	${iptables_bin} -F -t $a
+	${iptables_bin} -X -t $a
+
+	set_table_policy $a DROP
+done

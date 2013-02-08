@@ -1,0 +1,7 @@
+[Unit]
+Description=rtorrent Service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sudo -u myuser /usr/bin/screen -d -RR -X chdir /music
+ExecStart=/usr/bin/sudo -u myuser /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent

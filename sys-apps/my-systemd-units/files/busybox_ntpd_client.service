@@ -1,0 +1,18 @@
+[Unit]
+Description=NTPd client from busybox
+Conflicts=ntpd.service ntp-client.service
+After=hwclock.service network.target
+Requires=hwclock.service network.target
+
+[Service]
+#always working
+ExecStart=/bin/busybox ntpd -n -p 0.gentoo.pool.ntp.org -p 1.gentoo.pool.ntp.org -p 2.gentoo.pool.ntp.org -p 3.gentoo.pool.ntp.org
+#just set clock and exit
+#Type=oneshot
+#RemainAfterExit=yes
+#ExecStart=/bin/busybox ntpd -q -n -p 0.gentoo.pool.ntp.org -p 1.gentoo.pool.ntp.org -p 2.gentoo.pool.ntp.org -p 3.gentoo.pool.ntp.org
+
+
+[Install]
+WantedBy=multi-user.target
+
