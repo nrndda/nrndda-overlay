@@ -4,6 +4,7 @@ After=network.target syslog.service
 Requires=network.target syslog.service
 
 [Service]
+Type=forking
 ExecStart=/usr/sbin/flexlm start
 ExecStop=/usr/sbin/flexlm stop
 ExecReload=/usr/sbin/flexlm reload

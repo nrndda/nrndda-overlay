@@ -2,12 +2,18 @@
 Description=rtorrent Service
 
 [Service]
-#Type=oneshot
+User=nrndda
+Group=nrndda
+
+Type=forking
 EnvironmentFile=/etc/conf.d/rtorrentd
-Restart=always
+#Restart=always
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X chdir /music
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
-ExecStart=/usr/bin/sudo -u nrndda /usr/bin/screen -- -D -m -S rtorrentd /usr/bin/rtorrent
+#ExecStart=/usr/bin/sudo -u nrndda -g nrndda /usr/bin/screen -- -DmS rtorrent /usr/bin/rtorrent
+ExecStart=/usr/bin/screen -dmS rtorrent /usr/bin/rtorrent
+ExecStop=/usr/bin/screen -S rtorrent -X quit
+
 
 [Install]
 WantedBy=multi-user.target
