@@ -2,7 +2,11 @@
 Description=Git Daemon Instance
 
 [Service]
+User=gitdaemon
+Group=git
+
 EnvironmentFile=/etc/conf.d/git-daemon
+# The '-' is to ignore non-zero exit statuses
 ExecStart=/usr/bin/git daemon --inetd --syslog --verbose --base-path=/var/lib/gitolite/repositories
 StandardInput=socket
 StandardOutput=inherit

@@ -1,0 +1,12 @@
+[Unit]
+Description=FlexLM license manager for synopsys
+After=network.target syslog.service
+Requires=network.target syslog.service
+
+[Service]
+ExecStart=/usr/sbin/flexlm start
+ExecStop=/usr/sbin/flexlm stop
+ExecReload=/usr/sbin/flexlm reload
+
+[Install]
+WantedBy=multi-user.target

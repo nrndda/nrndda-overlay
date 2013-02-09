@@ -7,7 +7,7 @@ EnvironmentFile=/etc/conf.d/rtorrentd
 Restart=always
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X chdir /music
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
-ExecStart=/usr/bin/sudo -u $USER/usr/bin/screen -- -D -m -S rtorrentd /usr/bin/rtorrent
+ExecStart=/usr/bin/sudo -u nrndda /usr/bin/screen -- -D -m -S rtorrentd /usr/bin/rtorrent
 
 [Install]
 WantedBy=multi-user.target
