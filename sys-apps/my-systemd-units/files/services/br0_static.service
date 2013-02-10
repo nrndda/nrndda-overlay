@@ -1,7 +1,7 @@
 [Unit]
 Description=br0 Static Network Connectivity
-Requires=eth0.service
-After=eth0.service
+Requires=eth@0.service
+After=eth@0.service
 
 [Service]
 Type=oneshot

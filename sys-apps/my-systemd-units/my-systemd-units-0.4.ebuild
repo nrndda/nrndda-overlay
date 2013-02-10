@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban flexlm ${IUSE_STUBS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS}"
 
 #REQUIRED_USE="
 #        ?? ( br0_dynamic br0_static )
@@ -43,11 +43,15 @@ DEPEND="sys-apps/systemd
 	screen? ( app-misc/screen )
 	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )
-	fail2ban? ( net-analyzer/fail2ban )"
+	fail2ban? ( net-analyzer/fail2ban )
+	nut? ( sys-power/nut )"
 
 install_dir="/etc/systemd/system"
 
 src_install() {
+        insinto "/etc/tmpfiles.d"
+        dodir "/etc/tmpfiles.d"
+        doins "${FILESDIR}"/tmpfiles.d/uptimed.conf || die "doins failed"
 	insinto "${install_dir}"
 	dodir "${install_dir}"
 
@@ -84,6 +88,11 @@ src_install() {
 		doins "${FILESDIR}"/services/busybox_ntpd_client.service || die "doins failed"
 		doins "${FILESDIR}"/services/ntp-client.service || die "doins failed"
 		doins "${FILESDIR}"/services/ntpd.service || die "doins failed"
+	fi
+	if use nut ; then
+		doins "${FILESDIR}"/services/nut-driver.service || die "doins failed"
+		doins "${FILESDIR}"/services/nut-monitor.service || die "doins failed"
+		doins "${FILESDIR}"/services/nut-server.service || die "doins failed"
 	fi
 	if use configure-printer ; then
 		doins "${FILESDIR}"/services/configure-printer@.service || die "doins failed"

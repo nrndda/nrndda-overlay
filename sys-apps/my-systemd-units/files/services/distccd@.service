@@ -7,5 +7,5 @@ Requires=network.target syslog.service
 #ExecStartPre=/bin/mkdir -p /run/distccd
 #ExecStartPre=/bin/chown distcc:daemon /run/distccd
 ExecStartPre=/bin/bash -c eval "$(gcc-config -E)"
-ExecStart=/usr/bin/distccd --user distcc --inetd --log-level error --log-file /var/log/distccd.log --allow 10.0.0.0/24 --allow ::ffff:10.0.0.0/24
+ExecStart=/usr/bin/distccd --user distcc --inetd --log-level error --log-file /var/log/distccd.log --allow 10.0.0.0/24 --allow ::ffff:10.0.0.0/24 --listen 10.0.0.3 --zeroconf
 StandardInput=socket

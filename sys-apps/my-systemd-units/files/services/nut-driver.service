@@ -1,0 +1,10 @@
+[Unit]
+Description=Network UPS Tools - power device driver controller
+After=local-fs.target network.target
+StopWhenUnneeded=yes
+
+[Service]
+ExecStart=/lib64/nut/upsdrvctl start
+ExecStop=/lib64/nut/upsdrvctl stop
+Type=forking
+
