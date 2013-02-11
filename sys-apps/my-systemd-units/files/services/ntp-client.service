@@ -5,9 +5,10 @@ Requires=hwclock.service network.target
 
 [Service]
 Type=oneshot
+#Restart=on-failure
 EnvironmentFile=/etc/conf.d/ntp-client
 RemainAfterExit=yes
-ExecStart=/usr/sbin/ntpdate -s -b -u 1.gentoo.pool.ntp.org 2.gentoo.pool.ntp.org 3.gentoo.pool.ntp.org 4.gentoo.pool.ntp.org
+ExecStart=/usr/sbin/ntpdate -t 60 -s -b -u 1.gentoo.pool.ntp.org 2.gentoo.pool.ntp.org 3.gentoo.pool.ntp.org 4.gentoo.pool.ntp.org
 
 [Install]
 WantedBy=multi-user.target
