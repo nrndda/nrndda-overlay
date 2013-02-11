@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
-	ntp git syslog-ng iptables nfs samba vixie-cron configure-printer rtorrent screen \
+	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS}"
 
 #REQUIRED_USE="
@@ -93,9 +93,6 @@ src_install() {
 		doins "${FILESDIR}"/services/nut-driver.service || die "doins failed"
 		doins "${FILESDIR}"/services/nut-monitor.service || die "doins failed"
 		doins "${FILESDIR}"/services/nut-server.service || die "doins failed"
-	fi
-	if use configure-printer ; then
-		doins "${FILESDIR}"/services/configure-printer@.service || die "doins failed"
 	fi
 	if use eth ; then
 		doins "${FILESDIR}"/services/eth0.service || die "doins failed"
