@@ -8,7 +8,7 @@ Type=oneshot
 Restart=on-failure
 EnvironmentFile=/etc/conf.d/ntp-client
 RemainAfterExit=yes
-ExecStart=/usr/sbin/ntpdate -t 120 -s -b -u 1.gentoo.pool.ntp.org 2.gentoo.pool.ntp.org 3.gentoo.pool.ntp.org 4.gentoo.pool.ntp.org
+ExecStart=/usr/sbin/ntpdate -t 30 -s -b -u 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org 4.pool.ntp.org
 
 [Install]
 WantedBy=multi-user.target
