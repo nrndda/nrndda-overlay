@@ -130,6 +130,11 @@ src_install() {
 	if use samba ; then
 		doins "${FILESDIR}"/services/samba.service || die "doins failed"
 		doins "${FILESDIR}"/services/nmbd.service || die "doins failed"
+                insinto "/etc/tmpfiles.d"
+                dodir "/etc/tmpfiles.d"
+                doins "${FILESDIR}"/tmpfiles.d/samba.conf || die "doins failed"
+                insinto "${install_dir}"
+                dodir "${install_dir}"
 	fi
 	if use screen ; then
 		doins "${FILESDIR}"/services/screen@.service || die "doins failed"
