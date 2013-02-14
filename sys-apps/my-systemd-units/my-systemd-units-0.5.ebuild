@@ -47,49 +47,49 @@ DEPEND="sys-apps/systemd
 	fail2ban? ( net-analyzer/fail2ban )
 	nut? ( sys-power/nut )"
 
-source_service_dir="${FILESDIR}"/services"
-source_tmpfiles_dir="${FILESDIR}"/tmpfiles"
-source_mounts_dir="${FILESDIR}"/mounts"
-source_sockets_dir="${FILESDIR}"/sockets"
-source_path_dir="${FILESDIR}"/path"
-source_targets_dir="${FILESDIR}"/targets"
+SOURCE_SERVICES_DIR="${FILESDIR}/services"
+SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
+SOURCE_MOUNTS_DIR="${FILESDIR}/mounts"
+SOURCE_SOCKETS_DIR="${FILESDIR}/sockets"
+SOURCE_PATH_DIR="${FILESDIR}/path"
+SOURCE_TARGETS_DIR="${FILESDIR}/targets"
 
-destination_service_dir="/etc/systemd/system"
-destination_tmpfiles_dir="/etc/tmpfiles.d"
-destination_mount_dir="/etc/systemd/system"
-destination_sockets_dir="/etc/systemd/system"
-destination_path_dir="/etc/systemd/system"
-destination_targets_dir="/etc/systemd/system"
+DESTINATION_SERVICES_DIR="/etc/systemd/system"
+DESTINATION_TMPFILES_DIR="/etc/tmpfiles.d"
+DESTINATION_MOUNTS_DIR="/etc/systemd/system"
+DESTINATION_SOCKETS_DIR="/etc/systemd/system"
+DESTINATION_PATH_DIR="/etc/systemd/system"
+DESTINATION_TARGETS_DIR="/etc/systemd/system"
 
 install_service() {
-	insinto "${destination_service_dir}"
-	dodir "${destination_service_dir}"
-	doins "${source_service_dir}"/$1
+	insinto "${DESTINATION_SERVICES_DIR}"
+	dodir "${DESTINATION_SERVICES_DIR}"
+	doins "${SOURCE_SERVICES_DIR}"/$1
 }
 install_tmpfile() {
-	insinto "${destination_tmpfiles_dir}"
-	dodir "${destination_tmpfiles_dir}"
-	doins "${source_tmpfiles_dir}"/$1
+	insinto "${DESTINATION_TMPFILES_DIR}"
+	dodir "${DESTINATION_TMPFILES_DIR}"
+	doins "${SOURCE_TMPFILES_DIR}"/$1
 }
 install_mount() {
-	insinto "${destination_mount_dir}"
-	dodir "${destination_mount_dir}"
-	doins "${source_mounts_dir}"/$1
+	insinto "${DESTINATION_MOUNTS_DIR}"
+	dodir "${DESTINATION_MOUNTS_DIR}"
+	doins "${SOURCE_MOUNTS_DIR}"/$1
 }
 install_socket() {
-	insinto "${destination_sockets_dir}"
-	dodir "${destination_sockets_dir}"
-	doins "${source_sockets_dir}"/$1
+	insinto "${DESTINATION_SOCKETS_DIR}"
+	dodir "${DESTINATION_SOCKETS_DIR}"
+	doins "${SOURCE_SOCKETS_DIR}"/$1
 }
 install_path() {
-	insinto "${destination_path_dir}"
-	dodir "${destination_path_dir}"
-	doins "${source_path_dir}"/$1
+	insinto "${DESTINATION_PATH_DIR}"
+	dodir "${DESTINATION_PATH_DIR}"
+	doins "${SOURCE_PATH_DIR}"/$1
 }
 install_target() {
-	insinto "${destination_targets_dir}"
-	dodir "${destination_targets_dir}"
-	doins "${source_targets_dir}"/$1
+	insinto "${DESTINATION_TARGETS_DIR}"
+	dodir "${DESTINATION_TARGETS_DIR}"
+	doins "${SOURCE_TARGETS_DIR}"/$1
 }
 
 src_install() {
@@ -188,26 +188,26 @@ src_install() {
 
 
 	if use mask_auditd; then
-		dosym /dev/null "${destination_service_dir}"/auditd.service || die "dosym failed"
+		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/auditd.service || die "dosym failed"
 	fi
 	if use mask_mysql.target; then
-		dosym /dev/null "${destination_target_dir}"/mysql.target || die "dosym failed"
+		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/mysql.target || die "dosym failed"
 	fi
 	if use mask_dbus.target; then
-		dosym /dev/null "${destination_target_dir}"/dbus.target || die "dosym failed"
+		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/dbus.target || die "dosym failed"
 	fi
 	if use mask_plymouth; then
-		dosym /dev/null "${destination_service_dir}"/plymouth-quit-wait.service || die "dosym failed"
-		dosym /dev/null "${destination_service_dir}"/plymouth-quit.service || die "dosym failed"
-		dosym /dev/null "${destination_service_dir}"/plymouth-start.service || die "dosym failed"
+		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-quit-wait.service || die "dosym failed"
+		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-quit.service || die "dosym failed"
+		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-start.service || die "dosym failed"
 	fi
 	if use mask_display-manager; then
-		dosym /dev/null "${destination_service_dir}"/display-manager.service || die "dosym failed"
+		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/display-manager.service || die "dosym failed"
 	fi
 
 
 	if use no_tmp_as_tmpfs ; then 
-		dosym /dev/null "${destination_mount_dir}"/tmp.mount
+		dosym /dev/null "${DESTINATION_MOUNTS_DIR}"/tmp.mount
 	fi
 
 	if use br0_dynamic && use br0_static; then
@@ -216,17 +216,24 @@ src_install() {
 
 	for i in br0_dynamic br0_static ; do
 		if use $i; then
-			dosym "${destination_service_dir}"/$i.service "${destination_service_dir}"/br0.service || die "dosym failed"
+			dosym "${DESTINATION_SERVICES_DIR}"/$i.service "${DESTINATION_SERVICES_DIR}"/br0.service || die "dosym failed"
 		fi
 	done
 
 	if use vixie-cron; then
-		dosym "${destination_service_dir}"/vixie-cron.service "${destination_service_dir}"/cron.service || die "dosym failed"
+		dosym "${DESTINATION_SERVICES_DIR}"/vixie-cron.service "${DESTINATION_SERVICES_DIR}"/cron.service || die "dosym failed"
 	fi
 
 	if use syslog-ng; then
-		dosym "${destination_service_dir}"/syslog-ng.service "${destination_service_dir}"/syslog.service || die "dosym failed"
+		dosym "${DESTINATION_SERVICES_DIR}"/syslog-ng.service "${DESTINATION_SERVICES_DIR}"/syslog.service || die "dosym failed"
 	fi
+	
+	einfo "Services installed into ${DESTINATION_SERVICES_DIR}"
+	einfo "Sockets installed into ${DESTINATION_SOCKETS_DIR}"
+	einfo "Tmpfiles installed into ${DESTINATION_TMPFILES_DIR}"
+	einfo "Targets installed into ${DESTINATION_TARGETS_DIR}"
+	einfo "Pathes installed into ${DESTINATION_PATH_DIR}"
+	einfo "Mounts installed into ${DESTINATION_MOUNTS_DIR}"
 	
 	einfo
 	einfo "For enable unit type:"
