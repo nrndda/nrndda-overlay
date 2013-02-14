@@ -16,9 +16,10 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
+IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_plumouth mask_display-manager"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
 #REQUIRED_USE="
 #        ?? ( br0_dynamic br0_static )
@@ -158,8 +159,29 @@ src_install() {
 	fi
 	if use stub_plymouth ; then
 		doins "${FILESDIR}"/services/plymouth-quit-wait.service || die "doins failed"
+		doins "${FILESDIR}"/services/plymouth-quit.service || die "doins failed"
 		doins "${FILESDIR}"/services/plymouth-start.service || die "doins failed"
 	fi
+
+
+	if use mask_auditd; then
+		dosym /dev/null "${install_dir}"/auditd.service || die "dosym failed"
+	fi
+	if use mask_mysql.target; then
+		dosym /dev/null "${install_dir}"/mysql.target || die "dosym failed"
+	fi
+	if use mask_dbus.target; then
+		dosym /dev/null "${install_dir}"/dbus.target || die "dosym failed"
+	fi
+	if use mask_plumouth; then
+		dosym /dev/null "${install_dir}"/plymouth-quit-wait.service || die "dosym failed"
+		dosym /dev/null "${install_dir}"/plymouth-quit.service || die "dosym failed"
+		dosym /dev/null "${install_dir}"/plymouth-start.service || die "dosym failed"
+	fi
+	if use mask_display-manager; then
+		dosym /dev/null "${install_dir}"/display-manager.service || die "dosym failed"
+	fi
+
 
 	if use no_tmp_as_tmpfs ; then 
 		dosym /dev/null "${install_dir}"/tmp.mount
