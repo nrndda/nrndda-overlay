@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
-IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_plymouth mask_display-manager"
+IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
 IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
@@ -195,6 +195,9 @@ src_install() {
 	fi
 	if use mask_dbus.target; then
 		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/dbus.target || die "dosym failed"
+	fi
+	if use mask_networking.target; then
+		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/networking.target || die "dosym failed"
 	fi
 	if use mask_plymouth; then
 		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-quit-wait.service || die "dosym failed"
