@@ -93,8 +93,8 @@ install_target() {
 }
 
 src_install() {
-        install_tmpfile "${FILESDIR}"/tmpfiles.d/uptimed.conf || die "install_tmpfile failed"
-	install_service "${FILESDIR}"/services/configure-printer@.service || die "install_service failed"
+        install_tmpfile uptimed.conf || die "install_tmpfile failed"
+	install_service configure-printer@.service || die "install_service failed"
 
 	for i in mediatomb php-fpm br0_dynamic br0_static hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram ; do
 		if use $i; then
