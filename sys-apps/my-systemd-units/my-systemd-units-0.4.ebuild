@@ -54,6 +54,7 @@ src_install() {
         doins "${FILESDIR}"/tmpfiles.d/uptimed.conf || die "doins failed"
 	insinto "${install_dir}"
 	dodir "${install_dir}"
+	doins "${FILESDIR}"/services/configure-printer@.service || die "doins failed"
 
 	for i in mediatomb php-fpm br0_dynamic br0_static hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram ; do
 		if use $i; then
