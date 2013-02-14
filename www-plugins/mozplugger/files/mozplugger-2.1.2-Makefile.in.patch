@@ -1,0 +1,25 @@
+--- Makefile.in_old	2013-02-14 22:34:41.600406113 +0400
++++ Makefile.in	2013-02-14 22:35:38.054710559 +0400
+@@ -261,14 +261,14 @@
+ 	make localinstall BROWSERDIR=.opera
+ 
+ install:
+-	-install -d @bindir@
+-	for a in $(EXE_FILES); do install $$a @bindir@ ; done
+-	-for a in ${PLUGINDIRS}; do install -d $$a ; done
+-	for a in ${PLUGINDIRS}; do install mozplugger.so $$a ; done
+-	-install -d @sysconfdir@
+-	install $(srcdir)/mozpluggerrc @sysconfdir@
+-	-install -d @mandir@/man7
+-	install $(srcdir)/mozplugger.7 @mandir@/man7/
++	-install -d ${root}@bindir@
++	for a in $(EXE_FILES); do install $$a ${root}@bindir@ ; done
++	-for a in ${PLUGINDIRS}; do install -d ${root}$$a ; done
++	for a in ${PLUGINDIRS}; do install mozplugger.so ${root}$$a ; done
++	-install -d ${root}@sysconfdir@
++	install $(srcdir)/mozpluggerrc ${root}@sysconfdir@
++	-install -d ${root}@mandir@/man7
++	install $(srcdir)/mozplugger.7 ${root}@mandir@/man7/
+ 
+ uninstall:
+ 	-rm -f @mandir@/man7/mozplugger.7

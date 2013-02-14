@@ -6,7 +6,7 @@
 ~www-client/firefox-9999
 
 #Wrong Makefile
-=www-plugins/mozplugger-2.1.2
+#=www-plugins/mozplugger-2.1.2
 
 #Beta version
 =x11-drivers/nvidia-drivers-310.14
