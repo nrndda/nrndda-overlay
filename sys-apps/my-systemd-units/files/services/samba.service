@@ -4,11 +4,12 @@ After=syslog.target
 After=network.target
 
 [Service]
+Type=forking
 ExecStart=/usr/sbin/smbd --piddir=/var/run/samba
 ExecStop=/bin/kill -15 $MAINPID
 PIDFile=/var/run/samba/smbd.pid
 
-Restart=always
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

@@ -156,7 +156,7 @@ src_install() {
 	fi
 
 	if use no_tmp_as_tmpfs ; then 
-		dosym /dev/null "${install_dir}"/mounts/tmp.mount
+		dosym /dev/null "${install_dir}"/tmp.mount
 	fi
 
 	if use br0_dynamic && use br0_static; then
