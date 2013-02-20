@@ -1,13 +1,18 @@
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+
 [Unit]
 Description=iptables
-Before=network.target
+DefaultDependencies=false
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-EnvironmentFile=/etc/conf.d/iptables
-ExecStart=/sbin/iptables-restore ${SAVE_RESTORE_OPTIONS} ${IPTABLES_SAVE}
-ExecStop=/usr/sbin/iptables-stop
+ExecStart=/sbin/iptables-restore /var/lib/iptables/rules-save
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target

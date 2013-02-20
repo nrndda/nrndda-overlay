@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
-IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
+IUSE="apache2 proftpd uptimed rsyncd distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
@@ -26,6 +26,7 @@ IUSE="distccd eth wlan br0_dynamic br0_static hostapd hwclock kdm lvm microcode_
 #"
 
 DEPEND="sys-apps/systemd
+	apache2? ( www-servers/apache )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
 	br0_dynamic? ( net-misc/bridge-utils )
@@ -34,6 +35,7 @@ DEPEND="sys-apps/systemd
 	hwclock? ( sys-apps/util-linux )
 	kdm? ( kde-base/kdm )
 	lvm? ( sys-fs/lvm2 )
+	proftpd? ( net-ftp/proftpd )
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
 	microcode_ctl? ( sys-apps/microcode-ctl )
@@ -41,11 +43,13 @@ DEPEND="sys-apps/systemd
 	samba? ( net-fs/samba )
 	nfs? ( net-fs/nfs-utils )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
+	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
 	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )
 	fail2ban? ( net-analyzer/fail2ban )
-	nut? ( sys-power/nut )"
+	nut? ( sys-power/nut )
+	uptimed? ( app-misc/uptimed )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -96,7 +100,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm br0_dynamic br0_static hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram ; do
+	for i in mediatomb php-fpm br0_dynamic br0_static hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 proftpd uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
