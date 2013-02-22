@@ -4,6 +4,7 @@ After=local-fs.target network.target
 StopWhenUnneeded=yes
 
 [Service]
+Restart=on-abort
 ExecStart=/lib64/nut/upsdrvctl start
 ExecStop=/lib64/nut/upsdrvctl stop
 Type=forking

@@ -3,7 +3,9 @@ Description=Ban IPs that make too many password failures
 After=syslog.target network.target
 
 [Service]
-#Type=forking
+Type=oneshot
+Restart=on-failure
+RemainAfterExit=yes
 ExecStart=/usr/bin/fail2ban-client start
 ExecReload=/usr/bin/fail2ban-client reload
 ExecStop=/usr/bin/fail2ban-client stop

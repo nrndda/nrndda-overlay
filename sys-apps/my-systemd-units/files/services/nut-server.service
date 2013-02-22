@@ -5,6 +5,7 @@ Requires=nut-driver.service
 Before=nut-monitor.service
 
 [Service]
+Restart=always
 ExecStart=/usr/sbin/upsd 
 Type=forking
 

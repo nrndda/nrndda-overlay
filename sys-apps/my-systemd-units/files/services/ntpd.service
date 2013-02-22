@@ -2,6 +2,7 @@
 Description=ntpd
 
 [Service]
+Restart=always
 ExecStart=/usr/sbin/ntpd -n
 
 [Install]

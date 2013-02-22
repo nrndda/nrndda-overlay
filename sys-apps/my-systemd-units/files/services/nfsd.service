@@ -4,6 +4,7 @@ Requires=rpcbind.service rpc.statd.service rpc.mountd.service
 
 [Service]
 Type=oneshot
+Restart=on-failure
 RemainAfterExit=yes
 EnvironmentFile=/etc/conf.d/nfs
 ExecStart=/usr/sbin/rpc.nfsd $OPTS_RPC_NFSD

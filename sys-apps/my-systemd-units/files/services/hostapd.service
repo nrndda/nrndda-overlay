@@ -5,6 +5,7 @@ Requires=br0.service wlan0.service syslog.service
 
 [Service]
 Type=forking
+Restart=always
 #ExecStartPre=/bin/mkdir -p /run/hostapd/
 #ExecStartPre=/bin/chown root:wheel run/hostapd
 ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd.pid /etc/hostapd/hostapd.conf

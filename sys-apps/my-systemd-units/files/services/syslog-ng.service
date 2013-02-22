@@ -6,6 +6,7 @@ DefaultDependencies=false
 
 [Service]
 Type=forking
+Restart=always
 ExecStart=/usr/sbin/syslog-ng --pidfile /run/syslog-ng.pid
 PIDFile=/run/syslog-ng.pid
 

@@ -5,6 +5,7 @@ Requires=network.target syslog.service
 
 [Service]
 Type=forking
+Restart=always
 EnvironmentFile=/etc/conf.d/distccd
 #ExecStartPre=/bin/mkdir -p /run/distccd
 #ExecStartPre=/bin/chown distcc:daemon /run/distccd

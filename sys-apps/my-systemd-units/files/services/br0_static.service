@@ -5,6 +5,7 @@ After=eth@0.service
 
 [Service]
 Type=oneshot
+Restart=on-failure
 RemainAfterExit=yes
 
 ExecStart=/bin/bash -c " if ! ( brctl show | grep -q br0 ); then /sbin/brctl addbr br0; fi "

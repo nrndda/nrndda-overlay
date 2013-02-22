@@ -5,6 +5,7 @@ Requires=local-fs.target syslog.service
 
 [Service]
 Type=forking
+Restart=always
 ExecStart=/usr/sbin/cron
 PIDFile=/run/cron.pid
 

@@ -5,6 +5,7 @@ After=network.target
 
 [Service]
 Type=forking
+Restart=always
 ExecStart=/usr/sbin/nmbd
 ExecStop=/bin/kill -15 $MAINPID
 PIDFile=/var/run/samba/nmbd.pid
