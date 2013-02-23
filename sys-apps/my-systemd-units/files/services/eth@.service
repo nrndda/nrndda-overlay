@@ -1,5 +1,6 @@
 [Unit]
 Description=eth%i Network Connectivity
+After=systemd-modules-load.service systemd-udev-trigger.service
 
 [Service]
 Type=oneshot

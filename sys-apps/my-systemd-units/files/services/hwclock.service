@@ -1,5 +1,6 @@
 [Unit]
 Description=hwclock
+Before=local-fs.target
 
 [Service]
 Type=oneshot

@@ -1,6 +1,6 @@
 [Unit]
 Description=NTP client
-After=hwclock.service network.target
+After=hwclock.service network.target systemd-readahead-collect.service systemd-readahead-replay.service systemd-readahead-done.service
 Requires=hwclock.service network.target
 
 [Service]
