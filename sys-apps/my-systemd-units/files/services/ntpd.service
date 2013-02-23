@@ -3,7 +3,7 @@ Description=ntpd
 
 [Service]
 Restart=always
-ExecStart=/usr/sbin/ntpd -n
+ExecStart=/usr/sbin/ntpd -d
 
 [Install]
 WantedBy=multi-user.target
