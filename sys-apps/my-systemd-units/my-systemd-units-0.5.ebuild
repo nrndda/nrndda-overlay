@@ -116,6 +116,7 @@ src_install() {
 	if use hostapd ; then
 		install_service hostapd.service || die "install_service failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
+	fi
 	if use proftpd ; then
 		install_service proftpd.service || die "install_service failed"
 		install_tmpfile proftpd.conf || die "install_tmpfile failed"
