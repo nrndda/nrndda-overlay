@@ -1,6 +1,8 @@
 [Unit]
 Description=hwclock
-Before=local-fs.target
+Conflicts=shutdown.target
+After=systemd-readahead-collect.service systemd-readahead-replay.service systemd-readahead-done.service
+Before=sysinit.target shutdown.target udev.service time-sync.target
 
 [Service]
 Type=oneshot
@@ -9,4 +11,4 @@ ExecStart=/sbin/hwclock --localtime --hctosys --localtime
 ExecStop=/sbin/hwclock --localtime --systohc --localtime
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target
