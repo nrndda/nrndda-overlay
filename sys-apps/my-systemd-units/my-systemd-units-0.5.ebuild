@@ -101,7 +101,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm br0_dynamic br0_static haveged hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 proftpd uptimed rsyncd ; do
+	for i in mediatomb php-fpm br0_dynamic br0_static haveged hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -116,6 +116,9 @@ src_install() {
 	if use hostapd ; then
 		install_service hostapd.service || die "install_service failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
+	if use proftpd ; then
+		install_service proftpd.service || die "install_service failed"
+		install_tmpfile proftpd.conf || die "install_tmpfile failed"
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
