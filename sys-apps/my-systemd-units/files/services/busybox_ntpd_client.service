@@ -1,8 +1,8 @@
 [Unit]
 Description=NTPd client from busybox
 Conflicts=ntpd.service ntp-client.service
-After=hwclock.service network.target
-Requires=hwclock.service network.target
+After=hwclock.service network.target systemd-readahead-collect.service systemd-readahead-replay.service systemd-readahead-done.service                                                                                                       
+Requires=network.target
 
 [Service]
 #always working
