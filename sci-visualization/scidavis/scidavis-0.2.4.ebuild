@@ -23,8 +23,8 @@ done
 CDEPEND="sys-libs/zlib
 	x11-libs/qwt:5[svg]
 	>=x11-libs/qwtplot3d-0.2.7
-	|| ( >=x11-libs/qt-assistant-4.7.0:4[compat] <x11-libs/qt-assistant-4.7.0:4 )
-	x11-libs/qt-qt3support:4
+	|| ( >=dev-qt/qthelp-4.7.0:4[compat] <dev-qt/qthelp-4.7.0:4 )
+	dev-qt/qtqt3support:4
 	>=dev-cpp/muParser-1.30
 	>=sci-libs/gsl-1.8"
 # remove because unsupported for now

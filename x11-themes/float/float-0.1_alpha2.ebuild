@@ -20,7 +20,7 @@ SLOT="0"
 IUSE="debug"
 
 DEPEND="
-	x11-libs/qt-gui:4
+	dev-qt/qtgui:4
 "
 RDEPEND="${DEPEND}"
 

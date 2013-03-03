@@ -16,7 +16,7 @@ KEYWORDS=""
 IUSE="doc"
 SLOT="0"
 
-RDEPEND="x11-libs/qt-gui:4
+RDEPEND="dev-qt/qtgui:4
 	sci-electronics/sapec-ng
 	>=x11-libs/qwt-6.0.0
 "

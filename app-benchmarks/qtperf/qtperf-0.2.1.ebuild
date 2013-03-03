@@ -15,8 +15,8 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug"
 
-RDEPEND="x11-libs/qt-gui
-	x11-libs/qt-core
+RDEPEND="dev-qt/qtgui
+	dev-qt/qtcore
 	dev-libs/glib"
 DEPEND="${RDEPEND}"
 S="${WORKDIR}/${PN}"
