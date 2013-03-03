@@ -5,8 +5,13 @@ After=hwclock.service network.target systemd-readahead-collect.service systemd-r
 Requires=network.target
 
 [Service]
-Restart=always
-ExecStart=/usr/sbin/ntpd -d > /dev/null 2>&1
+#Restart=always
+#ExecStart=/usr/sbin/ntpd -d > /dev/null 2>&1
+
+Type=oneshot
+Restart=on-failure
+RemainAfterExit=yes
+ExecStart=/usr/sbin/ntpd
 
 [Install]
 WantedBy=multi-user.target
