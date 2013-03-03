@@ -6,7 +6,7 @@ Requires=network.target
 
 [Service]
 Restart=always
-ExecStart=/usr/sbin/ntpd -d
+ExecStart=/usr/sbin/ntpd -d > /dev/null 2>&1
 
 [Install]
 WantedBy=multi-user.target
