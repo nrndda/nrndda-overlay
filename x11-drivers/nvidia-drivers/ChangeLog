@@ -1,6 +1,148 @@
 # ChangeLog for x11-drivers/nvidia-drivers
-# Copyright 1999-2012 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/ChangeLog,v 1.401 2012/10/17 13:12:13 jer Exp $
+# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/ChangeLog,v 1.432 2013/03/04 23:44:37 jer Exp $
+
+*nvidia-drivers-304.84 (04 Mar 2013)
+
+  04 Mar 2013; Jeroen Roovers <jer@gentoo.org> +nvidia-drivers-304.84.ebuild:
+  Version bump.
+
+  04 Mar 2013; Jeroen Roovers <jer@gentoo.org> metadata.xml:
+  Remove zerochaos.
+
+  04 Mar 2013; Rick Farina <zerochaos@gentoo.org> metadata.xml:
+  adding myself as maintainer
+
+  03 Mar 2013; Doug Goldstein <cardoe@gentoo.org> metadata.xml:
+  Removed myself from involvement in nvidia-drivers
+
+  02 Mar 2013; Doug Goldstein <cardoe@gentoo.org>
+  nvidia-drivers-173.14.36.ebuild, nvidia-drivers-304.64.ebuild,
+  nvidia-drivers-310.32.ebuild, nvidia-drivers-313.18.ebuild,
+  nvidia-drivers-96.43.23.ebuild:
+  Clarify ewarn language
+
+  02 Mar 2013; Doug Goldstein <cardoe@gentoo.org>
+  -files/nvidia-drivers-313.18-builddir-config.patch,
+  -files/nvidia-drivers-313.18-linux-3.7+.patch,
+  -files/nvidia-drivers-313.18-linux-3.8+.patch, nvidia-drivers-313.18.ebuild:
+  Revert non-maintainer changes per bug #447566.
+
+  02 Mar 2013; Samuli Suominen <ssuominen@gentoo.org>
+  nvidia-drivers-313.18.ebuild, +files/nvidia-drivers-313.18-linux-3.8+.patch:
+  Fix missing -I flag to get headers from arch/x86/include/uapi in use with
+  Linux 3.8.x wrt #447566, Comment #38
+
+  24 Feb 2013; Doug Goldstein <cardoe@gentoo.org> nvidia-drivers-310.32.ebuild:
+  stable on amd64 and x86 for stability fixes and new X.org Video ABI support
+
+  22 Feb 2013; Doug Goldstein <cardoe@gentoo.org>
+  nvidia-drivers-96.43.23.ebuild, nvidia-drivers-173.14.36.ebuild,
+  nvidia-drivers-304.64.ebuild, nvidia-drivers-310.32.ebuild,
+  nvidia-drivers-313.18.ebuild:
+  Add generic message to let people know they're on their own for newer kernels
+
+  22 Feb 2013; Doug Goldstein <cardoe@gentoo.org>
+  -nvidia-drivers-96.43.20.ebuild, -nvidia-drivers-173.14.35.ebuild,
+  -nvidia-drivers-295.75.ebuild:
+  Remove more versions
+
+  22 Feb 2013; Doug Goldstein <cardoe@gentoo.org>
+  -nvidia-drivers-295.71.ebuild, -nvidia-drivers-304.60.ebuild,
+  -nvidia-drivers-310.19.ebuild:
+  Remove some older versions
+
+  12 Feb 2013; Jeroen Roovers <jer@gentoo.org> nvidia-drivers-310.32.ebuild:
+  Update xorg-server ABI compatible version.
+
+*nvidia-drivers-310.32 (12 Feb 2013)
+
+  12 Feb 2013; Jeroen Roovers <jer@gentoo.org> +nvidia-drivers-310.32.ebuild:
+  Version bump by Ben Kohler (bug #455172).
+
+  12 Feb 2013; Mike Frysinger <vapier@gentoo.org>
+  +files/nvidia-drivers-313.18-builddir-config.patch,
+  +files/nvidia-drivers-313.18-linux-3.7+.patch, nvidia-drivers-313.18.ebuild:
+  Fix building with kernels that split obj & src dirs.  Fix building against
+  linux-3.7+ #447566 by Martin Väth.
+
+  20 Jan 2013; Pacho Ramos <pacho@gentoo.org> metadata.xml:
+  Cleanup due retirement, bug #35242
+
+  17 Jan 2013; Doug Goldstein <cardoe@gentoo.org> nvidia-drivers-313.18.ebuild:
+  Fix X.org server depend
+
+*nvidia-drivers-313.18 (16 Jan 2013)
+
+  16 Jan 2013; Doug Goldstein <cardoe@gentoo.org>
+  +nvidia-drivers-313.18.ebuild:
+  Version bump
+
+  19 Dec 2012; Alexandre Rostovtsev <tetromino@gentoo.org>
+  nvidia-drivers-96.43.20.ebuild, nvidia-drivers-96.43.23.ebuild,
+  nvidia-drivers-173.14.35.ebuild, nvidia-drivers-173.14.36.ebuild,
+  nvidia-drivers-295.71.ebuild, nvidia-drivers-295.75.ebuild,
+  nvidia-drivers-304.60.ebuild, nvidia-drivers-304.64.ebuild,
+  nvidia-drivers-310.19.ebuild:
+  Depend on pangox-compat if using pango-1.32.
+
+  11 Dec 2012; Samuli Suominen <ssuominen@gentoo.org>
+  nvidia-drivers-295.71.ebuild, nvidia-drivers-295.75.ebuild,
+  nvidia-drivers-304.60.ebuild, nvidia-drivers-304.64.ebuild,
+  nvidia-drivers-310.19.ebuild:
+  Use udev.eclass to install nvidia udev rules.
+
+  19 Nov 2012; Doug Goldstein <cardoe@gentoo.org> nvidia-drivers-310.19.ebuild:
+  Fix bad directory reference
+
+  19 Nov 2012; Jeroen Roovers <jer@gentoo.org> nvidia-drivers-96.43.23.ebuild:
+  Lower x11-base/xorg-server dependency (bug #443926).
+
+*nvidia-drivers-310.19 (19 Nov 2012)
+
+  19 Nov 2012; Doug Goldstein <cardoe@gentoo.org>
+  +nvidia-drivers-310.19.ebuild:
+  Version bump. Supports OpenGL 4.3 as well as additional 32-bit libraries on
+  64-bit multilib installs.
+
+  18 Nov 2012; Agostino Sarubbo <ago@gentoo.org>
+  nvidia-drivers-173.14.36.ebuild, nvidia-drivers-304.60.ebuild,
+  nvidia-drivers-304.64.ebuild, nvidia-drivers-96.43.23.ebuild:
+  stable on amd64 and x86
+
+  18 Nov 2012; Doug Goldstein <cardoe@gentoo.org> nvidia-drivers-295.75.ebuild:
+  Stabilize on x86 based on a user report in bug #435700 since x86 is falling
+  way behind.
+
+  18 Nov 2012; Doug Goldstein <cardoe@gentoo.org>
+  -nvidia-drivers-302.17-r1.ebuild, -nvidia-drivers-304.37-r1.ebuild,
+  -nvidia-drivers-304.43.ebuild, -nvidia-drivers-304.48.ebuild,
+  -nvidia-drivers-304.51.ebuild:
+  Remove older versions
+
+  14 Nov 2012; Agostino Sarubbo <ago@gentoo.org> nvidia-drivers-96.43.23.ebuild:
+  stable for amd64, wrt to bug #438246
+
+  14 Nov 2012; Agostino Sarubbo <ago@gentoo.org>
+  nvidia-drivers-173.14.36.ebuild:
+  Stable for amd64, wrt bug #438246
+
+  13 Nov 2012; Doug Goldstein <cardoe@gentoo.org> nvidia-drivers-304.60.ebuild:
+  Stabilize 304.60 for amd64. bug #438246
+
+*nvidia-drivers-304.64 (07 Nov 2012)
+
+  07 Nov 2012; Jeroen Roovers <jer@gentoo.org> +nvidia-drivers-304.64.ebuild:
+  Version bump.
+
+  19 Oct 2012; Agostino Sarubbo <ago@gentoo.org> nvidia-drivers-295.75.ebuild:
+  Stable for AMD64, wrt bug #435700
+
+*nvidia-drivers-304.60 (19 Oct 2012)
+
+  19 Oct 2012; Doug Goldstein <cardoe@gentoo.org>
+  +nvidia-drivers-304.60.ebuild:
+  Version bump.
 
 *nvidia-drivers-173.14.36 (17 Oct 2012)
 
@@ -126,12 +268,6 @@
 
   10 Aug 2012; Jeroen Roovers <jer@gentoo.org> nvidia-drivers-173.14.35.ebuild:
   Stable for AMD64 (bug #426642).
-
-  10 Aug 2012; Samuli Suominen <ssuominen@gentoo.org>
-  nvidia-drivers-295.59-r1.ebuild, nvidia-drivers-302.17-r1.ebuild,
-  nvidia-drivers-304.22.ebuild:
-  Read udevdir from udev.pc pkg-config file for compability with sys-fs/udev >=
-  187.
 
 *nvidia-drivers-295.71 (08 Aug 2012)
 
