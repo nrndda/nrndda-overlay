@@ -1,6 +1,7 @@
 [Unit]
 Description=br0 Network Connectivity
 After=systemd-modules-load.service systemd-udev-trigger.service
+Conflicts=br0_static.service
 
 [Service]
 Type=forking
@@ -22,3 +23,4 @@ PIDFile=/run/dhclient.pid
 
 [Install]
 WantedBy=network.target
+Alias=br0.service

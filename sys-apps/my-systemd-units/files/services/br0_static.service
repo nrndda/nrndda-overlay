@@ -1,6 +1,7 @@
 [Unit]
 Description=br0 Static Network Connectivity
 After=systemd-modules-load.service systemd-udev-trigger.service
+Conflicts=br0_dynamic.service
 
 [Service]
 Type=oneshot
@@ -23,3 +24,4 @@ ExecStop=/bin/bash -c " if ! ( brctl show | grep -q br0 ); then /sbin/brctl delb
 
 [Install]
 WantedBy=network.target
+Alias=br0.service

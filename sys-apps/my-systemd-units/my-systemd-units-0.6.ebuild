@@ -17,20 +17,15 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
-IUSE="apache2 proftpd uptimed rsyncd distccd br0_dynamic br0_static hostapd haveged hwclock kdm lvm microcode_ctl \
+IUSE="apache2 proftpd uptimed rsyncd distccd br0 hostapd haveged hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
-
-#REQUIRED_USE="
-#        ?? ( br0_dynamic br0_static )
-#"
 
 DEPEND="sys-apps/systemd
 	apache2? ( www-servers/apache )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
-	br0_dynamic? ( net-misc/bridge-utils )
-	br0_static? ( net-misc/bridge-utils )
+	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	haveged? ( sys-apps/haveged )
 	hwclock? ( sys-apps/util-linux )
@@ -101,11 +96,15 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm br0_dynamic br0_static haveged hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 uptimed rsyncd ; do
+	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
 	done
+	if use br0; then
+		install_service br0_static.service || die "install_service failed"
+		install_service br0_dynamic.service || die "install_service failed"
+	fi
 	if use distccd ; then
 		install_service distccd.service || die "install_service failed"
 		install_service distccd@.service || die "install_service failed"
@@ -213,16 +212,6 @@ src_install() {
 	if use no_tmp_as_tmpfs ; then 
 		dosym /dev/null "${DESTINATION_MOUNTS_DIR}"/tmp.mount
 	fi
-
-	if use br0_dynamic && use br0_static; then
-		eerror "Only one use (br0_dynamic,br0_static) allowed."
-	fi
-
-	for i in br0_dynamic br0_static ; do
-		if use $i; then
-			dosym "${DESTINATION_SERVICES_DIR}"/$i.service "${DESTINATION_SERVICES_DIR}"/br0.service || die "dosym failed"
-		fi
-	done
 
 	if use vixie-cron; then
 		dosym "${DESTINATION_SERVICES_DIR}"/vixie-cron.service "${DESTINATION_SERVICES_DIR}"/cron.service || die "dosym failed"
