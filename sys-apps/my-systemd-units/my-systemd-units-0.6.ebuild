@@ -96,7 +96,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm syslog-ng vixie-cron zram apache2 uptimed rsyncd ; do
+	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron zram apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -167,6 +167,10 @@ src_install() {
 	fi
 	if use screen ; then
 		install_service screen@.service || die "install_service failed"
+	fi
+	if use syslog-ng ; then
+		install_target syslog.target || die "install_target failed"
+		install_service syslog-ng.service || die "install_service failed"
 	fi
 	if use fail2ban ; then
 		install_service fail2ban.service || die "install_service failed"
