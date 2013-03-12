@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
-IUSE="apache2 proftpd uptimed rsyncd distccd eth wlan br0_dynamic br0_static hostapd haveged hwclock kdm lvm microcode_ctl \
+IUSE="apache2 proftpd uptimed rsyncd distccd br0_dynamic br0_static hostapd haveged hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
@@ -135,14 +135,6 @@ src_install() {
 		install_service nut-driver.service || die "install_service failed"
 		install_service nut-monitor.service || die "install_service failed"
 		install_service nut-server.service || die "install_service failed"
-	fi
-	if use eth ; then
-		install_service eth0.service || die "install_service failed"
-		install_service eth@.service || die "install_service failed"
-	fi
-	if use wlan ; then
-		install_service wlan0.service || die "install_service failed"
-		install_service wlan@.service || die "install_service failed"
 	fi
 	if use iptables ; then
 		install_service iptables.service || die "install_service failed"
