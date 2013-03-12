@@ -1,6 +1,6 @@
 [Unit]
 Description=MediaTomb Daemon
-After=network.target mysqld.service
+After=network.target
 
 [Service]
 EnvironmentFile=/etc/conf.d/mediatomb
