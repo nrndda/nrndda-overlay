@@ -180,6 +180,7 @@ src_install() {
 		install_service zram.service || die "install_service failed"
 		dosbin "${FILESDIR}"/zram || die "dosbin failed"
 		dosbin "${FILESDIR}"/zram_statistic || die "dosbin failed"
+		newconfd "${FILESDIR}"/zram.conf zram || die "newconfd failed"
 	fi
 
 

@@ -23,16 +23,17 @@ start() {
                 chmod 0775 /tmp/portage_nozram
         else
 	        if ( grep -qi "swap_zram" /proc/cmdline); then
-			CPUS=`grep /proc/cpuinfo -e processor|wc -l`
-		        RAM=`grep /proc/meminfo -e MemTotal|grep -o -E '[[:digit:]]+'`
-		        USERAM=$(( $RAM / 2 ))
-		        DEVRAM=$(( $USERAM / $CPUS ))
-			echo "Activating $CPUS zram swap device(s), using total $USERAM kb, $DEVRAM kb per device."
+			CPUS=`grep -c processor /proc/cpuinfo`
+		        RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
+			FACTOR=50
+			[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
+			mem_by_cpu=$(($RAM/$CPUS*$FACTOR/100*1024))
+			echo "Activating $CPUS zram swap device(s), using $mem_by_cpu per cpu."
 
 			modprobe zram num_devices=${CPUS}
 
 		        for (( i=0; i<$CPUS; i++ )); do
-		                echo $(($DEVRAM*1024)) > /sys/block/zram$i/disksize
+		                echo $mem_by_cpu > /sys/block/zram$i/disksize
 		                mkswap /dev/zram$i
 		                swapon -d -p 10 /dev/zram$i
 		        done
@@ -48,10 +49,13 @@ stop() {
         fi
 	if ( grep -qi "swap_zram" /proc/cmdline ); then
 		echo "Disactivating Swap ZRAM"
-		swapoff /dev/zram0
-		swapoff /dev/zram1
-		echo 1 > /sys/block/zram0/reset
-		echo 1 > /sys/block/zram1/reset
+		CPUS=`grep -c processor /proc/cpuinfo`
+			for (( i=0; i<$CPUS; i++ )); do
+				grep -q "/dev/zram$i" /proc/swaps && swapoff /dev/zram$i
+				grep -q "/dev/zram$i" /proc/swaps && echo 1 > /sys/block/zram$i/reset
+                        done
+		sleep 1
+		rmmod zram
 	fi
 }
 
