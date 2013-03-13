@@ -96,7 +96,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron zram apache2 uptimed rsyncd ; do
+	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -175,6 +175,10 @@ src_install() {
 	if use fail2ban ; then
 		install_service fail2ban.service || die "install_service failed"
 		install_tmpfile fail2ban.conf || die "install_tmpfile failed"
+	fi
+	if use zram ; then
+		install_service zram.service || die "install_service failed"
+		dosbin "${FILESDIR}"/zram || die "dosbin failed"
 	fi
 
 

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+start() {
+        #if get_bootparam "tmp_zram" ; then
+        #       ebegin "Creating ZRAM /tmp and mounting"
+        #       echo $size > /sys/block/zram0/disksize
+        #       mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 -N $inodes -L "zram0" /dev/zram0
+        #       mount -o barrier=0,commit=240,noatime,nodev /dev/zram0 /tmp
+        #       chmod 1777 /tmp
+        #fi
+
+        if ( grep -qi "portage_tmp_zram" /proc/cmdline); then
+		modprobe zram num_devices=1
+		size=$((4*256*1024*1024))
+		inodes=$((262144))
+                echo "Creating ZRAM /tmp/portage and mounting"
+                echo $size > /sys/block/zram0/disksize
+                mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 -N $inodes -L "zram0" /dev/zram0
+                mount -o barrier=0,commit=240,noatime,nodev /dev/zram0 /tmp/portage
+                chown portage:portage /tmp/portage
+                chmod 0775 /tmp/portage
+                chown portage:portage /tmp/portage_nozram
+                chmod 0775 /tmp/portage_nozram
+        else
+	        if ( grep -qi "swap_zram" /proc/cmdline); then
+			modprobe zram num_devices=2
+			size=$((4*256*1024*1024))
+        	        echo "Creating Swap ZRAM"
+			echo $size > /sys/block/zram0/disksize
+			echo $size > /sys/block/zram1/disksize
+			mkswap /dev/zram0
+			mkswap /dev/zram1
+			swapon /dev/zram0 -p 10
+			swapon /dev/zram1 -p 10
+		fi	
+	fi
+}
+
+stop() {
+        if ( grep -qi "tmp_zram" /proc/cmdline ) || ( grep -qi "portage_tmp_zram" /proc/cmdline ); then
+                echo "Unmounting ZRAM"
+                umount /dev/zram0
+		echo 1 > /sys/block/zram0/reset
+        fi
+	if ( grep -qi "swap_zram" /proc/cmdline ); then
+		echo "Disactivating Swap ZRAM"
+		swapoff /dev/zram0
+		swapoff /dev/zram1
+		echo 1 > /sys/block/zram0/reset
+		echo 1 > /sys/block/zram1/reset
+	fi
+}
+
+OPERATION="$1"
+
+if [ "x${OPERATION}x" == "xstartx" ]; then
+        start;
+else
+        if [ "x${OPERATION}x" == "xstopx" ]; then
+                stop;
+        else
+                echo "No operation specified"
+                exit 1
+        fi
+fi
+
