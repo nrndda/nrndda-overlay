@@ -1,0 +1,8 @@
+#! /bin/bash
+CPUS=`grep /proc/cpuinfo -e processor|wc -l`
+for (( i=0; i<$CPUS; i++ )); do
+        ODS=`cat /sys/block/zram$i/orig_data_size`
+        MEM=`cat /sys/block/zram$i/mem_used_total`
+        CDS=`cat /sys/block/zram$i/compr_data_size`
+        echo Compression ratio of zram$i: `echo "scale=3; $ODS/$CDS;"|bc -l` net, `echo "scale=3; $ODS/$MEM;"|bc -l` gross.
+done

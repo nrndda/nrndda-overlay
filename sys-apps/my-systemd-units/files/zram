@@ -23,15 +23,19 @@ start() {
                 chmod 0775 /tmp/portage_nozram
         else
 	        if ( grep -qi "swap_zram" /proc/cmdline); then
-			modprobe zram num_devices=2
-			size=$((4*256*1024*1024))
-        	        echo "Creating Swap ZRAM"
-			echo $size > /sys/block/zram0/disksize
-			echo $size > /sys/block/zram1/disksize
-			mkswap /dev/zram0
-			mkswap /dev/zram1
-			swapon /dev/zram0 -p 10
-			swapon /dev/zram1 -p 10
+			CPUS=`grep /proc/cpuinfo -e processor|wc -l`
+		        RAM=`grep /proc/meminfo -e MemTotal|grep -o -E '[[:digit:]]+'`
+		        USERAM=$(( $RAM / 2 ))
+		        DEVRAM=$(( $USERAM / $CPUS ))
+			echo "Activating $CPUS zram swap device(s), using total $USERAM kb, $DEVRAM kb per device."
+
+			modprobe zram num_devices=${CPUS}
+
+		        for (( i=0; i<$CPUS; i++ )); do
+		                echo $(($DEVRAM*1024)) > /sys/block/zram$i/disksize
+		                mkswap /dev/zram$i
+		                swapon -p 10 /dev/zram$i
+		        done
 		fi	
 	fi
 }

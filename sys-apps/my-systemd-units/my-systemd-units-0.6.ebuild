@@ -179,6 +179,7 @@ src_install() {
 	if use zram ; then
 		install_service zram.service || die "install_service failed"
 		dosbin "${FILESDIR}"/zram || die "dosbin failed"
+		dosbin "${FILESDIR}"/zram_statistic || die "dosbin failed"
 	fi
 
 
