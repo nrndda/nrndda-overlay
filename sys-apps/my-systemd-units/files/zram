@@ -34,7 +34,7 @@ start() {
 		        for (( i=0; i<$CPUS; i++ )); do
 		                echo $(($DEVRAM*1024)) > /sys/block/zram$i/disksize
 		                mkswap /dev/zram$i
-		                swapon -p 10 /dev/zram$i
+		                swapon -d -p 10 /dev/zram$i
 		        done
 		fi	
 	fi
