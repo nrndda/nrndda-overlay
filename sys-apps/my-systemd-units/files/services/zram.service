@@ -13,4 +13,4 @@ ExecStart=/usr/sbin/zram start
 ExecStop=/usr/sbin/zram stop
 
 [Install]
-WantedBy=sysinit.target
+WantedBy=multi-user.target
