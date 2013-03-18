@@ -1,7 +1,7 @@
 [Unit]
 Description=distcc
-After=network.target syslog.service
-Requires=network.target syslog.service
+After=network.target syslog.service avahi-daemon.service avahi-dnsconfd.service 
+Requires=network.target syslog.service avahi-daemon.service avahi-dnsconfd.service
 
 [Service]
 Type=forking
