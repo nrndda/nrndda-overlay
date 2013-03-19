@@ -12,4 +12,5 @@
 =x11-drivers/nvidia-drivers-310.14
 =media-video/nvidia-settings-310.14
 
-
+#Unmask this just for x86 arch
+=media-libs/ilmbase-2.0.0::nrndda
