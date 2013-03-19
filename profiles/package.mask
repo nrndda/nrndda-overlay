@@ -13,4 +13,4 @@
 =media-video/nvidia-settings-310.14
 
 #Unmask this just for x86 arch
-media-libs/ilmbase::nrndda
+=media-libs/ilmbase-2.0.0::nrndda
