@@ -9,9 +9,9 @@
 #=www-plugins/mozplugger-2.1.2
 
 #Beta version
-=x11-drivers/nvidia-drivers-313.09
-=media-video/nvidia-settings-313.09
+#=x11-drivers/nvidia-drivers-313.09
+#=media-video/nvidia-settings-313.09
 
 #Beta for Titan
-=x11-drivers/nvidia-drivers-313.26
-=media-video/nvidia-settings-313.26
+#=x11-drivers/nvidia-drivers-313.26
+#=media-video/nvidia-settings-313.26
