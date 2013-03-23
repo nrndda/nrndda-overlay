@@ -1,7 +1,7 @@
 [Unit]
 Description=Hostapd wifi ap
 After=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service
-After=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service
+Requires=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service
 
 [Service]
 Type=forking
