@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/nvidia-drivers-313.26.ebuild,v 1.4 2013/03/14 12:50:41 pinkbyte Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-drivers/nvidia-drivers/nvidia-drivers-313.18.ebuild,v 1.9 2013/03/07 16:14:25 jer Exp $
 
 EAPI=5
 
@@ -21,7 +21,7 @@ SRC_URI="x86? ( ftp://download.nvidia.com/XFree86/Linux-x86/${PV}/${X86_NV_PACKA
 
 LICENSE="GPL-2 NVIDIA"
 SLOT="0"
-KEYWORDS="-* amd64 ~x86 ~amd64-fbsd ~x86-fbsd"
+KEYWORDS="-* ~amd64 ~x86 ~amd64-fbsd ~x86-fbsd"
 IUSE="acpi multilib kernel_FreeBSD kernel_linux pax_kernel +tools +X"
 RESTRICT="bindist mirror strip"
 EMULTILIB_PKG="true"
@@ -47,6 +47,7 @@ RDEPEND="${COMMON}
 		x11-libs/libX11
 		x11-libs/libXext
 		x11-libs/pango[X]
+		|| ( x11-libs/pangox-compat <x11-libs/pango-1.31[X] )
 	)
 	X? ( >=x11-libs/libvdpau-0.3-r1 )"
 
@@ -64,11 +65,11 @@ pkg_pretend() {
 		die "Unexpected \${DEFAULT_ABI} = ${DEFAULT_ABI}"
 	fi
 
-	if use kernel_linux && kernel_is ge 3 9 ; then
+	if use kernel_linux && kernel_is ge 3 7 ; then
 		ewarn "Gentoo supports kernels which are supported by NVIDIA"
 		ewarn "which are limited to the following kernels:"
-		ewarn "<sys-kernel/gentoo-sources-3.9"
-		ewarn "<sys-kernel/vanilla-sources-3.9"
+		ewarn "<sys-kernel/gentoo-sources-3.7"
+		ewarn "<sys-kernel/vanilla-sources-3.7"
 		ewarn ""
 		ewarn "You are free to utilize epatch_user to provide whatever"
 		ewarn "support you feel is appropriate, but will not receive"

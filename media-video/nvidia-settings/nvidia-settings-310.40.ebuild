@@ -1,6 +1,6 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/media-video/nvidia-settings/nvidia-settings-295.40.ebuild,v 1.6 2012/04/25 04:27:06 idl0r Exp $
+# $Header: /var/cvsroot/gentoo-x86/media-video/nvidia-settings/nvidia-settings-310.19.ebuild,v 1.1 2012/11/24 00:25:59 idl0r Exp $
 
 EAPI=4
 
@@ -29,13 +29,8 @@ COMMON_DEPEND="x11-libs/libX11
 RDEPEND="=x11-drivers/nvidia-drivers-3*
 	${COMMON_DEPEND}"
 DEPEND="${RDEPEND}
-	dev-util/pkgconfig
+	virtual/pkgconfig
 	x11-proto/xproto"
-
-src_prepare() {
-	# The PM does it for us
-	sed -i -e 's:^\(MANPAGE_GZIP ?=\) 1:\1 0:' Makefile || die
-}
 
 src_compile() {
 	einfo "Building libXNVCtrl..."
@@ -43,11 +38,11 @@ src_compile() {
 	emake -C src/libXNVCtrl/ CC="$(tc-getCC)" RANLIB="$(tc-getRANLIB)" libXNVCtrl.a
 
 	einfo "Building nvidia-settings..."
-	emake  CC="$(tc-getCC)" LD="$(tc-getLD)" STRIP_CMD="$(type -P true)" NV_VERBOSE=1
+	emake -C src/ CC="$(tc-getCC)" LD="$(tc-getLD)" STRIP_CMD="$(type -P true)" NV_VERBOSE=1
 }
 
 src_install() {
-	emake DESTDIR="${D}" PREFIX=/usr install
+	emake -C src/ DESTDIR="${D}" PREFIX=/usr install
 
 	insinto /usr/$(get_libdir)
 	doins src/libXNVCtrl/libXNVCtrl.a
@@ -56,10 +51,10 @@ src_install() {
 	doins src/libXNVCtrl/*.h
 
 #	doicon doc/${PN}.png # Installed through nvidia-drivers
-	make_desktop_entry ${PN} "NVIDIA X Server Settings" ${PN} Application
+	make_desktop_entry ${PN} "NVIDIA X Server Settings" ${PN} Settings
 
 	# bug 412569 - Installed through nvidia-drivers
-	rm -rf "${D}"/usr/share/man
+#	rm -rf "${D}"/usr/share/man
 
 	dodoc doc/*.txt
 
