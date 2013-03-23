@@ -6,6 +6,7 @@ Requires=systemd-modules-load.service systemd-udev-trigger.service br0.service s
 [Service]
 Type=forking
 Restart=always
+RestartSec=1
 ExecStartPre=/bin/ifconfig wlp3s0 0.0.0.0 up
 ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd.pid /etc/hostapd/hostapd.conf
 ExecReload=/bin/kill -HUP $(cat /run/hostapd/hostapd.pid) > /dev/null 2>&1
