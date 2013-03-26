@@ -1,9 +1,9 @@
 [Unit]
 Description=Linux Volume Manager
 DefaultDependencies=no
-Requires=systemd-udev-settle.service
-After=systemd-udev-settle.service
-Before=shutdown.target local-fs.target
+Requires=systemd-udev-settle.service lvm2-lvmetad.service
+After=systemd-udev-settle.service lvm2-lvmetad.service
+Before=shutdown.target local-fs.target lvm2-lvmetad.service
 
 [Service]
 Type=oneshot
