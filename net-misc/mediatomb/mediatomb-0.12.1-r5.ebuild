@@ -18,6 +18,9 @@ IUSE="+curl debug +exif +ffmpeg id3tag inotify +javascript lastfm libextractor +
 REQUIRED_USE="
 	|| ( mysql sqlite )
 	taglib? ( !id3tag ) id3tag? ( !taglib )
+	thumbnail? ( ffmpeg !libextractor )
+	ffmpeg? ( !libextractor )
+	libextractor? ( !ffmpeg !thumbnail )
 "
 
 DEPEND="mysql? ( virtual/mysql )
@@ -66,8 +69,8 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-inotify-hard-links.patch
 	epatch "${FILESDIR}"/${P}-thumb-cache.patch
 	epatch "${FILESDIR}"/${P}-libav9.patch
+	epatch "${FILESDIR}"/${P}-avformatcontext-pointer.patch #446922
 	epatch "${FILESDIR}"/${P}-no-thumbnail.patch
-	epatch "${FILESDIR}"/${P}-avformatcontext-pointer.patch
 
 	#Fix for samsung smart tv 2012
 	epatch "${FILESDIR}"/${P}-urifix.patch
@@ -75,38 +78,25 @@ src_prepare() {
 }
 
 src_configure() {
-	local myconf=()
-	if use thumbnail ; then
-		elog "libextrator does not work with thumbnail, disabling libextrator"
-		myconf+=( --enable-ffmpegthumbnailer --enable-ffmpeg --disable-libextractor )
-	elif ! use thumbnail && use ffmpeg && use libextractor ; then
-		elog "libextrator does not work with ffmpeg, disabling libextrator"
-		myconf+=( --disable-ffmpegthumbnailer --enable-ffmpeg --disable-libextractor )
-	else
-		myconf+=(
-			$(use_enable thumbnail ffmpegthumbnailer)
-			$(use_enable ffmpeg)
-			$(use_enable libextractor)
-		)
-	fi
-
 	econf \
 		$(use_enable curl) $(use_enable curl youtube) \
 		$(use_enable debug tombdebug) \
 		$(use_enable exif libexif) \
+		$(use_enable ffmpeg) \
 		$(use_enable id3tag id3lib) \
 		$(use_enable inotify) \
 		$(use_enable javascript libjs) \
 		$(use_enable lastfm lastfmlib) \
+		$(use_enable libextractor) \
 		$(use_enable magic libmagic) \
 		$(use_enable mp4 libmp4v2) \
 		$(use_enable mysql) \
 		$(use_enable sqlite sqlite3) \
 		$(use_enable taglib) \
+		$(use_enable thumbnail ffmpegthumbnailer) \
 		$(use_enable zlib) \
 		--enable-external-transcoding \
-		--enable-protocolinfo-extension \
-		"${myconf[@]}"
+		--enable-protocolinfo-extension
 }
 
 src_install() {
