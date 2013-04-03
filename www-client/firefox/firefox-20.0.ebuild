@@ -38,7 +38,7 @@ HOMEPAGE="http://www.mozilla.com/firefox"
 KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~x86 ~amd64-linux ~x86-linux"
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="bindist gstreamer +jit +minimal pgo selinux system-jpeg system-sqlite system-libvpx webm"
+IUSE="bindist gstreamer +jit +minimal pgo selinux system-jpeg system-sqlite system-libvpx +webm"
 
 # More URIs appended below...
 SRC_URI="${SRC_URI}
