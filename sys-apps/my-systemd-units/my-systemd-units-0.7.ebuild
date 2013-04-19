@@ -19,7 +19,7 @@ IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
 IUSE="apache2 proftpd uptimed rsyncd distccd br0 hostapd haveged hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb minidlna fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb minidlna ushare fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	apache2? ( www-servers/apache )
@@ -35,6 +35,7 @@ DEPEND="sys-apps/systemd
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
 	minidlna? ( net-misc/minidlna )
+	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	ntp? ( || ( net-misc/ntp net-misc/openntpd sys-apps/busybox ) )
 	samba? ( net-fs/samba )
@@ -97,7 +98,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron apache2 uptimed rsyncd ; do
+	for i in mediatomb ushare php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi

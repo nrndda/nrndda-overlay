@@ -1,0 +1,15 @@
+[Unit]
+Description=Ushare Daemon
+After=network.target
+
+[Service]
+User=ushare
+Group=ushare
+
+Type=forking
+EnvironmentFile=/etc/conf.d/ushare
+ExecStart=/usr/bin/ushare $USHARE_NAME $USHARE_IFACE $USHARE_PORT $USHARE_TELNET $USHARE_TELNET_PORT $USHARE_WEB $USHARE_XBOX $USHARE_DLNA $USHARE_OPTS $USHARE_DIRS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
