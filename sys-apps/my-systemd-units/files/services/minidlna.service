@@ -1,0 +1,15 @@
+[Unit]
+Description=MiniDLNA Daemon
+After=network.target
+
+[Service]
+User=minidlna
+Group=minidlna
+
+Type=forking
+EnvironmentFile=/etc/conf.d/minidlna
+ExecStart=/usr/sbin/minidlna 
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -19,7 +19,7 @@ IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
 IUSE="apache2 proftpd uptimed rsyncd distccd br0 hostapd haveged hwclock kdm lvm microcode_ctl \
 	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb minidlna fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	apache2? ( www-servers/apache )
@@ -34,6 +34,7 @@ DEPEND="sys-apps/systemd
 	proftpd? ( net-ftp/proftpd )
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
+	minidlna? ( net-misc/minidlna )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	ntp? ( || ( net-misc/ntp net-misc/openntpd sys-apps/busybox ) )
 	samba? ( net-fs/samba )
@@ -119,6 +120,10 @@ src_install() {
 	if use proftpd ; then
 		install_service proftpd.service || die "install_service failed"
 		install_tmpfile proftpd.conf || die "install_tmpfile failed"
+	fi
+	if use minidlna ; then
+		install_service minidlna.service || die "install_service failed"
+		install_tmpfile minidlna.conf || die "install_tmpfile failed"
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
