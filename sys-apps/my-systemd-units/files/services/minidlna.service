@@ -8,7 +8,8 @@ Group=minidlna
 
 Type=forking
 EnvironmentFile=/etc/conf.d/minidlna
-ExecStart=/usr/sbin/minidlna 
+ExecStart=/usr/sbin/minidlna -P /var/run/minidlna.pid
+PIDFile=/var/run/minidlna.pid
 Restart=always
 
 [Install]
