@@ -40,7 +40,7 @@ do
 done
 
 
-start {
+function start {
         echo -n "\n"
         for file in ${FLEXLM_LICENSE}
         do
@@ -51,7 +51,7 @@ start {
         echo -n "\n"
 }
 
-stop {
+function stop {
         for file in ${FLEXLM_LICENSE}
         do
                 SERVICE=`basename ${file} | awk -F. '{print $1}'`
@@ -70,7 +70,7 @@ stop {
         echo "\n"
 }
 
-reload {
+function reload {
 	for file in ${FLEXLM_LICENSE}
 	do
 		SERVICE=`basename ${file} | awk -F. '{print $1}'`
