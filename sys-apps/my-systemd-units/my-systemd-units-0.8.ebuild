@@ -17,9 +17,9 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
-IUSE="apache2 proftpd uptimed rsyncd distccd br0 hostapd haveged hwclock kdm lvm microcode_ctl \
-	ntp git syslog-ng iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb minidlna ushare fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
+IUSE="apache2 uptimed rsyncd distccd br0 hostapd haveged hwclock kdm microcode_ctl \
+	ntp git iptables nfs samba vixie-cron rtorrent screen \
+	no_tmp_as_tmpfs zram php-fpm mediatomb ushare fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	apache2? ( www-servers/apache )
@@ -30,11 +30,8 @@ DEPEND="sys-apps/systemd
 	haveged? ( sys-apps/haveged )
 	hwclock? ( sys-apps/util-linux )
 	kdm? ( kde-base/kdm )
-	lvm? ( sys-fs/lvm2 )
-	proftpd? ( net-ftp/proftpd )
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
-	minidlna? ( net-misc/minidlna )
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	ntp? ( || ( net-misc/ntp net-misc/openntpd sys-apps/busybox ) )
@@ -43,7 +40,6 @@ DEPEND="sys-apps/systemd
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
-	syslog-ng? ( app-admin/syslog-ng )
 	vixie-cron? ( sys-process/vixie-cron )
 	fail2ban? ( net-analyzer/fail2ban )
 	nut? ( sys-power/nut )
@@ -98,7 +94,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm haveged hwclock microcode_ctl kdm lvm vixie-cron apache2 uptimed rsyncd ; do
+	for i in mediatomb ushare php-fpm haveged hwclock microcode_ctl kdm vixie-cron apache2 uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -117,14 +113,6 @@ src_install() {
 	if use hostapd ; then
 		install_service hostapd.service || die "install_service failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
-	fi
-	if use proftpd ; then
-		install_service proftpd.service || die "install_service failed"
-		install_tmpfile proftpd.conf || die "install_tmpfile failed"
-	fi
-	if use minidlna ; then
-		install_service minidlna.service || die "install_service failed"
-		install_tmpfile minidlna.conf || die "install_tmpfile failed"
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
@@ -173,10 +161,6 @@ src_install() {
 	fi
 	if use screen ; then
 		install_service screen@.service || die "install_service failed"
-	fi
-	if use syslog-ng ; then
-		install_target syslog.target || die "install_target failed"
-		install_service syslog-ng.service || die "install_service failed"
 	fi
 	if use fail2ban ; then
 		install_service fail2ban.service || die "install_service failed"
@@ -233,10 +217,6 @@ src_install() {
 		dosym "${DESTINATION_SERVICES_DIR}"/vixie-cron.service "${DESTINATION_SERVICES_DIR}"/cron.service || die "dosym failed"
 	fi
 
-	if use syslog-ng; then
-		dosym "${DESTINATION_SERVICES_DIR}"/syslog-ng.service "${DESTINATION_SERVICES_DIR}"/syslog.service || die "dosym failed"
-	fi
-	
 	einfo "Services installed into ${DESTINATION_SERVICES_DIR}"
 	einfo "Sockets installed into ${DESTINATION_SOCKETS_DIR}"
 	einfo "Tmpfiles installed into ${DESTINATION_TMPFILES_DIR}"
