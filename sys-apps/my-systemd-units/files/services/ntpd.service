@@ -11,7 +11,7 @@ Requires=network.target
 Type=oneshot
 Restart=on-failure
 RemainAfterExit=yes
-ExecStart=/usr/sbin/ntpd
+ExecStart=/usr/sbin/ntpd -s
 
 [Install]
 WantedBy=multi-user.target
