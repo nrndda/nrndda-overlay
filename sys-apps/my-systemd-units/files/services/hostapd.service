@@ -1,13 +1,14 @@
 [Unit]
 Description=Hostapd wifi ap
-After=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service
-Requires=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service
+After=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service sys-subsystem-net-devices-wlp0s29u1u6u3.device
+Requires=systemd-modules-load.service systemd-udev-trigger.service br0.service syslog.service sys-subsystem-net-devices-wlp0s29u1u6u3.device
 
 [Service]
 Type=forking
 Restart=always
 RestartSec=1
 ExecStartPre=/bin/ifconfig wlp3s0 0.0.0.0 up
+ExecStartPre=/bin/bash -c " COUNTRY="00" /sbin/crda "
 ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd.pid /etc/hostapd/hostapd.conf
 ExecReload=/bin/kill -HUP $(cat /run/hostapd/hostapd.pid) > /dev/null 2>&1
 PIDFile=/run/hostapd/hostapd.pid
