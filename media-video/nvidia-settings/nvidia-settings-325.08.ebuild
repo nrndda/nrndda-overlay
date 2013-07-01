@@ -1,8 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/media-video/nvidia-settings/nvidia-settings-310.19.ebuild,v 1.1 2012/11/24 00:25:59 idl0r Exp $
+# $Header: /var/cvsroot/gentoo-x86/media-video/nvidia-settings/nvidia-settings-319.32.ebuild,v 1.1 2013/06/30 10:38:08 jlec Exp $
 
-EAPI=4
+EAPI=5
 
 inherit eutils multilib toolchain-funcs
 
@@ -24,25 +24,40 @@ COMMON_DEPEND="x11-libs/libX11
 	x11-libs/pango[X]
 	x11-libs/libXv
 	x11-libs/libXrandr
-	dev-libs/glib:2"
+	dev-libs/glib:2
+	dev-libs/jansson"
 
 RDEPEND="=x11-drivers/nvidia-drivers-3*
-	${COMMON_DEPEND}"
+	${COMMON_DEPEND}
+	x11-libs/libvdpau"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	x11-proto/xproto"
 
+src_prepare() {
+	epatch "${FILESDIR}"/${PN}-319.12-jansson.patch
+}
+
 src_compile() {
 	einfo "Building libXNVCtrl..."
 	emake -C src/libXNVCtrl/ clean # NVidia ships pre-built archives :(
-	emake -C src/libXNVCtrl/ CC="$(tc-getCC)" RANLIB="$(tc-getRANLIB)" libXNVCtrl.a
+	emake -C src/libXNVCtrl/ \
+		CC="$(tc-getCC)" \
+		AR="$(tc-getAR)" \
+		RANLIB="$(tc-getRANLIB)" \
+		libXNVCtrl.a
 
 	einfo "Building nvidia-settings..."
-	emake -C src/ CC="$(tc-getCC)" LD="$(tc-getLD)" STRIP_CMD="$(type -P true)" NV_VERBOSE=1
+	emake -C src/ \
+		CC="$(tc-getCC)" \
+		LD="$(tc-getLD)" \
+		STRIP_CMD="$(type -P true)" \
+		NV_VERBOSE=1 \
+		USE_EXTERNAL_JANSSON=1
 }
 
 src_install() {
-	emake -C src/ DESTDIR="${D}" PREFIX=/usr install
+	emake -C src/ DESTDIR="${D}" PREFIX=/usr USE_EXTERNAL_JANSSON=1 install
 
 	insinto /usr/$(get_libdir)
 	doins src/libXNVCtrl/libXNVCtrl.a
