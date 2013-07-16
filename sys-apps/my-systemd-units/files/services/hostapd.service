@@ -6,9 +6,13 @@ Requires=systemd-modules-load.service systemd-udev-trigger.service br0.service s
 [Service]
 Type=forking
 Restart=always
-RestartSec=1
-ExecStartPre=/bin/ifconfig wlp3s0 0.0.0.0 up
-ExecStartPre=/bin/bash -c " COUNTRY="00" /sbin/crda "
+RestartSec=10
+#ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/ifconfig wlp0s29u1u5 0.0.0.0 up
+#ExecStartPre=/bin/bash -c "COUNTRY="00" /sbin/crda"
+#ExecStartPre=/usr/local/sbin/crda_set.sh
+#ExecStartPre=/usr/sbin/iw reg set RU
+
 ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd.pid /etc/hostapd/hostapd.conf
 ExecReload=/bin/kill -HUP $(cat /run/hostapd/hostapd.pid) > /dev/null 2>&1
 PIDFile=/run/hostapd/hostapd.pid
