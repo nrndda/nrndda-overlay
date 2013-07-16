@@ -11,4 +11,4 @@ ExecStart=/sbin/hwclock --localtime --hctosys --localtime
 ExecStop=/sbin/hwclock --localtime --systohc --localtime
 
 [Install]
-WantedBy=sysinit.target
+WantedBy=time-sync.target
