@@ -8,7 +8,7 @@ Description=Git Daemon Instance
 Type=forking
 Restart=always
 EnvironmentFile=/etc/conf.d/git-daemon
-ExecStart=/usr/bin/git daemon --detach --pid-file=/var/run/git-daemon.pid --user=gitdaemon --group=git --syslog --verbose --base-path=/var/lib/gitolite/repositories
+ExecStart=/usr/bin/git daemon --detach --pid-file=/var/run/git-daemon.pid --user=git --group=git --syslog --verbose --base-path=/var/lib/gitolite/repositories
 PIDFile=/var/run/git-daemon.pid
 
 [Install]
