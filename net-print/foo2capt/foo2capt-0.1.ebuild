@@ -21,9 +21,9 @@ RDEPEND="net-print/cups"
 
 src_install() {
 	insinto /usr/share/ppd/Canon/
-	doins "${S}"/ppd/"Canon-LBP-810-capt.ppd"
+	doins ppd/*.ppd
 
-	dobin capt
+	dobin capt-print
 }
  
 #pkg_postinst() {
