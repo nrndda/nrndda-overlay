@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
 IUSE="uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	ntp git iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb ushare fail2ban nut flexlm ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -38,7 +38,6 @@ DEPEND="sys-apps/systemd
 	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
 	vixie-cron? ( sys-process/vixie-cron )
-	fail2ban? ( net-analyzer/fail2ban )
 	nut? ( sys-power/nut )
 	uptimed? ( app-misc/uptimed )"
 
@@ -158,10 +157,6 @@ src_install() {
 	fi
 	if use screen ; then
 		install_service screen@.service || die "install_service failed"
-	fi
-	if use fail2ban ; then
-		install_service fail2ban.service || die "install_service failed"
-		install_tmpfile fail2ban.conf || die "install_tmpfile failed"
 	fi
 	if use zram ; then
 		install_service zram.service || die "install_service failed"
