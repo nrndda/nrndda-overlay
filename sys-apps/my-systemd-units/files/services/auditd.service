@@ -1,8 +1,0 @@
-[Unit]
-Description=Auditd stub
-
-[Service]
-Type=oneshot
-ExecStart=/bin/true
-RemainAfterExit=yes
-

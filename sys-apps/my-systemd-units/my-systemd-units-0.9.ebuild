@@ -15,11 +15,10 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
-IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
+IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
 IUSE="uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	ntp git iptables nfs samba vixie-cron rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb ushare fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb ushare fail2ban nut flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -175,19 +174,8 @@ src_install() {
 	if use stub_dbus ; then
 		install_target dbus.target || die "install_target failed"
 	fi
-	if use stub_auditd ; then 
-		install_service auditd.service || die "install_service failed"
-	fi
-	if use stub_plymouth ; then
-		install_service plymouth-quit-wait.service || die "install_service failed"
-		install_service plymouth-quit.service || die "install_service failed"
-		install_service plymouth-start.service || die "install_service failed"
-	fi
 
 
-	if use mask_auditd; then
-		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/auditd.service || die "dosym failed"
-	fi
 	if use mask_mysql.target; then
 		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/mysql.target || die "dosym failed"
 	fi
@@ -196,11 +184,6 @@ src_install() {
 	fi
 	if use mask_networking.target; then
 		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/networking.target || die "dosym failed"
-	fi
-	if use mask_plymouth; then
-		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-quit-wait.service || die "dosym failed"
-		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-quit.service || die "dosym failed"
-		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/plymouth-start.service || die "dosym failed"
 	fi
 	if use mask_display-manager; then
 		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/display-manager.service || die "dosym failed"
