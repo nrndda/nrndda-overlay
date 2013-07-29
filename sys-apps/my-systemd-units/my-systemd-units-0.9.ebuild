@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
 IUSE="uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
-	ntp git iptables nfs samba vixie-cron rtorrent screen \
+	git iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
@@ -31,7 +31,6 @@ DEPEND="sys-apps/systemd
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
-	ntp? ( || ( net-misc/ntp net-misc/openntpd sys-apps/busybox ) )
 	samba? ( net-fs/samba )
 	nfs? ( net-fs/nfs-utils )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
@@ -114,11 +113,6 @@ src_install() {
 		install_service git-daemon@.service || die "install_service failed"
 		install_service git-daemon.service || die "install_service failed"
 		install_socket git-daemon.socket || die "install_socket failed"
-	fi
-	if use ntp ; then
-		install_service busybox_ntpd_client.service || die "install_service failed"
-		install_service ntp-client.service || die "install_service failed"
-		install_service ntpd.service || die "install_service failed"
 	fi
 	if use nut ; then
 		install_service nut-driver.service || die "install_service failed"
