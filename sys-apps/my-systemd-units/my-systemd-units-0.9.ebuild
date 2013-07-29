@@ -17,12 +17,11 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_STUBS="stub_auditd stub_dbus stub_plymouth"
 IUSE_MASKS="mask_auditd mask_mysql.target mask_dbus.target mask_networking.target mask_plymouth mask_display-manager"
-IUSE="apache2 uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
+IUSE="uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	ntp git iptables nfs samba vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare fail2ban nut flexlm ${IUSE_STUBS} ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
-	apache2? ( www-servers/apache )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
 	br0? ( net-misc/bridge-utils )
@@ -93,7 +92,7 @@ src_install() {
         install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm hwclock microcode_ctl kdm vixie-cron apache2 uptimed rsyncd ; do
+	for i in mediatomb ushare php-fpm hwclock microcode_ctl kdm vixie-cron uptimed rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
