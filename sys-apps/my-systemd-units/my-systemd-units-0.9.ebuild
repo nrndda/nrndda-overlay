@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
-IUSE="uptimed rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
+IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	git iptables nfs vixie-cron rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
 
@@ -36,8 +36,7 @@ DEPEND="sys-apps/systemd
 	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
 	vixie-cron? ( sys-process/vixie-cron )
-	nut? ( sys-power/nut )
-	uptimed? ( app-misc/uptimed )"
+	nut? ( sys-power/nut )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -85,10 +84,9 @@ install_target() {
 }
 
 src_install() {
-        install_tmpfile uptimed.conf || die "install_tmpfile failed"
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm hwclock microcode_ctl kdm vixie-cron uptimed rsyncd ; do
+	for i in mediatomb ushare php-fpm hwclock microcode_ctl kdm vixie-cron rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
