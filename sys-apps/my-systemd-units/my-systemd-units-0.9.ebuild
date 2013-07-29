@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_networking.target mask_display-manager"
-IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
+IUSE="distccd br0 hostapd hwclock kdm microcode_ctl \
 	git iptables rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare flexlm ${IUSE_MASKS}"
 
@@ -32,7 +32,6 @@ DEPEND="sys-apps/systemd
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
-	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
@@ -83,7 +82,7 @@ install_target() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm hwclock microcode_ctl rsyncd ; do
+	for i in mediatomb ushare php-fpm hwclock microcode_ctl; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
