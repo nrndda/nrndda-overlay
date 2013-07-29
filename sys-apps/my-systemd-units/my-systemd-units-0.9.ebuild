@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_networking.target mask_display-manager"
 IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
-	git iptables nfs rtorrent screen \
+	git iptables rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
@@ -31,7 +31,6 @@ DEPEND="sys-apps/systemd
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
-	nfs? ( net-fs/nfs-utils )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
@@ -123,18 +122,6 @@ src_install() {
 	if use flexlm ; then
 		install_service flexlm.service || die "install_service failed"
 		dosbin "${FILESDIR}"/flexlm || die "dosbin failed"
-	fi
-	if use nfs ; then
-		install_service nfsd.service || die "install_service failed"
-		install_service rpcbind.service || die "install_service failed"
-		install_service rpc.gssd.service || die "install_service failed"
-		install_service rpc.idmapd.service || die "install_service failed"
-		install_service rpc.mountd.service || die "install_service failed"
-		install_service rpc.statd.service || die "install_service failed"
-		install_service sm-notify.service || die "install_service failed"
-
-		install_target nfs3_client.target || die "install_target failed"
-		install_target nfs4_client.target || die "install_target failed"
 	fi
 	if use rtorrent ; then
 		install_service rtorrent.service || die "install_service failed"
