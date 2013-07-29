@@ -15,9 +15,9 @@ LICENSE="GPL-2"
 
 RDEPEND="net-print/cups"
 
-src_prepare() {
-	epatch "${FILESDIR}"/path.patch || die
-}
+#src_prepare() {
+#	epatch "${FILESDIR}"/path.patch || die
+#}
 
 src_install() {
 	insinto /usr/share/ppd/Canon/
@@ -26,9 +26,9 @@ src_install() {
 	dobin capt
 }
  
-pkg_postinst() {
-        echo
-        elog "Make simlink /dev/canon into your /dev/bus/*/*"
-        echo
-}
+#pkg_postinst() {
+#        echo
+#        elog "Make simlink /dev/canon into your /dev/bus/*/*"
+#        echo
+#}
 
