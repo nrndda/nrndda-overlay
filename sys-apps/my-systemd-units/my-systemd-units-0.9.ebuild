@@ -15,7 +15,7 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
+IUSE_MASKS="mask_mysql.target mask_networking.target mask_display-manager"
 IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	git iptables nfs rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
@@ -151,16 +151,9 @@ src_install() {
 	fi
 
 
-	if use stub_dbus ; then
-		install_target dbus.target || die "install_target failed"
-	fi
-
 
 	if use mask_mysql.target; then
 		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/mysql.target || die "dosym failed"
-	fi
-	if use mask_dbus.target; then
-		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/dbus.target || die "dosym failed"
 	fi
 	if use mask_networking.target; then
 		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/networking.target || die "dosym failed"
