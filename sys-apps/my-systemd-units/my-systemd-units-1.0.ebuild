@@ -103,7 +103,6 @@ src_install() {
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
 		install_service git-daemon.service || die "install_service failed"
-		install_socket git-daemon.socket || die "install_socket failed"
 	fi
 	if use iptables ; then
 		install_service iptables.service || die "install_service failed"
