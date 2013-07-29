@@ -21,9 +21,9 @@ RDEPEND="net-print/cups"
 
 src_install() {
 	insinto /usr/share/ppd/Canon/
-	doins ppd/*.ppd
+	doins "${S}"/ppd/*.ppd
 
-	dobin capt-print
+	dobin "${S}"/capt-print
 }
  
 #pkg_postinst() {
