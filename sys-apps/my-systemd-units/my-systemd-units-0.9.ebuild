@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_dbus.target mask_networking.target mask_display-manager"
 IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
-	git iptables nfs vixie-cron rtorrent screen \
+	git iptables nfs rtorrent screen \
 	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
@@ -35,7 +35,6 @@ DEPEND="sys-apps/systemd
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	rsyncd? ( net-misc/rsync )
 	screen? ( app-misc/screen )
-	vixie-cron? ( sys-process/vixie-cron )
 	nut? ( sys-power/nut )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
@@ -86,7 +85,7 @@ install_target() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm hwclock microcode_ctl kdm vixie-cron rsyncd ; do
+	for i in mediatomb ushare php-fpm hwclock microcode_ctl rsyncd ; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -173,10 +172,6 @@ src_install() {
 
 	if use no_tmp_as_tmpfs ; then 
 		dosym /dev/null "${DESTINATION_MOUNTS_DIR}"/tmp.mount
-	fi
-
-	if use vixie-cron; then
-		dosym "${DESTINATION_SERVICES_DIR}"/vixie-cron.service "${DESTINATION_SERVICES_DIR}"/cron.service || die "dosym failed"
 	fi
 
 	einfo "Services installed into ${DESTINATION_SERVICES_DIR}"
