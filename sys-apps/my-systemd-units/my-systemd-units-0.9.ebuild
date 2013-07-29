@@ -15,10 +15,9 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE_MASKS="mask_mysql.target mask_networking.target mask_display-manager"
-IUSE="distccd br0 hostapd hwclock kdm microcode_ctl \
+IUSE="distccd br0 hostapd hwclock microcode_ctl \
 	git iptables rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb ushare flexlm ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram mediatomb ushare flexlm"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -26,7 +25,6 @@ DEPEND="sys-apps/systemd
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	hwclock? ( sys-apps/util-linux )
-	kdm? ( kde-base/kdm )
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
@@ -82,7 +80,7 @@ install_target() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
-	for i in mediatomb ushare php-fpm hwclock microcode_ctl; do
+	for i in mediatomb ushare hwclock microcode_ctl; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -128,18 +126,6 @@ src_install() {
 		dosbin "${FILESDIR}"/zram || die "dosbin failed"
 		dosbin "${FILESDIR}"/zram_statistic || die "dosbin failed"
 		newconfd "${FILESDIR}"/zram.conf zram || die "newconfd failed"
-	fi
-
-
-
-	if use mask_mysql.target; then
-		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/mysql.target || die "dosym failed"
-	fi
-	if use mask_networking.target; then
-		dosym /dev/null "${DESTINATION_TARGETS_DIR}"/networking.target || die "dosym failed"
-	fi
-	if use mask_display-manager; then
-		dosym /dev/null "${DESTINATION_SERVICES_DIR}"/display-manager.service || die "dosym failed"
 	fi
 
 
