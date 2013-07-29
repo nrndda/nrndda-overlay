@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE_MASKS="mask_mysql.target mask_networking.target mask_display-manager"
 IUSE="rsyncd distccd br0 hostapd hwclock kdm microcode_ctl \
 	git iptables rtorrent screen \
-	no_tmp_as_tmpfs zram php-fpm mediatomb ushare nut flexlm ${IUSE_MASKS}"
+	no_tmp_as_tmpfs zram php-fpm mediatomb ushare flexlm ${IUSE_MASKS}"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -33,8 +33,7 @@ DEPEND="sys-apps/systemd
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	rsyncd? ( net-misc/rsync )
-	screen? ( app-misc/screen )
-	nut? ( sys-power/nut )"
+	screen? ( app-misc/screen )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -108,11 +107,6 @@ src_install() {
 		install_service git-daemon@.service || die "install_service failed"
 		install_service git-daemon.service || die "install_service failed"
 		install_socket git-daemon.socket || die "install_socket failed"
-	fi
-	if use nut ; then
-		install_service nut-driver.service || die "install_service failed"
-		install_service nut-monitor.service || die "install_service failed"
-		install_service nut-server.service || die "install_service failed"
 	fi
 	if use iptables ; then
 		install_service iptables.service || die "install_service failed"
