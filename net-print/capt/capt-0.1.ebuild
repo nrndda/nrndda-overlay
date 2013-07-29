@@ -24,6 +24,7 @@ src_install() {
 	doins "${S}"/ppd/*.ppd
 
 	dobin "${S}"/capt-print
+	dobin "${S}"/capt
 }
  
 #pkg_postinst() {
