@@ -5,7 +5,7 @@ Conflicts=br0_dynamic.service
 
 [Service]
 Type=oneshot
-RestartSec=1
+#RestartSec=1
 RemainAfterExit=yes
 
 #ExecStart=/bin/ifconfig enp3s1 hw ether 00:e0:81:5e:83:00
