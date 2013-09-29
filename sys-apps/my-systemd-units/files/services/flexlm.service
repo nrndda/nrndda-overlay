@@ -5,7 +5,7 @@ Requires=network.target syslog.service
 
 [Service]
 Type=oneshot
-Restart=on-failure
+#Restart=on-failure
 RemainAfterExit=yes
 ExecStart=/sbin/modprobe veth
 ExecStart=/bin/ip link add type veth
@@ -15,6 +15,8 @@ ExecStart=/bin/ip link set eth0 up
 ExecStart=/bin/ip link set eth0 addr 00:e0:81:5e:83:00
 ExecStart=/usr/sbin/flexlm start
 ExecStop=/usr/sbin/flexlm stop
+ExecStop=/bin/ip link set veth0 down
+ExecStop=/sbin/modprobe -r veth
 ExecReload=/usr/sbin/flexlm reload
 
 [Install]
