@@ -3,7 +3,7 @@
 # $Header: $
 
 EAPI=2
-inherit eutils multilib toolchain-funcs
+inherit eutils nsplugins multilib toolchain-funcs
 
 DESCRIPTION="Configurable browser plugin to launch streaming media players."
 SRC_URI="http://mozplugger.mozdev.org/files/${P}.tar.gz"
@@ -11,7 +11,7 @@ HOMEPAGE="http://mozplugger.mozdev.org/"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~ppc ~sparc ~x86"
+KEYWORDS=""
 IUSE="+X debug gcov xembed"
 
 DEPEND="X? ( x11-libs/libX11 )"
@@ -48,6 +48,7 @@ src_compile() {
 }
 
 src_install() {
+	inst_plugin /usr/lib/mozilla/plugins/mozplugger.so
 	emake root="${D}" install || die
 	dodoc ChangeLog README
 }
