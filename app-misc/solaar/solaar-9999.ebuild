@@ -5,16 +5,11 @@
 EAPI=5
 PYTHON_COMPAT=( python{2_7,3_2,3_3} )
 
-if [[ $PV = 9999* ]]; then
-        GIT_ECLASS="git-2"
-        EXPERIMENTAL="true"
-	KEYWORDS=""
-        SRC_URI=""
-        EGIT_REPO_URI="https://github.com/pwr/Solaar.git"
-else
-	KEYWORDS="~amd64 ~x86"
-	SRC_URI="https://github.com/pwr/Solaar/archive/${PV}.tar.gz -> ${P}.tar.gz"
-fi
+GIT_ECLASS="git-2"
+EXPERIMENTAL="true"
+KEYWORDS="**"
+SRC_URI=""
+EGIT_REPO_URI="https://github.com/pwr/Solaar.git"
 
 inherit distutils-r1 udev user linux-info gnome2-utils ${GIT_ECLASS}
 
