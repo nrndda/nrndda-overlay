@@ -5,16 +5,11 @@
 EAPI=5
 
 
-if [[ $PV = 9999* ]]; then
-        GIT_ECLASS="git-2"
-        EXPERIMENTAL="true"
-	KEYWORDS=""
-	SRC_URI=""
-	EGIT_REPO_URI="https://git.lekensteyn.nl/upower.git"
-else
-	KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~mips ~ppc ~ppc64 ~sparc ~x86 ~x86-fbsd"
-	SRC_URI="http://${PN}.freedesktop.org/releases/${P}.tar.xz"
-fi
+GIT_ECLASS="git-2"
+EXPERIMENTAL="true"
+KEYWORDS=""
+SRC_URI=""
+EGIT_REPO_URI="https://git.lekensteyn.nl/upower.git"
 
 inherit autotools eutils systemd gnome2-utils ${GIT_ECLASS}
 
