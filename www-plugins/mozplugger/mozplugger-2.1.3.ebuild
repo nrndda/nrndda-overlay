@@ -11,7 +11,7 @@ HOMEPAGE="http://mozplugger.mozdev.org/"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="+X debug gcov xembed"
 
 DEPEND="X? ( x11-libs/libX11 )"
