@@ -27,7 +27,7 @@ src_install() {
 	doins "${FILESDIR}"/regulatory.bin
 
 	insinto /etc/wireless-regdb/pubkeys
-	doins linville.key.pub.pem
+	#doins linville.key.pub.pem
 	doins "${FILESDIR}"/nrndda.key.pub.pem
 
 	doman regulatory.bin.5
