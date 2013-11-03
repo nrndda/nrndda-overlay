@@ -5,8 +5,6 @@
 ~net-libs/xulrunner-9999
 ~www-client/firefox-9999
 
-net-wireless/crda::nrndda
-
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
 
