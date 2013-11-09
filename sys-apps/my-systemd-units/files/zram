@@ -25,12 +25,16 @@ portage_tmp_zram_dev_name() {
 start() {
 	CPUS=`grep -Ec "^processor" /proc/cpuinfo`
 	DEVICES=$(devices_num)
+        RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
+	SWAP_FACTOR=50
+	PORTAGE_TMP_FACTOR=50
+	[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
 
 	modprobe zram num_devices=${DEVICES}
 
 	PORTAGE_TMP_ZRAM_DEV=$(portage_tmp_zram_dev_name)
         if ( grep -qi "portage_tmp_zram" /proc/cmdline); then
-		size=$((4*256*1024*1024))
+		size=$(($RAM*$PORTAGE_TMP_FACTOR/100*1024))
 		#inodes="-N $((262144))"
                 echo "Creating ZRAM /tmp/portage_zram and mounting"
                 echo $size > /sys/block/${PORTAGE_TMP_ZRAM_DEV}/disksize
@@ -45,10 +49,7 @@ start() {
         fi
 
         if ( grep -qi "swap_zram" /proc/cmdline); then
-	        RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
-		FACTOR=50
-		[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
-		mem_by_cpu=$(($RAM/$CPUS*$FACTOR/100*1024))
+		mem_by_cpu=$(($RAM/$CPUS*$SWAP_FACTOR/100*1024))
 		echo "Activating $CPUS zram swap device(s), using $mem_by_cpu per cpu."
 
 		#modprobe zram num_devices=${CPUS}
