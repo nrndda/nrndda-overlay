@@ -38,6 +38,10 @@ start() {
                 mount -o barrier=0,commit=240,noatime,nodev /dev/${PORTAGE_TMP_ZRAM_DEV} /tmp/portage_zram
                 chown portage:portage /tmp/portage_zram
                 chmod 0775 /tmp/portage_zram
+		if [ -d /tmp/portage/.distcc ]; then
+			mkdir /tmp/portage_zram/.distcc
+			mount -o bind /tmp/portage/.distcc /tmp/portage_zram/.distcc
+		fi
         fi
 
         if ( grep -qi "swap_zram" /proc/cmdline); then
