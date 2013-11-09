@@ -1,62 +1,79 @@
 #!/bin/bash
 
+devices_num() {
+	DEVICES_NUMBER=$((0))
+	if ( grep -qi "portage_tmp_zram" /proc/cmdline); then
+		DEVICES_NUMBER=$((${DEVICES_NUMBER}+1))
+	fi
+	if ( grep -qi "swap_zram" /proc/cmdline); then
+		DEVICES_NUMBER=$((${DEVICES_NUMBER}+${CPUS}))
+	fi
+	echo ${DEVICES_NUMBER}
+}
+
+portage_tmp_zram_dev_name() {
+        if ( grep -qi "portage_tmp_zram" /proc/cmdline ) && ( grep -qi "swap_zram" /proc/cmdline ); then
+		ZRAM_DEV="zram"${CPUS}
+	else
+		if ( grep -qi "portage_tmp_zram" /proc/cmdline ); then
+			ZRAM_DEV="zram0"
+		fi
+	fi
+	echo ${ZRAM_DEV}
+}
+
 start() {
-        #if get_bootparam "tmp_zram" ; then
-        #       ebegin "Creating ZRAM /tmp and mounting"
-        #       echo $size > /sys/block/zram0/disksize
-        #       mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 -N $inodes -L "zram0" /dev/zram0
-        #       mount -o barrier=0,commit=240,noatime,nodev /dev/zram0 /tmp
-        #       chmod 1777 /tmp
-        #fi
+	CPUS=`grep -Ec "^processor" /proc/cpuinfo`
+	DEVICES=$(devices_num)
 
+	modprobe zram num_devices=${DEVICES}
+
+	PORTAGE_TMP_ZRAM_DEV=$(portage_tmp_zram_dev_name)
         if ( grep -qi "portage_tmp_zram" /proc/cmdline); then
-		modprobe zram num_devices=1
 		size=$((4*256*1024*1024))
-		inodes=$((262144))
-                echo "Creating ZRAM /tmp/portage and mounting"
-                echo $size > /sys/block/zram0/disksize
-                mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 -N $inodes -L "zram0" /dev/zram0
-                mount -o barrier=0,commit=240,noatime,nodev /dev/zram0 /tmp/portage
-                chown portage:portage /tmp/portage
-                chmod 0775 /tmp/portage
-                chown portage:portage /tmp/portage_nozram
-                chmod 0775 /tmp/portage_nozram
-        else
-	        if ( grep -qi "swap_zram" /proc/cmdline); then
-			CPUS=`grep -Ec "^processor" /proc/cpuinfo`
-		        RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
-			FACTOR=50
-			[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
-			mem_by_cpu=$(($RAM/$CPUS*$FACTOR/100*1024))
-			echo "Activating $CPUS zram swap device(s), using $mem_by_cpu per cpu."
+		#inodes="-N $((262144))"
+                echo "Creating ZRAM /tmp/portage_zram and mounting"
+                echo $size > /sys/block/${PORTAGE_TMP_ZRAM_DEV}/disksize
+                mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 $inodes -L ${PORTAGE_TMP_ZRAM_DEV} /dev/${PORTAGE_TMP_ZRAM_DEV}
+                mount -o barrier=0,commit=240,noatime,nodev /dev/${PORTAGE_TMP_ZRAM_DEV} /tmp/portage_zram
+                chown portage:portage /tmp/portage_zram
+                chmod 0775 /tmp/portage_zram
+        fi
 
-			modprobe zram num_devices=${CPUS}
+        if ( grep -qi "swap_zram" /proc/cmdline); then
+	        RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
+		FACTOR=50
+		[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
+		mem_by_cpu=$(($RAM/$CPUS*$FACTOR/100*1024))
+		echo "Activating $CPUS zram swap device(s), using $mem_by_cpu per cpu."
 
-		        for (( i=0; i<$CPUS; i++ )); do
-		                echo $mem_by_cpu > /sys/block/zram$i/disksize
-		                mkswap /dev/zram$i
-		                swapon -d -p 10 /dev/zram$i
-		        done
-		fi	
+		#modprobe zram num_devices=${CPUS}
+
+	        for (( i=0; i<$CPUS; i++ )); do
+	                echo $mem_by_cpu > /sys/block/zram$i/disksize
+	                mkswap /dev/zram$i
+	                swapon -d -p 10 /dev/zram$i
+	        done
 	fi
 }
 
 stop() {
-        if ( grep -qi "tmp_zram" /proc/cmdline ) || ( grep -qi "portage_tmp_zram" /proc/cmdline ); then
-                echo "Unmounting ZRAM"
-                umount /dev/zram0
-		echo 1 > /sys/block/zram0/reset
-        fi
 	if ( grep -qi "swap_zram" /proc/cmdline ); then
 		echo "Disactivating Swap ZRAM"
-		CPUS=`grep -c processor /proc/cpuinfo`
+		CPUS=`grep -Ec "^processor" /proc/cpuinfo`
 			for (( i=0; i<$CPUS; i++ )); do
 				grep -q "/dev/zram$i" /proc/swaps && swapoff /dev/zram$i
 				grep -q "/dev/zram$i" /proc/swaps && echo 1 > /sys/block/zram$i/reset
                         done
 		sleep 1
-		rmmod zram
 	fi
+        if ( grep -qi "portage_tmp_zram" /proc/cmdline ); then
+                echo "Unmounting ZRAM"
+		DEV=$(portage_tmp_zram_dev_name)
+                umount /dev/${DEV}
+		echo 1 > /sys/block/${DEV}/reset
+        fi
+	rmmod zram
 }
 
 OPERATION="$1"
