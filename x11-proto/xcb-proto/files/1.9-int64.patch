@@ -1,0 +1,7 @@
+--- xcb-proto-1.8/1	2013-11-12 00:32:54.639459939 +0400
++++ xcb-proto-1.9/1	2013-11-12 00:33:02.529494830 +0400
+@@ -0,0 +1,4 @@
++./xcbgen/xtypes.py:tcard64 = SimpleType(('uint64_t',), 8)
++./xcbgen/xtypes.py:tint64 = SimpleType(('int64_t',), 8)
++./xcbgen/state.py:        self.add_type('CARD64', '', ('uint64_t',), tcard64)
++./xcbgen/state.py:        self.add_type('INT64', '', ('int64_t',), tint64)

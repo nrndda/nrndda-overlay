@@ -70,6 +70,7 @@ src_prepare() {
 		"${FILESDIR}/${PN}-1.48.0-disable_libboost_python3.patch" \
 		"${FILESDIR}/${PN}-1.48.0-python_linking.patch" \
 		"${FILESDIR}/${PN}-1.48.0-disable_icu_rpath.patch" \
+		"${FILESDIR}/${PN}-1.54.0-uintptr.patch" \
 		"${FILESDIR}/${PN}-1.53.0-library_status.patch" # bug 459112
 	epatch_user
 
