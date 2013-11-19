@@ -1,7 +1,7 @@
 [Unit]
 Description=Hostapd wifi ap
-After=br0@enp*.service sys-subsystem-net-devices-%i.device
-Requires=br0@enp*.service sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+Requires=sys-subsystem-net-devices-%i.device
 
 [Service]
 Type=forking

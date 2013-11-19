@@ -24,3 +24,4 @@ ExecStop=/bin/bash -c " if ! ( brctl show | grep -q br0 ); then /sbin/brctl delb
 
 [Install]
 WantedBy=network.target
+WantedBy=hostapd@.service
