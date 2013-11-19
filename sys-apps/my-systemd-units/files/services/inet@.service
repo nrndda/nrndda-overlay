@@ -19,3 +19,11 @@ PIDFile=/var/run/-pppoe.pid
 
 [Install]
 WantedBy=network.target
+RequiredBy=sntp.service
+RequiredBy=ntpd.service
+RequiredBy=ntpdate.service
+RequiredBy=ddclient.service
+RequiredBy=fail2ban.service
+RequiredBy=miniupnpd.service
+RequiredBy=radvd.service
+#RequiredBy=
