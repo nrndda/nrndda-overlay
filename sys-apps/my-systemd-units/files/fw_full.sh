@@ -81,13 +81,13 @@ function get_dev()
 
 function get_ext_lan_if()
 {
-  IF=get_dev(ext_lan\@enp*)
+  IF=get_dev "ext_lan\@enp*"
   echo $IF;
 }
 
 function get_inet_if()
 {
-  IF=get_dev(inet\@ppp*)
+  IF=get_dev "inet\@ppp*"
   echo $IF;
 }
 ######################################################################
