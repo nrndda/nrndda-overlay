@@ -15,4 +15,4 @@ ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
 
 [Install]
 WantedBy=network.target
-WantedBy=inet@.service
+RequiredBy=inet@.service
