@@ -72,18 +72,23 @@ function get_broadcast()
    echo $IP;
 }
 
-function get_ext_lan_if()
+function get_dev()
 {
   sytemd_dir="/etc/systemd/system/network.target.wants"
-  DEV=`$sytemd_dir/ext_lan\@enp* | cut -d "@" -f 2- | cut -d "." -f -1`
+  DEV=`ls $sytemd_dir/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
+}
+
+function get_ext_lan_if()
+{
+  IF=get_dev(ext_lan\@enp*)
+  echo $IF;
 }
 
 function get_inet_if()
 {
-  sytemd_dir="/etc/systemd/system/network.target.wants"
-  DEV=`$sytemd_dir/inet\@ppp* | cut -d "@" -f 2- | cut -d "." -f -1`
-  echo $DEV;
+  IF=get_dev(inet\@ppp*)
+  echo $IF;
 }
 ######################################################################
 #####
