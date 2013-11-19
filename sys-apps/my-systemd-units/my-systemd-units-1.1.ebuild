@@ -86,8 +86,9 @@ src_install() {
 		fi
 	done
 	if use br0; then
-		install_service br0_static.service || die "install_service failed"
-		install_service br0_dynamic.service || die "install_service failed"
+		install_service br0@.service || die "install_service failed"
+	        exeinto /usr/local/sbin/
+	        doexe "${FILESDIR}"/crda_set.sh
 	fi
 	if use distccd ; then
 		install_service distccd.service || die "install_service failed"
@@ -98,6 +99,7 @@ src_install() {
 	fi
 	if use hostapd ; then
 		install_service hostapd.service || die "install_service failed"
+		install_service hostapd@.service || die "install_service failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
 	fi
 	if use git ; then

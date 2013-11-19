@@ -55,6 +55,6 @@ src_install() {
 
 	keepdir /etc/wireless-regdb/pubkeys
 
-        exeinto /usr/local/sbin/
-        doexe "${FILESDIR}"/crda_set.sh
+        #exeinto /usr/local/sbin/
+        #doexe "${FILESDIR}"/crda_set.sh
 }

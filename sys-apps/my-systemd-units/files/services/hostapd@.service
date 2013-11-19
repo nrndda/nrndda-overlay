@@ -1,0 +1,21 @@
+[Unit]
+Description=Hostapd wifi ap
+After=br0.service sys-subsystem-net-devices-%i.device
+Requires=br0.service sys-subsystem-net-devices-%i.device
+
+[Service]
+Type=forking
+Restart=always
+RestartSec=10
+#ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/ifconfig %i 0.0.0.0 up
+#ExecStartPre=/bin/bash -c "COUNTRY="00" /sbin/crda"
+ExecStartPre=-/usr/local/sbin/crda_set.sh
+#ExecStartPre=/usr/sbin/iw reg set RU
+
+ExecStart=/usr/sbin/hostapd -B -P /run/hostapd/hostapd_%i.pid /etc/hostapd/hostapd_%i.conf
+ExecReload=/bin/kill -HUP $(cat /run/hostapd/hostapd_%i.pid) > /dev/null 2>&1
+PIDFile=/run/hostapd/hostapd_%i.pid
+
+[Install]
+WantedBy=multi-user.target
