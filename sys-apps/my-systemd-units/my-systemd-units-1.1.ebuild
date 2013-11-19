@@ -81,6 +81,10 @@ install_target() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
+	mkdir -p /etc/systemd/system/getty@tty1.service.d/
+	insinto /etc/systemd/system/getty@tty1.service.d/
+	doins "${FILESDIR}"/noclear.conf
+
 	for i in mediatomb ushare hwclock microcode_ctl; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
