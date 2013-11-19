@@ -19,3 +19,4 @@ PIDFile=/run/hostapd/hostapd_%i.pid
 
 [Install]
 WantedBy=multi-user.target
+WantedBy=network.target
