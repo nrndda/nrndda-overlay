@@ -1,8 +1,6 @@
 [Unit]
 Description=P-T-K internal lan connection with firewall
-After=systemd-modules-load.service systemd-udev-trigger.service br0@enp*.service
-Before=ppp0.service
-Requires=br0@enp*.service
+After=systemd-modules-load.service systemd-udev-trigger.service
 
 [Service]
 RestartSec=5
@@ -10,10 +8,11 @@ Restart=always
 
 ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
 ExecStartPre=/usr/bin/sleep 5
-ExecStart=/sbin/dhcpcd -B -w -c /home/nrndda/bin/fw_full.sh %i
+ExecStart=/sbin/dhcpcd -B -w -c /usr/local/sbin/fw_full.sh %i
 
 ExecStop=/sbin/dhcpcd -k %i
 ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh 0
 
 [Install]
 WantedBy=network.target
+WantedBy=inet@.service

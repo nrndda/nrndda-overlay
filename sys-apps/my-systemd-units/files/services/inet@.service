@@ -1,7 +1,6 @@
 [Unit]
 Description=PPPoE connection with firewall
-After=systemd-modules-load.service systemd-udev-trigger.service ext_lan@enp*.service
-Requires=ext_lan@enp*.service
+After=systemd-modules-load.service systemd-udev-trigger.service
 
 [Service]
 Type=forking
