@@ -8,7 +8,11 @@ Restart=always
 
 ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
 ExecStartPre=/usr/bin/sleep 5
-ExecStart=/sbin/dhcpcd -B -w -c "/lib/dhcpcd/dhcpcd-run-hooks && /usr/local/sbin/fw_full.sh" %i
+ExecStart=/sbin/dhcpcd -B -w %i
+######################################TODO: convert to oneshot with:
+#ExecStart=/sbin/dhcpcd -B -w 4 -w 6 %i
+ExecStartPre=/usr/bin/sleep 32
+ExecStartPre=-/usr/local/sbin/fw_full.sh
 
 ExecStop=/sbin/dhcpcd -k %i
 ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
