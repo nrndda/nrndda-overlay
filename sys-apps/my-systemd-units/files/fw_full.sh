@@ -74,8 +74,8 @@ function get_broadcast()
 
 function get_dev()
 {
-  sytemd_dir="/etc/systemd/system/network.target.wants"
-  DEV=`ls $sytemd_dir/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
+  systemd_dir="/etc/systemd/system/network.target.wants"
+  DEV=`ls ${systemd_dir}/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
 }
 
@@ -128,13 +128,15 @@ LAN_IP_RANGE_EXT="$LAN_IP_EXT/$LAN_NETMASK_EXT"
 #
 INET_IFACE=`get_inet_if`
 WITH_INET=`$IFCONFIG | grep -q $INET_IFACE`
-INET_IP=`get_addr $INET_IFACE`
-INET_IPv6=`get_addrv6 $INET_IFACE`
-INET_IPv6_ALL=`get_addrv6_all $INET_IFACE`
-INET_NETMASK=`get_netmask $INET_IFACE`
-INET_PREFIX=`get_my_prefix $INET_IFACE`
-INET_BROADCAST=`get_broadcast $INET_IFACE`
-INET_IP_RANGE="$INET_IP/$INET_NETMASK"
+if $WITH_INET; then
+  INET_IP=`get_addr $INET_IFACE`
+  INET_IPv6=`get_addrv6 $INET_IFACE`
+  INET_IPv6_ALL=`get_addrv6_all $INET_IFACE`
+  INET_NETMASK=`get_netmask $INET_IFACE`
+  INET_PREFIX=`get_my_prefix $INET_IFACE`
+  INET_BROADCAST=`get_broadcast $INET_IFACE`
+  INET_IP_RANGE="$INET_IP/$INET_NETMASK"
+fi
 
 #
 # 1.3 VPN Configuration.
