@@ -12,11 +12,12 @@ RemainAfterExit=yes
 ExecStart=/bin/ifconfig %i 0.0.0.0 up
 ExecStart=/bin/bash -c " if ! ( brctl show | grep -q br0 ); then /sbin/brctl addbr br0; fi "
 ExecStart=/bin/bash -c " if ! ( brctl show | grep -q %i ); then /sbin/brctl addif br0 %i; fi "
-ExecStart=/bin/ifconfig br0 10.0.0.2 netmask 255.255.255.0 broadcast 10.0.0.255 up
+ExecStart=/bin/ifconfig br0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up
+ExecStart=/bin/ip -6 addr add fe80::1 dev br0
 #ExecStart=/bin/ip -6 addr add `rdisc6 -q1 ppp0 | cut -d "/" -f 1`::2 dev br0
-ExecStart=/bin/route add default gw 10.0.0.1
-ExecStart=/bin/echo "nameserver 10.0.0.1" > /etc/resolv.conf
-ExecStart=/bin/echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+#ExecStart=/bin/route add default gw 10.0.0.1
+#ExecStart=/bin/echo "nameserver 10.0.0.1" > /etc/resolv.conf
+#ExecStart=/bin/echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
 ExecStop=/bin/ifconfig br0 down
 ExecStop=/bin/bash -c " if ! ( brctl show | grep -q %i ); then /sbin/brctl delif br0 %i; fi "
