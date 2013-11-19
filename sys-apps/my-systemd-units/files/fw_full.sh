@@ -127,7 +127,11 @@ LAN_IP_RANGE_EXT="$LAN_IP_EXT/$LAN_NETMASK_EXT"
 #
 #
 INET_IFACE=`get_inet_if`
-WITH_INET=`$IFCONFIG | grep -q $INET_IFACE`
+if $IFCONFIG | grep -q $INET_IFACE; then
+  WITH_INET="true";
+else
+  WITH_INET="false";
+fi
 if $WITH_INET; then
   INET_IP=`get_addr $INET_IFACE`
   INET_IPv6=`get_addrv6 $INET_IFACE`
