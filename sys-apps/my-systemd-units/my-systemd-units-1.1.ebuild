@@ -81,7 +81,7 @@ install_target() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
-	mkdir -p /etc/systemd/system/getty@tty1.service.d/
+	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
 	insinto /etc/systemd/system/getty@tty1.service.d/
 	doins "${FILESDIR}"/noclear.conf
 
