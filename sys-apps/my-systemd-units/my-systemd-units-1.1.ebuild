@@ -113,6 +113,7 @@ src_install() {
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
 	        doexe "${FILESDIR}"/fw_full.sh
+	        doexe "${FILESDIR}"/fw_with_dhcpcd_hooks.sh
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
