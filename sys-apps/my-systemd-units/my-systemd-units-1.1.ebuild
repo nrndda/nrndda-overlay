@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
-	git iptables rtorrent screen \
+	git iptables miniupnpd rtorrent screen \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm"
 
 DEPEND="sys-apps/systemd
@@ -27,6 +27,7 @@ DEPEND="sys-apps/systemd
 	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
 	hwclock? ( sys-apps/util-linux )
 	iptables? ( net-firewall/iptables )
+	miniupnpd? ( net-misc/miniupnpd )
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
@@ -123,6 +124,10 @@ src_install() {
 		install_service iptables.service || die "install_service failed"
 		install_service ip6tables.service || die "install_service failed"
 		dosbin "${FILESDIR}"/iptables-stop || die "dosbin failed"
+	fi
+	if use miniupnpd ; then
+		install_service miniupnpd.service || die "install_service failed"
+		install_tmpfile miniupnpd.conf || die "install_tmpfile failed"
 	fi
 	if use flexlm ; then
 		install_service flexlm.service || die "install_service failed"
