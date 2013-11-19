@@ -9,7 +9,7 @@ Restart=always
 ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
 ExecStartPre=/usr/bin/sleep 5
 #ExecStart=/sbin/dhcpcd -q -B -w4 -w6 %i
-ExecStart=/sbin/dhcpcd -q -B -w4 -w6 -c /usr/local/sbin/fw_with_dhcpcd_hooks.sh %i
+ExecStart=/sbin/dhcpcd -q -B -c /usr/local/sbin/fw_with_dhcpcd_hooks.sh %i
 #ExecStartPre=/usr/bin/sleep 32
 #ExecStartPre=-/usr/local/sbin/fw_full.sh
 
