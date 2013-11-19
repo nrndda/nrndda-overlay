@@ -15,7 +15,7 @@ HOMEPAGE="http://nrndda.mine.nu"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="distccd br0 hostapd hwclock microcode_ctl \
+IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
 	git iptables rtorrent screen \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm"
 
@@ -24,6 +24,7 @@ DEPEND="sys-apps/systemd
 	git? ( dev-vcs/git )
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
+	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
 	hwclock? ( sys-apps/util-linux )
 	iptables? ( net-firewall/iptables )
 	mediatomb? ( net-misc/mediatomb )
@@ -101,6 +102,13 @@ src_install() {
 		install_service hostapd.service || die "install_service failed"
 		install_service hostapd@.service || die "install_service failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
+	fi
+	if use inet ; then
+		install_service inet@.service || die "install_service failed"
+		install_service ext_lan@.service || die "install_service failed"
+	        exeinto /usr/local/sbin/
+	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
+	        doexe "${FILESDIR}"/fw_full.sh
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"

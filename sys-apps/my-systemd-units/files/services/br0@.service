@@ -1,5 +1,7 @@
 [Unit]
 Description=br0 Static Network Connectivity
+After=sys-subsystem-net-devices-%i.device
+Requires=sys-subsystem-net-devices-%i.devic
 Conflicts=NetworkManager.service
 
 [Service]
