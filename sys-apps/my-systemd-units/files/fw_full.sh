@@ -74,15 +74,15 @@ function get_broadcast()
 
 function get_ext_lan_if()
 {
-  sytemd_dir = "/etc/systemd/system"
-  DEV = `$sytemd_dir/ext_lan\@enp* | cut -d "@" -f 2- | cut -d "." -f -1`
+  sytemd_dir="/etc/systemd/system"
+  DEV=`$sytemd_dir/ext_lan\@enp* | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
 }
 
 function get_inet_if()
 {
-  sytemd_dir = "/etc/systemd/system"
-  DEV = `$sytemd_dir/inet\@ppp* | cut -d "@" -f 2- | cut -d "." -f -1`
+  sytemd_dir="/etc/systemd/system"
+  DEV=`$sytemd_dir/inet\@ppp* | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
 }
 ######################################################################
