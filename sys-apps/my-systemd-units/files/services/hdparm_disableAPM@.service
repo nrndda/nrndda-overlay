@@ -1,0 +1,10 @@
+[Unit]
+Description=Disable APM for hdd via hdparm
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/hdparm -B 255 /dev/%i
+
+[Install]
+WantedBy=multi-user.target

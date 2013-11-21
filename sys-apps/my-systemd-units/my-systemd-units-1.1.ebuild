@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
-	git iptables miniupnpd rtorrent screen \
+	git iptables miniupnpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm"
 
 DEPEND="sys-apps/systemd
@@ -32,7 +32,8 @@ DEPEND="sys-apps/systemd
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
-	screen? ( app-misc/screen )"
+	screen? ( app-misc/screen )
+	hdparm? ( sys-apps/hdparm )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -115,6 +116,9 @@ src_install() {
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
 	        doexe "${FILESDIR}"/fw_full.sh
 	        doexe "${FILESDIR}"/fw_with_dhcpcd_hooks.sh
+	fi
+	if use hdparm ; then
+		install_service hdparm_disableAPM@.service || die "install_service failed"
 	fi
 	if use git ; then
 		install_service git-daemon@.service || die "install_service failed"
