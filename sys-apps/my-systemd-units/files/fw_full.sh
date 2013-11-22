@@ -246,23 +246,23 @@ for i in $IPTABLES $IP6TABLES; do
   #
   #/*TODO*/ need more information about "SYN,FIN SYN,FIN" and "SYN,RST SYN,RST"
   $i -A bad_tcp_packets -p tcp --tcp-flags ALL ACK,RST,SYN,FIN -m \
-      state --state NEW -j REJECT --reject-with tcp-reset
+      conntrack --ctstate NEW -j REJECT --reject-with tcp-reset
   $i -A bad_tcp_packets -p tcp --tcp-flags SYN,RST SYN,RST -m \
-      state --state NEW -j REJECT --reject-with tcp-reset
+      conntrack --ctstate NEW -j REJECT --reject-with tcp-reset
   $i -A bad_tcp_packets -p tcp --tcp-flags SYN,FIN SYN,FIN -m \
-      state --state NEW -j REJECT --reject-with tcp-reset
+      conntrack --ctstate NEW -j REJECT --reject-with tcp-reset
   $i -A bad_tcp_packets -p tcp --tcp-flags SYN,ACK SYN,ACK -m \
-      state --state NEW -j REJECT --reject-with tcp-reset
-  $i -A bad_tcp_packets -p tcp ! --syn -m state --state NEW -j DROP
-#   $i -A bad_tcp_packets -p tcp ! --syn -m state --state NEW -j logging
-  $i -A bad_tcp_packets -p tcp -m state --state INVALID -j DROP
+      conntrack --ctstate NEW -j REJECT --reject-with tcp-reset
+  $i -A bad_tcp_packets -p tcp ! --syn -m conntrack --ctstate NEW -j DROP
+#   $i -A bad_tcp_packets -p tcp ! --syn -m conntrack --ctstate NEW -j logging
+  $i -A bad_tcp_packets -p tcp -m conntrack --ctstate INVALID -j DROP
 
   #
   # allowed chain
   #
   #
   $i -A allowed -p TCP --syn -j ACCEPT
-  $i -A allowed -p TCP -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+  $i -A allowed -p TCP -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
   $i -A allowed -p TCP -j DROP
 
   #
@@ -333,9 +333,9 @@ for i in $IPTABLES $IP6TABLES; do
   # LOG rules
   #
   #
-  $i -A logging -p tcp ! --syn -m state --state NEW -j LOG \
+  $i -A logging -p tcp ! --syn -m conntrack --ctstate NEW -j LOG \
       -m limit --limit 12/h --limit-burst 5 --log-prefix "New not syn:"
-  $i -A logging -p tcp ! --syn -m state --state NEW -j DROP
+  $i -A logging -p tcp ! --syn -m conntrack --ctstate NEW -j DROP
   $i -A logging -m limit --limit 12/h --limit-burst 5 -j LOG \
       --log-level 4 --log-prefix "IPT-Dropped: "
   $i -A logging -j DROP
@@ -453,14 +453,14 @@ $IP6TABLES -A INPUT -p tcp -j bad_tcp_packets
 # Which could allow a ping-pong of packets
 $IP6TABLES -A INPUT -m rt --rt-type 0 -j DROP
 
-$IPTABLES  -A INPUT -d $LAN_IP_EXT -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES  -A INPUT -d $LAN_IP_EXT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 for i in $LAN_IPv6_EXT_ALL; do
-  $IP6TABLES -A INPUT -d $i -m state --state ESTABLISHED,RELATED -j ACCEPT
+  $IP6TABLES -A INPUT -d $i -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 done
 if $WITH_INET; then
-  $IPTABLES  -A INPUT -d $INET_IP -m state --state ESTABLISHED,RELATED -j ACCEPT
+  $IPTABLES  -A INPUT -d $INET_IP -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
   for i in $INET_IPv6_ALL; do
-    $IP6TABLES -A INPUT -d $i -m state --state ESTABLISHED,RELATED -j ACCEPT
+    $IP6TABLES -A INPUT -d $i -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
   done
 fi
 
@@ -517,8 +517,8 @@ $IP6TABLES -A INPUT -p UDP -i $LAN_IFACE_INT --dport 67:68 --sport 67:68 -j ACCE
 # Multicast DNS
 #
 #
-$IPTABLES -A INPUT -m state --state NEW -m udp -p udp --dport 5353 -d 224.0.0.251 -j ACCEPT
-$IP6TABLES -A INPUT -m state --state NEW -m udp -p udp --dport 5353 -d ff02::00fb -j ACCEPT
+$IPTABLES -A INPUT -m conntrack --ctstate NEW -m udp -p udp --dport 5353 -d 224.0.0.251 -j ACCEPT
+$IP6TABLES -A INPUT -m conntrack --ctstate NEW -m udp -p udp --dport 5353 -d ff02::00fb -j ACCEPT
 
 #
 # Rules for incoming packets from the internet.
@@ -575,8 +575,8 @@ $IP6TABLES -A INPUT -j logging
 $IPTABLES  -A FORWARD -p tcp -j bad_tcp_packets
 $IP6TABLES -A FORWARD -p tcp -j bad_tcp_packets
 
-$IPTABLES  -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-$IP6TABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES  -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IP6TABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 #Allow some  special range
 $IP6TABLES -A FORWARD -s ff00::/8 -j ACCEPT
@@ -659,8 +659,8 @@ fi
 $IPTABLES  -A OUTPUT -p tcp -j bad_tcp_packets
 $IP6TABLES -A OUTPUT -p tcp -j bad_tcp_packets
 
-$IPTABLES  -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-$IP6TABLES -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES  -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IP6TABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 #Explicit rule for ICMPv6 needed for ipv6
 $IP6TABLES -A OUTPUT -p ICMPv6 -j ACCEPT
