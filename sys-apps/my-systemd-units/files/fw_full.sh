@@ -104,7 +104,7 @@ LAN_IFACE_INT="br0"
 LAN_IP_INT=`get_addr $LAN_IFACE_INT`
 LAN_IPv6_INT=`get_addrv6 $LAN_IFACE_INT`
 LAN_IPv6_INT_ALL=`get_addrv6_all $LAN_IFACE_INT`
-# TODO WRONG! IN external lan i hvaen't any prefixes! "LAN_PREFIX_INT=`get_my_prefix $LAN_IFACE_INT`"
+# TODO WRONG! IN external lan i haven't any prefixes! "LAN_PREFIX_INT=`get_my_prefix $LAN_IFACE_INT`"
 LAN_NETMASK_INT=`get_netmask $LAN_IFACE_INT`
 LAN_BROADCAST_INT=`get_broadcast $LAN_IFACE_INT`
 LAN_IP_RANGE_INT="$LAN_IP_INT/$LAN_NETMASK_INT"
@@ -362,6 +362,9 @@ if $WITH_INET; then
   $IPTABLES  -A udp_packets -p UDP -i $INET_IFACE -d $INET_BROADCAST --dport 67:68 -j DROP
 #   $IP6TABLES -A udp_packets -p UDP -i $INET_IFACE --dport 67:68 -j DROP
 $IPTABLES  -A udp_packets -p UDP -i $INET_IFACE -d $LAN_IP_INT --sport 123 --dport 123 -j DROP
+
+$IPTABLES  -A udp_packets -p UDP -i $INET_IFACE --sport 53 -j DROP
+$IP6TABLES -A udp_packets -p UDP -i $INET_IFACE --sport 53 -j DROP
 fi
 
 #
