@@ -1,20 +1,21 @@
 [Unit]
 Description=rtorrent Service
+After=local-fs.target
+Requires=local-fs.target
 
 [Service]
 User=nrndda
 Group=nrndda
 
-Type=forking
-EnvironmentFile=/etc/conf.d/rtorrentd
-#Restart=always
+Type=oneshot
+#EnvironmentFile=/etc/conf.d/rtorrentd
+Restart=on-failure
 ExecStartPre=/bin/bash -c "lockfile=`grep -i nrndda /etc/passwd | cut -d ':' -f 6`/.rtorrent/session/rtorrent.lock; if [ -a $lockfile ]; then rm $lockfile; fi"
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X chdir /music
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
 #ExecStart=/usr/bin/sudo -u nrndda -g nrndda /usr/bin/screen -- -DmS rtorrent /usr/bin/rtorrent
 ExecStart=/usr/bin/screen -dmS rtorrent /usr/bin/rtorrent
 ExecStop=/usr/bin/screen -S rtorrent -X quit
-
 
 [Install]
 WantedBy=multi-user.target
