@@ -9,7 +9,7 @@ Group=nrndda
 
 Type=oneshot
 #EnvironmentFile=/etc/conf.d/rtorrentd
-Restart=on-failure
+#Restart=on-failure
 ExecStartPre=/bin/bash -c "lockfile=`grep -i nrndda /etc/passwd | cut -d ':' -f 6`/.rtorrent/session/rtorrent.lock; if [ -a $lockfile ]; then rm $lockfile; fi"
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X chdir /music
 #ExecStart=/usr/bin/sudo -u $USER /usr/bin/screen -d -RR -X screen -t rtorrent /usr/bin/rtorrent
