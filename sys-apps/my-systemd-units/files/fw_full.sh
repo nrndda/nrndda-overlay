@@ -74,7 +74,7 @@ function get_broadcast()
 
 function get_dev()
 {
-  systemd_dir="/etc/systemd/system/network.target.wants"
+  systemd_dir="/etc/systemd/system/network.target.*"
   DEV=`ls ${systemd_dir}/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
 }
