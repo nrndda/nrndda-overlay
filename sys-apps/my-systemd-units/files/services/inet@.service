@@ -4,13 +4,13 @@ After=systemd-modules-load.service systemd-udev-trigger.service
 
 [Service]
 Type=forking
-RestartSec=5
+RestartSec=2
 Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
-ExecStartPost=/usr/bin/sleep 5
+ExecStartPost=/usr/bin/sleep 10
 ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
-ExecStartPost=/usr/bin/sleep 5
+ExecStartPost=/usr/bin/sleep 10
 ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
 #Prevent infinite loop in routing table
 ExecStartPost=-/bin/sh -c "/bin/ip -6 route del `rdisc6 -q1 %i` dev %i"
@@ -26,12 +26,11 @@ ExecStopPost=-/bin/sh -c "/bin/ip -6 addr del $(ip -6 addr show dev br0 scope gl
 PIDFile=/var/run/-pppoe.pid
 
 [Install]
-WantedBy=network.target
-RequiredBy=sntp.service
-RequiredBy=ntpd.service
-RequiredBy=ntpdate.service
-RequiredBy=ddclient.service
-RequiredBy=fail2ban.service
-RequiredBy=miniupnpd.service
-RequiredBy=radvd.service
-#RequiredBy=
+RequiredBy=network.target
+#RequiredBy=sntp.service
+#RequiredBy=ntpd.service
+#RequiredBy=ntpdate.service
+#RequiredBy=ddclient.service
+#RequiredBy=fail2ban.service
+#RequiredBy=miniupnpd.service
+#RequiredBy=radvd.service
