@@ -8,15 +8,15 @@ RestartSec=2
 Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
-#ExecStartPost=/usr/bin/sleep 10
-#ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
+ExecStartPost=/usr/bin/sleep 2
+ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
 ExecStartPost=/usr/bin/sleep 10
-ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev %i | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev %i"
-#ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
+#ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev %i | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev %i"
+ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
 #Prevent infinite loop in routing table
 #ExecStartPost=-/bin/sh -c "/bin/ip -6 route del `rdisc6 -q1 %i` dev %i"
 #Remove Router advertisement for not to stain routing table. I think I can disable it and set IPv6 addresses by myself.
-#ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
+ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
 ExecStartPost=-/usr/local/sbin/fw_full.sh
 ExecStartPost=-/etc/miniupnpd/iptables_init.sh
 ExecStartPost=-/etc/miniupnpd/ip6tables_init.sh
