@@ -7,7 +7,7 @@ Requires=sys-subsystem-net-devices-%i.device
 RestartSec=5
 Restart=always
 
-ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
+#ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
 #ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
 #ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.autoconf=0
 #ExecStartPre=/usr/bin/sleep 1

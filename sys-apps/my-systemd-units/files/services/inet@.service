@@ -10,10 +10,10 @@ Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
 ExecStartPost=/usr/bin/sleep 1
-ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
+#ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.autoconf=0
-ExecStartPost=/usr/bin/sleep 1
+#ExecStartPost=/usr/bin/sleep 1
 #ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev %i | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev %i"
 #ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
 #Prevent infinite loop in routing table
