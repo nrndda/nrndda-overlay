@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-wireless/hostapd/hostapd-0.7.3.ebuild,v 1.2 2011/03/29 16:09:09 angelos Exp $
 
-EAPI="2"
+EAPI="5"
 
 inherit toolchain-funcs eutils git-2
 

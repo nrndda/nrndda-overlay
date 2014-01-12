@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/sci-electronics/iverilog/iverilog-0.9.3.ebuild,v 1.1 2010/11/02 01:41:19 rafaelmartins Exp $
 
-EAPI="2"
+EAPI="5"
 
 inherit eutils autotools multilib git-2
 

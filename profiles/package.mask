@@ -1,10 +1,3 @@
-# Mozilla SCM packages
-~meta-sync/mozilla-repositories-9999
-~dev-libs/nspr-9999
-~dev-libs/nss-9999
-~net-libs/xulrunner-9999
-~www-client/firefox-9999
-
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
 

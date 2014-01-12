@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/www-plugins/gnash/gnash-0.8.9-r2.ebuild,v 1.2 2011/11/26 02:24:20 chithanh Exp $
 
-EAPI=3
+EAPI=5
 CMAKE_REQUIRED="never"
 KDE_REQUIRED="optional"
 AT_M4DIR="cygnal"
