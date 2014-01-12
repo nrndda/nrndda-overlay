@@ -290,7 +290,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##messengers
   $i -A tcp_packets -p TCP -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j allowed
   ##C610A IP
-  $i -A tcp_packets -p TCP -m multiport --dport 5060:5076,3478,5004:5020 -j allowed
+  $i -A tcp_packets -p TCP -m multiport --dport 5060:5076,3478,11024,5004:5020 -j allowed
   # ##SAMBA
   # $i -A tcp_packets -p TCP -m multiport --dport 135:139,445 -j allowed
 
@@ -321,7 +321,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##messengers
   $i -A udp_packets -p UDP -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j ACCEPT
   ##C610A IP
-  $i -A udp_packets -p UDP -m multiport --dport 5060:5076,3478,5004:5020 -j ACCEPT
+  $i -A udp_packets -p UDP -m multiport --dport 5060:5076,3478,11024,5004:5020 -j ACCEPT
   # ##SAMBA
   # $i -A udp_packets -p UDP -m multiport --dport 135:139,445 -j ACCEPT
 
@@ -728,8 +728,8 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 8650:8
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399,48628 -j DNAT --to-destination 10.0.0.2
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399,48628 -j DNAT --to-destination 10.0.0.2
 ##C610A IP
-$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,5004:5020 -j DNAT --to-destination 10.0.0.3
-$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,5004:5020 -j DNAT --to-destination 10.0.0.3
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
 if $WITH_INET; then
   ##rtorrent
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
@@ -738,8 +738,8 @@ if $WITH_INET; then
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
   ##C610A IP
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,5004:5020 -j DNAT --to-destination 10.0.0.3
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,5004:5020 -j DNAT --to-destination 10.0.0.3
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
 fi
 #
 # 4.2.2 POSTROUTING chain
