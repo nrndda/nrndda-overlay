@@ -727,6 +727,9 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 8650:8
 ##messengers
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399,48628 -j DNAT --to-destination 10.0.0.2
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399,48628 -j DNAT --to-destination 10.0.0.2
+#Forward port for ssh to nrndda_core
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 ##C610A IP
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
@@ -737,6 +740,9 @@ if $WITH_INET; then
   ##messengers
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
+  #Forward port for ssh to nrndda_core
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   ##C610A IP
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
