@@ -81,6 +81,9 @@ install_target() {
 }
 
 src_install() {
+	#Just for workaround emerge error
+	mkdir "${S}"
+
 	install_service configure-printer@.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
