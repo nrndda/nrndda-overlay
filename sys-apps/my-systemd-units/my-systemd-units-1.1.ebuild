@@ -8,7 +8,7 @@ inherit eutils
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
-#SRC_URI=""
+SRC_URI=""
 #SRC_URI="ftp://nrndda.mine.nu/Apps/my_systemd_units-0.1.tar.gz
 #	ftp://10.0.0.2/Apps/my_systemd_units-0.1.tar.gz"
 
@@ -80,10 +80,12 @@ install_target() {
 	doins "${SOURCE_TARGETS_DIR}"/$1
 }
 
-src_install() {
+src_unpack() {
 	#Just for workaround emerge error
-	mkdir "${S}"
+	mkdir -p "${S}/${P}"
+}
 
+src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
