@@ -4,26 +4,26 @@
 
 EAPI=5
 
-inherit multilib
-
 MY_P="wireless-regdb-${PV:0:4}.${PV:4:2}.${PV:6:2}"
 DESCRIPTION="Binary regulatory database for CRDA"
 HOMEPAGE="http://wireless.kernel.org/en/developers/Regulatory"
 SRC_URI="https://www.kernel.org/pub/software/network/${PN}/${MY_P}.tar.xz"
+
 LICENSE="ISC"
 SLOT="0"
-
 KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 S="${WORKDIR}/${MY_P}"
 
 src_compile() {
-	einfo "Recompiling regulatory.bin from db.txt would break CRDA verify. Installing untouched binary version."
+	einfo "Recompiling regulatory.bin from db.txt would break CRDA verify. Installing unmodified binary version."
 }
 
 src_install() {
-	insinto /usr/$(get_libdir)/crda/
+	# This file is not ABI-specific, and crda itself always hardcodes
+	# this path.  So install into a common location for all ABIs to use.
+	insinto /usr/lib/crda
 	doins "${FILESDIR}"/regulatory.bin
 
 	insinto /etc/wireless-regdb/pubkeys
