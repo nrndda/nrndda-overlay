@@ -721,6 +721,9 @@ $IP6TABLES -A OUTPUT -j logging
 # 4.2.2 PREROUTING chain
 #
 #
+##aMule
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
 ##rtorrent
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
@@ -734,6 +737,9 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp --dport 11111 -j DNAT --to-
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
 if $WITH_INET; then
+  ##aMule
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
   ##rtorrent
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
