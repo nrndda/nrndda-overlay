@@ -1,6 +1,7 @@
 [Unit]
 Description=PPPoE connection with firewall
 After=systemd-modules-load.service systemd-udev-trigger.service
+Before=time-sync.target
 
 [Service]
 Type=forking
@@ -32,8 +33,8 @@ ExecStop=/usr/sbin/pppoe-stop
 PIDFile=/var/run/-pppoe.pid
 
 [Install]
-RequiredBy=network.target
-#RequiredBy=sntp.service
+WantedBy=network.target
+#RequiredBy=time-sync.target
 #RequiredBy=ntpd.service
 #RequiredBy=ntpdate.service
 #RequiredBy=ddclient.service

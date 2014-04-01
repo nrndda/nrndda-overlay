@@ -20,5 +20,5 @@ ExecStop=/sbin/dhcpcd -k %i
 ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
 
 [Install]
-RequiredBy=network.target
+#RequiredBy=network.target
 RequiredBy=inet@.service
