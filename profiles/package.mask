@@ -1,3 +1,6 @@
+#Default mask it
+app-emulation/wine::nrndda
+
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
 

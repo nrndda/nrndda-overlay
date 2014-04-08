@@ -15,7 +15,7 @@ if [[ ${PV} == "9999" ]] ; then
 	EGIT_REPO_URI="https://github.com/stefand/wine.git"
 	inherit git-2
 	SRC_URI=""
-	#KEYWORDS=""
+	KEYWORDS=""
 else
 	MY_P="${PN}-${PV/_/-}"
 	SRC_URI="mirror://sourceforge/${PN}/Source/${MY_P}.tar.bz2"
