@@ -1,10 +1,10 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-wireless/hostapd/hostapd-0.7.3.ebuild,v 1.2 2011/03/29 16:09:09 angelos Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-wireless/hostapd/hostapd-2.1.ebuild,v 1.1 2014/02/12 10:30:27 gurligebis Exp $
 
-EAPI="5"
+EAPI="4"
 
-inherit toolchain-funcs eutils git-2
+inherit toolchain-funcs eutils git-2 systemd
 
 DESCRIPTION="IEEE 802.11 wireless LAN Host AP daemon"
 HOMEPAGE="http://hostap.epitest.fi"
@@ -14,20 +14,23 @@ EGIT_REPO_URI="git://w1.fi/srv/git/hostap.git"
 LICENSE="|| ( GPL-2 BSD )"
 SLOT="0"
 KEYWORDS=""
-IUSE="debug ipv6 logwatch madwifi +ssl +wps"
+IUSE="ipv6 logwatch madwifi +ssl wps +crda"
 
 DEPEND="ssl? ( dev-libs/openssl )
-	dev-libs/libnl:1.1
+	kernel_linux? (
+		dev-libs/libnl:3
+		crda? ( net-wireless/crda )
+	)
 	madwifi? ( ||
 		( >net-wireless/madwifi-ng-tools-0.9.3
 		net-wireless/madwifi-old ) )"
 RDEPEND="${DEPEND}"
 
-MY_S="${S}/hostapd"
+MY_S="${S}/${PN}"
 
 src_prepare() {
 	sed -i -e "s:/etc/hostapd:/etc/hostapd/hostapd:g" \
-		"${MY_S}/hostapd.conf"
+		"${MY_S}/hostapd.conf" || die
 }
 
 src_configure() {
@@ -51,6 +54,7 @@ src_configure() {
 	if use wps; then
 		# Enable Wi-Fi Protected Setup
 		echo "CONFIG_WPS=y" >> ${CONFIG}
+		echo "CONFIG_WPS2=y" >> ${CONFIG}
 		echo "CONFIG_WPS_UPNP=y" >> ${CONFIG}
 		einfo "Enabling Wi-Fi Protected Setup support"
 	fi
@@ -58,6 +62,7 @@ src_configure() {
 	echo "CONFIG_EAP_GTC=y" >> ${CONFIG}
 	echo "CONFIG_EAP_SIM=y" >> ${CONFIG}
 	echo "CONFIG_EAP_AKA=y" >> ${CONFIG}
+	echo "CONFIG_EAP_EKE=y" >> ${CONFIG}
 	echo "CONFIG_EAP_PAX=y" >> ${CONFIG}
 	echo "CONFIG_EAP_PSK=y" >> ${CONFIG}
 	echo "CONFIG_EAP_SAKE=y" >> ${CONFIG}
@@ -67,14 +72,14 @@ src_configure() {
 	einfo "Enabling drivers: "
 
 	# drivers
-#	echo "CONFIG_DRIVER_HOSTAP=y" >> ${CONFIG}
-#	einfo "  HostAP driver enabled"
-#	echo "CONFIG_DRIVER_WIRED=y" >> ${CONFIG}
-#	einfo "  Wired driver enabled"
-#	echo "CONFIG_DRIVER_PRISM54=y" >> ${CONFIG}
-#	einfo "  Prism54 driver enabled"
-#	echo "CONFIG_DRIVER_NONE=y" >> ${CONFIG}
-#	einfo "  None driver enabled"
+	echo "CONFIG_DRIVER_HOSTAP=y" >> ${CONFIG}
+	einfo "  HostAP driver enabled"
+	echo "CONFIG_DRIVER_WIRED=y" >> ${CONFIG}
+	einfo "  Wired driver enabled"
+	echo "CONFIG_DRIVER_PRISM54=y" >> ${CONFIG}
+	einfo "  Prism54 driver enabled"
+	echo "CONFIG_DRIVER_NONE=y" >> ${CONFIG}
+	einfo "  None driver enabled"
 
 	if use madwifi; then
 		# Add include path for madwifi-driver headers
@@ -99,73 +104,76 @@ src_configure() {
 	echo "CONFIG_IEEE80211N=y" >> ${CONFIG}
 	echo "CONFIG_PEERKEY=y" >> ${CONFIG}
 	echo "CONFIG_RSN_PREAUTH=y" >> ${CONFIG}
+	echo "CONFIG_INTERWORKING=y" >> ${CONFIG}
+	echo "CONFIG_ACS=y" >> ${CONFIG}
 
 	if use ipv6; then
 		# IPv6 support
 		echo "CONFIG_IPV6=y" >> ${CONFIG}
 	fi
 
-	if ! use debug; then
-		echo "CONFIG_NO_STDOUT_DEBUG=y" >> ${CONFIG}
+	# If we are using libnl 2.0 and above, enable support for it
+	# Removed for now, since the 3.2 version is broken, and we don't
+	# support it.
+	if has_version ">=dev-libs/libnl-3.2"; then
+		echo "CONFIG_LIBNL32=y" >> .config
 	fi
 
 	# TODO: Add support for BSD drivers
 
-        cd "${MY_S}"
+	cd ${MY_S}
 	default_src_configure
 }
 
 src_compile() {
-        cd "${MY_S}"
-	default_src_compile
-
-	#emake || die "emake failed"
+	cd ${MY_S}
+	emake V=1
 
 	if use ssl; then
-		emake nt_password_hash || die "emake nt_password_hash failed"
-		emake hlr_auc_gw || die "emake hlr_auc_gw failed"
+		emake V=1 nt_password_hash
+		emake V=1 hlr_auc_gw
 	fi
 }
 
 src_install() {
-        cd "${MY_S}"
-	insinto /etc/hostapd
-	doins hostapd.conf hostapd.accept hostapd.deny \
-		hostapd.eap_user hostapd.radius_clients hostapd.sim_db hostapd.wpa_psk
+	cd ${MY_S}
+	insinto /etc/${PN}
+	doins ${PN}.{conf,accept,deny,eap_user,radius_clients,sim_db,wpa_psk}
 
-	dosbin hostapd
-	dobin hostapd_cli
+	fperms -R 600 /etc/${PN}
 
-	use ssl && dobin nt_password_hash
-	use ssl && dobin hlr_auc_gw
+	dosbin ${PN}
+	dobin ${PN}_cli
 
-	newinitd "${FILESDIR}"/${PN}-init.d hostapd
-	newconfd "${FILESDIR}"/${PN}-conf.d hostapd
+	use ssl && dobin nt_password_hash hlr_auc_gw
 
-	doman hostapd.8 hostapd_cli.1
+	newinitd "${FILESDIR}"/${PN}-init.d ${PN}
+	newconfd "${FILESDIR}"/${PN}-conf.d ${PN}
+	systemd_dounit "${FILESDIR}"/${PN}.service
+
+	doman ${PN}{.8,_cli.1}
 
 	dodoc ChangeLog README
-	if use wps; then
-		dodoc README-WPS
-	fi
+	use wps && dodoc README-WPS
 
 	docinto examples
 	dodoc wired.conf
 
 	if use logwatch; then
 		insinto /etc/log.d/conf/services/
-		doins logwatch/hostapd.conf
+		doins logwatch/${PN}.conf
 
 		exeinto /etc/log.d/scripts/services/
-		doexe logwatch/hostapd
+		doexe logwatch/${PN}
 	fi
 }
 
 pkg_postinst() {
 	einfo
+	einfo "If you are running openRC you need to follow this instructions:"
 	einfo "In order to use ${PN} you need to set up your wireless card"
 	einfo "for master mode in /etc/conf.d/net and then start"
-	einfo "/etc/init.d/hostapd."
+	einfo "/etc/init.d/${PN}."
 	einfo
 	einfo "Example configuration:"
 	einfo
@@ -180,7 +188,7 @@ pkg_postinst() {
 		einfo "You should remerge ${PN} after upgrading these packages."
 		einfo
 		einfo "Since you are using the madwifi-ng driver, you should disable or"
-		einfo "comment out wme_enabled from hostapd.conf, since it will"
+		einfo "comment out wme_enabled from ${PN}.conf, since it will"
 		einfo "cause problems otherwise (see bug #260377"
 	fi
 	#if [ -e "${KV_DIR}"/net/mac80211 ]; then
