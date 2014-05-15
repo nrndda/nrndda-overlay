@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
 	git iptables miniupnpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram mediatomb ushare flexlm"
+	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -33,7 +33,8 @@ DEPEND="sys-apps/systemd
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	screen? ( app-misc/screen )
-	hdparm? ( sys-apps/hdparm )"
+	hdparm? ( sys-apps/hdparm )
+	mpd? ( media-sound/mpd )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -137,6 +138,9 @@ src_install() {
 	if use miniupnpd ; then
 		install_service miniupnpd.service || die "install_service failed"
 		install_tmpfile miniupnpd.conf || die "install_tmpfile failed"
+	fi
+	if use mpd ; then
+		install_service mpd@.service || die "install_service failed"
 	fi
 	if use flexlm ; then
 		install_service flexlm.service || die "install_service failed"
