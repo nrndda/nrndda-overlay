@@ -8,6 +8,7 @@ After=sound.target
 
 [Service]
 User=%i
+Group=audio
 PAMName=system-local-login
 #Restart=on-failure
 ExecStart=/usr/bin/mpd --no-daemon
