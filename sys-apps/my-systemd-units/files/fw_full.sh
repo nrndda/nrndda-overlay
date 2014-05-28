@@ -201,6 +201,12 @@ flush
 echo "1" > /proc/sys/net/ipv4/ip_forward
 echo "1" > /proc/sys/net/ipv6/conf/all/forwarding
 echo "1" > /proc/sys/net/ipv6/conf/default/forwarding
+
+echo "2" > /proc/sys/net/ipv6/conf/$LAN_IFACE_EXT/accept_ra
+if $WITH_INET; then
+  echo "2" > /proc/sys/net/ipv6/conf/$INET_IFACE/accept_ra
+fi
+
 #
 # 3.2 Non-Required proc configuration
 #
