@@ -49,7 +49,11 @@ function get_addrv6_all()
 function get_my_prefix()
 {
   RDISC6='/usr/bin/rdisc6';
-  $RDISC6 -q1 $1
+  PREFIX=`$RDISC6 -q1 $1`
+  if [[ "${PREFIX}x" == "x" ]]; then
+    PREFIX="fe80::/64";
+  fi
+  echo $PREFIX
 }
 
 function get_netmask()
@@ -348,7 +352,7 @@ for i in $IPTABLES $IP6TABLES; do
 done
 
 
-# In Microsoft Networks you will be swamped by broadcasts. These lines 
+# In Microsoft Networks you will be swamped by broadcasts. These lines
 # will prevent them from showing up in the logs.
 #
 $IPTABLES  -A udp_packets -p UDP -i $LAN_IFACE_EXT -d $LAN_BROADCAST_EXT --dport 135:139 -j DROP
@@ -403,7 +407,7 @@ $IPTABLES  -A udp_packets -p UDP -i $LAN_IFACE_EXT -d $LAN_BROADCAST_EXT --dport
 # $IPTABLES  -A icmp_packets -p ICMP --icmp-type 18 -j ACCEPT
 # ## ICMP Type 38 "Domain Name Reply"
 # $IPTABLES  -A icmp_packets -p ICMP --icmp-type 38 -j ACCEPT
-# 
+#
 # ## ICMP Type 1 “Destination Unreachable”
 # $IP6TABLES -A icmp_packets -p ICMPv6 --icmpv6-type 1 -j ACCEPT
 # ## ICMP Type 2 “Packet Too Big”
@@ -497,7 +501,7 @@ $IP6TABLES -A INPUT -i $LO_IFACE -j ACCEPT
 # for i in $LAN_IPv6_EXT_ALL; do
 #   $IP6TABLES -A INPUT -i $LO_IFACE -s $i -j ACCEPT
 # done
-# 
+#
 # if $WITH_INET; then
 #   $IPTABLES  -A INPUT -i $LO_IFACE -s $INET_IP -j ACCEPT
 #   for i in $INET_IPv6_ALL; do
@@ -551,8 +555,8 @@ if $WITH_INET; then
 fi
 
 #
-# If you have a Microsoft Network on the outside of your firewall, you may 
-# also get flooded by Multicasts. We drop them so we do not get flooded by 
+# If you have a Microsoft Network on the outside of your firewall, you may
+# also get flooded by Multicasts. We drop them so we do not get flooded by
 # logs
 #
 #
