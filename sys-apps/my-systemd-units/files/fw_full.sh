@@ -51,7 +51,7 @@ function get_my_prefix()
   RDISC6='/usr/bin/rdisc6';
   PREFIX=`$RDISC6 -q1 $1`
   if [[ "${PREFIX}x" == "x" ]]; then
-    PREFIX="fe80::/64";
+    PREFIX="fe80::/10";
   fi
   echo $PREFIX
 }
