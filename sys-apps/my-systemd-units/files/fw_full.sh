@@ -744,8 +744,8 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5180:5
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 $IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 ##C610A IP
-$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
-$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
+$IPTABLES -t nat -A PREROUTING -i $LAN_IP_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 if $WITH_INET; then
   ##aMule
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
@@ -760,8 +760,8 @@ if $WITH_INET; then
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   ##C610A IP
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020 -j DNAT --to-destination 10.0.0.3
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 fi
 #
 # 4.2.2 POSTROUTING chain
