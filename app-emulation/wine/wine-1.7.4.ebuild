@@ -282,7 +282,6 @@ src_prepare() {
 		"../${PULSE_PATCHES}"/*.patch #421365
 	)
 #		"${FILESDIR}"/winemultimedia_1.7.4_20131011.patch
-	if use truetype; then epatch "${FILESDIR}"/freetype.patch; fi
 
 	autotools-utils_src_prepare
 
