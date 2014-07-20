@@ -301,6 +301,7 @@ src_prepare() {
 }
 
 do_configure() {
+	ewarn "In order to build it you need to make symlink /usr/include/freetype2 -> /usr/include/freetype"
 	local myeconfargs=( "${myeconfargs[@]}" )
 
 	if use amd64; then
