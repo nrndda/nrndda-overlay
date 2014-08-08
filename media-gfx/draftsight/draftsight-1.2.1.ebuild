@@ -58,6 +58,8 @@ src_unpack() {
 src_install() {
 
 	cp -R "${WORKDIR}/opt" "${D}"
+	insinto /usr/share/applications/
+	doins "${WORKDIR}/opt/dassault-systemes/DraftSight/Resources/dassault-systemes_draftsight.desktop"
 
 }
 
