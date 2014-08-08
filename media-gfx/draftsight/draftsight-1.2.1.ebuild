@@ -19,8 +19,8 @@ RESTRICT="fetch"
 
 TGZ_FILE_NAME="$(expr substr ${DEB_FILE_NAME} 1 \( length ${DEB_FILE_NAME} - 4 \)).tar.gz"
 
-DEB_FILE="${DISTDIR}/${DEB_FILE_NAME}"
-TGZ_FILE="${DISTDIR}/${TGZ_FILE_NAME}"
+DEB_FILE="${WORKDIR}/${DEB_FILE_NAME}"
+TGZ_FILE="${WORKDIR}/${TGZ_FILE_NAME}"
 
 pkg_nofetch() {
 
@@ -31,9 +31,14 @@ pkg_nofetch() {
 	einfo "and download ${DEB_FILE_NAME} after accepting the license."
 	einfo "Put this file to ${DISTDIR} and resume the installation."
 
+	einfo
+	einfo "Deb file from site dowsn't have version string so you have to"
+	einfo "recreate manifest for this ebild each time draftsight updates."
+
 }
 
 src_unpack() {
+	cp "${DISTDIR}/${DEB_FILE_NAME}" "${DEB_FILE}"
 
 	if [[ ! -r ${DEB_FILE} ]]; then
 
