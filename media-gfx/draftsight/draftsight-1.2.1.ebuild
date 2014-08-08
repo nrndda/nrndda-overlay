@@ -4,7 +4,7 @@
 
 DESCRIPTION="Professional-grade 2D CAD application"
 DOWNLOAD_URL="http://www.draftsight.com/download-linux-ubuntu"
-DEB_FILE_NAME="DraftSight.deb"
+DEB_FILE_NAME="draftSight.deb"
 SRC_URI="${DEB_FILE_NAME}"
 HOMEPAGE="http://www.3ds.com/products/draftsight/free-cad-software/"
 KEYWORDS="~amd64 ~x86"
