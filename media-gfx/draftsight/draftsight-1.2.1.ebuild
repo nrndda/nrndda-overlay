@@ -58,52 +58,55 @@ src_unpack() {
 src_install() {
 
 	cp -R "${WORKDIR}/opt" "${D}"
-	insinto /usr/share/applications/
-	doins "${WORKDIR}/opt/dassault-systemes/DraftSight/Resources/dassault-systemes_draftsight.desktop"
+	#mkdir -p "${D}/usr/share/applications/"
+	#mv "${D}/opt/dassault-systemes/DraftSight/Resources/dassault-systemes_draftsight.desktop" "${D}/usr/share/applications/"
 
 }
 
 pkg_postinst() {
 
-	xdg-mime install --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dwg.xml"
+	xdg-mime install --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dwg.xml"
 	xdg-mime default "dassault-systemes"_"draftsight.desktop" "application/vnd.dassault-systemes.draftsight-dwg"
-	xdg-mime install --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dxf.xml"
+	xdg-mime install --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dxf.xml"
 	xdg-mime default "dassault-systemes"_"draftsight.desktop" "application/vnd.dassault-systemes.draftsight-dxf"
-	xdg-mime install --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dwt.xml"
+	xdg-mime install --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dwt.xml"
 	xdg-mime default "dassault-systemes"_"draftsight.desktop" "application/vnd.dassault-systemes.draftsight-dwt"
 
-	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 16 "/opt/dassault-systemes/draftsight/mime/pixmaps/16x16/dassault-systemes_draftsight.png" "dassault-systemes.draftsight"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/draftsight/mime/pixmaps/16x16/dassault-systemes_draftsight-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/draftsight/mime/pixmaps/16x16/dassault-systemes_draftsight-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/draftsight/mime/pixmaps/16x16/dassault-systemes_draftsight-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
-	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 32 "/opt/dassault-systemes/draftsight/mime/pixmaps/32x32/dassault-systemes_draftsight.png" "dassault-systemes.draftsight"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/draftsight/mime/pixmaps/32x32/dassault-systemes_draftsight-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/draftsight/mime/pixmaps/32x32/dassault-systemes_draftsight-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/draftsight/mime/pixmaps/32x32/dassault-systemes_draftsight-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
-	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 48 "/opt/dassault-systemes/draftsight/mime/pixmaps/48x48/dassault-systemes_draftsight.png" "dassault-systemes.draftsight"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/draftsight/mime/pixmaps/48x48/dassault-systemes_draftsight-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/draftsight/mime/pixmaps/48x48/dassault-systemes_draftsight-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/draftsight/mime/pixmaps/48x48/dassault-systemes_draftsight-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
-	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 64 "/opt/dassault-systemes/draftsight/mime/pixmaps/64x64/dassault-systemes_draftsight.png" "dassault-systemes.draftsight"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/draftsight/mime/pixmaps/64x64/dassault-systemes_draftsight-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/draftsight/mime/pixmaps/64x64/dassault-systemes_draftsight-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/draftsight/mime/pixmaps/64x64/dassault-systemes_draftsight-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
-	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 128 "/opt/dassault-systemes/draftsight/mime/pixmaps/128x128/dassault-systemes_draftsight.png" "dassault-systemes.draftsight"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/draftsight/mime/pixmaps/128x128/dassault-systemes_draftsight-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/draftsight/mime/pixmaps/128x128/dassault-systemes_draftsight-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
-	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/draftsight/mime/pixmaps/128x128/dassault-systemes_draftsight-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
+	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 16 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/16x16/program.png" "dassault-systemes.draftsight"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/16x16/file-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/16x16/file-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 16 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/16x16/file-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
+	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 32 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/32x32/program.png" "dassault-systemes.draftsight"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/32x32/file-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/32x32/file-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 32 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/32x32/file-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
+	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 48 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/48x48/program.png" "dassault-systemes.draftsight"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/48x48/file-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/48x48/file-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 48 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/48x48/file-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
+	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 64 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/64x64/program.png" "dassault-systemes.draftsight"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/64x64/file-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/64x64/file-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 64 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/64x64/file-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
+	xdg-icon-resource install --noupdate --novendor --context apps --mode system --size 128 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/128x128/program.png" "dassault-systemes.draftsight"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/128x128/file-dwg.png" "application-vnd.dassault-systemes.draftsight-dwg"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/128x128/file-dxf.png" "application-vnd.dassault-systemes.draftsight-dxf"
+	xdg-icon-resource install --noupdate --novendor --context mimetypes --mode system --size 128 "/opt/dassault-systemes/DraftSight/Resources/pixmaps/128x128/file-dwt.png" "application-vnd.dassault-systemes.draftsight-dwt"
 
 	xdg-icon-resource forceupdate
 
-	xdg-desktop-menu install --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight.desktop"
+	xdg-desktop-menu install --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight.desktop"
 
+        fdo-mime_desktop_database_update
+        fdo-mime_mime_database_update
+        gnome2_icon_cache_update
 }
 
 pkg_prerm() {
 
-	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dwg.xml"
-	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dxf.xml"
-	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight-dwt.xml"
+	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dwg.xml"
+	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dxf.xml"
+	xdg-mime uninstall --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight-dwt.xml"
 
 	xdg-icon-resource uninstall --noupdate --context apps --mode system --size 16 "dassault-systemes.draftsight"
 	xdg-icon-resource uninstall --noupdate --context mimetypes --mode system --size 16 "application-vnd.dassault-systemes.draftsight-dwg"
@@ -128,6 +131,9 @@ pkg_prerm() {
 
 	xdg-icon-resource forceupdate
 
-	xdg-desktop-menu uninstall --novendor --mode system "/opt/dassault-systemes/draftsight/mime/dassault-systemes"_"draftsight.desktop"
+	xdg-desktop-menu uninstall --novendor --mode system "/opt/dassault-systemes/DraftSight/Resources/dassault-systemes"_"draftsight.desktop"
 
+        fdo-mime_desktop_database_update
+        fdo-mime_mime_database_update
+        gnome2_icon_cache_update
 }
