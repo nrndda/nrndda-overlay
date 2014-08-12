@@ -42,7 +42,7 @@ _emake() {
 	emake \
 		PREFIX="${EPREFIX}/usr" \
 		SBINDIR='$(PREFIX)/sbin/' \
-		UDEV_RULE_DIR="$(udev_get_udevdir)/rules.d" \
+		UDEV_RULE_DIR="$(get_udevdir)/rules.d" \
 		REG_BIN=/usr/lib/crda/regulatory.bin \
 		USE_OPENSSL=1 \
 		CC="$(tc-getCC)" \
