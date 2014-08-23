@@ -1,5 +1,7 @@
 #Default mask it
 =app-emulation/wine-9999
+net-wireless/crda::nrndda
+net-wireless/wireless-regdb::nrndda
 
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
