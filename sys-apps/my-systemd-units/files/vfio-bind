@@ -1,8 +1,10 @@
 #!/bin/bash
 
+[ -f /etc/conf.d/vfio-pci ] && source /etc/conf.d/vfio-pci || DEVICES="$@"
+
 modprobe vfio-pci
 
-for dev in "$@"; do
+for dev in $DEVICES; do
         vendor=$(cat /sys/bus/pci/devices/$dev/vendor)
         device=$(cat /sys/bus/pci/devices/$dev/device)
         if [ -e /sys/bus/pci/devices/$dev/driver ]; then
