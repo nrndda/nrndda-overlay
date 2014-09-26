@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
 	git iptables miniupnpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd"
+	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -162,8 +162,14 @@ src_install() {
 	fi
 
 
-	if use no_tmp_as_tmpfs ; then 
+	if use no_tmp_as_tmpfs ; then
 		dosym /dev/null "${DESTINATION_MOUNTS_DIR}"/tmp.mount
+	fi
+
+	if use vfio ; then
+		install_service vfio-bind.service || die "install_service failed"
+		dosbin "${FILESDIR}"/vfio-bind || die "dosbin failed"
+		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci || die "newconfd failed"
 	fi
 
 	einfo "Services installed into ${DESTINATION_SERVICES_DIR}"
