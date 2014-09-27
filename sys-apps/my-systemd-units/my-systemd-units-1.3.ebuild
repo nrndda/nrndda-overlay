@@ -89,6 +89,7 @@ src_unpack() {
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
 	install_service cpufreq_governor.service || die "install_service failed"
+	install_service wpa_supplicant.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
 	insinto /etc/systemd/system/getty@tty1.service.d/
