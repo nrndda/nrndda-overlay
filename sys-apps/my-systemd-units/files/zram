@@ -26,6 +26,8 @@ start() {
 	CPUS=`grep -Ec "^processor" /proc/cpuinfo`
 	DEVICES=$(devices_num)
         RAM=$(grep MemTotal /proc/meminfo | awk ' { print $2 } ')
+	STREAMS=1
+	ALG=lzo
 	SWAP_FACTOR=50
 	PORTAGE_TMP_FACTOR=50
 	[ -f /etc/conf.d/zram ] && source /etc/conf.d/zram || true
@@ -38,6 +40,8 @@ start() {
 		#inodes="-N $((262144))"
                 echo "Creating ZRAM /tmp/portage_zram and mounting"
                 echo $size > /sys/block/${PORTAGE_TMP_ZRAM_DEV}/disksize
+		echo $STREAMS > /sys/block/${PORTAGE_TMP_ZRAM_DEV}/max_comp_streams
+		echo $ALG > /sys/block/${PORTAGE_TMP_ZRAM_DEV}/comp_algorithm
                 mkfs.ext4 -q -O dir_nlink,extent,extra_isize,flex_bg,^has_journal,uninit_bg -m0 -b 4096 $inodes -L ${PORTAGE_TMP_ZRAM_DEV} /dev/${PORTAGE_TMP_ZRAM_DEV}
                 mount -o barrier=0,commit=240,noatime,nodev /dev/${PORTAGE_TMP_ZRAM_DEV} /tmp/portage_zram
                 chown portage:portage /tmp/portage_zram
@@ -56,6 +60,8 @@ start() {
 
 	        for (( i=0; i<$CPUS; i++ )); do
 	                echo $mem_by_cpu > /sys/block/zram$i/disksize
+			echo $STREAMS > /sys/block/zram$i/max_comp_streams
+			echo $ALG > /sys/block/zram$i/comp_algorithm
 	                mkswap /dev/zram$i
 	                swapon -d -p 10 /dev/zram$i
 	        done
