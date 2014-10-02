@@ -1,0 +1,10 @@
+[Unit]
+Description=Enable auto power control for usb device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c "/bin/echo auto > /sys/bus/usb/devices/%i/power/control"
+
+[Install]
+WantedBy=multi-user.target
