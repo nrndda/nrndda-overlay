@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit apache-module
+inherit eutils apache-module
 
 DESCRIPTION="Apache module for a replacement of the CGI protocol, similar to FastCGI."
 HOMEPAGE="http://python.ca/scgi/ http://pypi.python.org/pypi/scgi"
@@ -29,6 +29,9 @@ DOCFILES="PKG-INFO LICENSE.txt CHANGES.txt apache2/README.txt"
 
 need_apache2_4
 
+#EPATCH_SOURCE="${FILESDIR}"
+#PATCHES=( ${P}-apache24_arch.patch )
+
 src_prepare() {
-        epatch "${FILESDIR}"/${P}-apache24.patch
+  epatch "${FILESDIR}"/${P}-apache24_arch.patch
 }
