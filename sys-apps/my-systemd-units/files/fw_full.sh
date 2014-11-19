@@ -324,6 +324,8 @@ for i in $IPTABLES $IP6TABLES; do
   # $i -A udp_packets -p UDP -m multiport --dport 20,21 -j ACCEPT
   ##ssh
   $i -A udp_packets -p UDP --dport 22 -j ACCEPT
+  ##mosh
+  $i -A udp_packets -p UDP -m multiport --dport 60000:61000 -j ACCEPT
   ##sftp
   $i -A udp_packets -p UDP --dport 115 -j ACCEPT
   ##apache
