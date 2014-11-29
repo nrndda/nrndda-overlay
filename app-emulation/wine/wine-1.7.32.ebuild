@@ -24,7 +24,7 @@ fi
 
 GV="2.24"
 MV="4.5.2"
-COMPHOLIO_P="wine-staging-${PV}"
+COMPHOLIO_P="wine-staging-1.7.31"
 WINE_GENTOO="wine-gentoo-2013.06.24"
 DESCRIPTION="Free implementation of Windows(tm) on Unix"
 HOMEPAGE="http://www.winehq.org/"
