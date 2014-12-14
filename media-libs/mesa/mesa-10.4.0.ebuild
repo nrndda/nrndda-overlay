@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/media-libs/mesa/mesa-10.3.5-r1.ebuild,v 1.2 2014/12/08 18:50:55 mattst88 Exp $
+# $Header: /var/cvsroot/gentoo-x86/media-libs/mesa/mesa-10.3.5.ebuild,v 1.2 2014/12/08 18:50:55 mattst88 Exp $
 
 EAPI=5
 
@@ -22,7 +22,7 @@ MY_PN="${PN/m/M}"
 MY_P="${MY_PN}-${PV/_/-}"
 MY_SRC_P="${MY_PN}Lib-${PV/_/-}"
 
-FOLDER="${PV}"
+FOLDER="${PV/.0/}"
 
 DESCRIPTION="OpenGL-like graphic library for Linux"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
@@ -68,8 +68,6 @@ REQUIRED_USE="
 	gles1?  ( egl )
 	gles2?  ( egl )
 	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
-	vaapi? ( gallium )
-	vdpau? ( gallium )
 	wayland? ( egl gbm )
 	xa?  ( gallium )
 	video_cards_freedreno?  ( gallium )
@@ -97,11 +95,9 @@ RDEPEND="
 	abi_x86_32? ( !app-emulation/emul-linux-x86-opengl[-abi_x86_32(-)] )
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
-	>=app-admin/eselect-opengl-1.3.0
+	>=app-admin/eselect-opengl-1.2.7
 	udev? ( kernel_linux? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] ) )
 	>=dev-libs/expat-2.1.0-r3:=[${MULTILIB_USEDEP}]
-	gbm? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] )
-	dri3? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] )
 	>=x11-libs/libX11-1.6.2:=[${MULTILIB_USEDEP}]
 	>=x11-libs/libxshmfence-1.1:=[${MULTILIB_USEDEP}]
 	>=x11-libs/libXdamage-1.1.4-r1:=[${MULTILIB_USEDEP}]
@@ -169,7 +165,7 @@ DEPEND="${RDEPEND}
 		>=x11-proto/dri3proto-1.0:=[${MULTILIB_USEDEP}]
 		>=x11-proto/presentproto-1.0:=[${MULTILIB_USEDEP}]
 	)
-	>=x11-proto/glproto-1.4.17-r1:=[${MULTILIB_USEDEP}]
+	>=x11-proto/glproto-1.4.16-r1:=[${MULTILIB_USEDEP}]
 	>=x11-proto/xextproto-7.2.1-r1:=[${MULTILIB_USEDEP}]
 	>=x11-proto/xf86driproto-2.1.1-r1:=[${MULTILIB_USEDEP}]
 	>=x11-proto/xf86vidmodeproto-2.3.1-r1:=[${MULTILIB_USEDEP}]
@@ -180,8 +176,8 @@ EGIT_CHECKOUT_DIR=${S}
 
 # It is slow without texrels, if someone wants slow
 # mesa without texrels +pic use is worth the shot
-QA_EXECSTACK="usr/lib*/libGL.so*"
-QA_WX_LOAD="usr/lib*/libGL.so*"
+QA_EXECSTACK="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
+QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 
 # Think about: ggi, fbcon, no-X configs
 
@@ -339,6 +335,32 @@ multilib_src_configure() {
 multilib_src_install() {
 	emake install DESTDIR="${D}"
 
+	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
+	# because user can eselect desired GL provider.
+	ebegin "Moving libGL and friends for dynamic switching"
+		local x
+		local gl_dir="/usr/$(get_libdir)/opengl/${OPENGL_DIR}/"
+		dodir ${gl_dir}/{lib,extensions,include/GL}
+		for x in "${ED}"/usr/$(get_libdir)/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
+			if [ -f ${x} -o -L ${x} ]; then
+				mv -f "${x}" "${ED}${gl_dir}"/lib \
+					|| die "Failed to move ${x}"
+			fi
+		done
+		for x in "${ED}"/usr/include/GL/{gl.h,glx.h,glext.h,glxext.h}; do
+			if [ -f ${x} -o -L ${x} ]; then
+				mv -f "${x}" "${ED}${gl_dir}"/include/GL \
+					|| die "Failed to move ${x}"
+			fi
+		done
+		for x in "${ED}"/usr/include/{EGL,GLES*,VG,KHR}; do
+			if [ -d ${x} ]; then
+				mv -f "${x}" "${ED}${gl_dir}"/include \
+					|| die "Failed to move ${x}"
+			fi
+		done
+	eend $?
+
 	if use classic || use gallium; then
 			ebegin "Moving DRI/Gallium drivers for dynamic switching"
 			local gallium_drivers=( i915_dri.so i965_dri.so r300_dri.so r600_dri.so swrast_dri.so )
@@ -420,6 +442,13 @@ pkg_postinst() {
 	# Switch to the xorg implementation.
 	echo
 	eselect opengl set --use-old ${OPENGL_DIR}
+
+	# switch to xorg-x11 and back if necessary, bug #374647 comment 11
+	OLD_IMPLEM="$(eselect opengl show)"
+	if [[ ${OPENGL_DIR}x != ${OLD_IMPLEM}x ]]; then
+		eselect opengl set ${OPENGL_DIR}
+		eselect opengl set ${OLD_IMPLEM}
+	fi
 
 	# Select classic/gallium drivers
 	if use classic || use gallium; then
