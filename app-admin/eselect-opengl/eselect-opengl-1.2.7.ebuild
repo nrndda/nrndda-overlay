@@ -22,7 +22,7 @@ SRC_URI="${MIRROR}/glext.h.${GLEXT}.xz
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="-*"
+KEYWORDS=""
 IUSE=""
 
 DEPEND="app-arch/xz-utils"
