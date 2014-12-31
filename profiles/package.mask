@@ -1,8 +1,8 @@
 #Default mask it
 =app-emulation/wine-9999
 
-=media-libs/mesa-10.4.1::nrndda
-=app-admin/eselect-opengl-1.2.7::nrndda
+=media-libs/mesa-10.4.1
+=app-admin/eselect-opengl-1.2.7-r1
 
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
