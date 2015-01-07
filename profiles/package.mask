@@ -2,6 +2,7 @@
 =app-emulation/wine-9999
 =media-sound/pulseaudio-9999
 
+=media-libs/mesa-10.4.9999
 =media-libs/mesa-10.4.1
 
 #Wrong Makefile
