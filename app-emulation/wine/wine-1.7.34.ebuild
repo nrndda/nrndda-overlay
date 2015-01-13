@@ -24,7 +24,8 @@ fi
 
 GV="2.34"
 MV="4.5.4"
-COMPHOLIO_P="wine-staging-${PV}"
+CV="${PV}-1"
+COMPHOLIO_P="wine-staging-${CV}"
 WINE_GENTOO="wine-gentoo-2013.06.24"
 DESCRIPTION="Free implementation of Windows(tm) on Unix"
 HOMEPAGE="http://www.winehq.org/"
@@ -34,9 +35,9 @@ SRC_URI="${SRC_URI}
 		abi_x86_64? ( mirror://sourceforge/${PN}/Wine%20Gecko/${GV}/wine_gecko-${GV}-x86_64.msi )
 	)
 	mono? ( mirror://sourceforge/${PN}/Wine%20Mono/${MV}/wine-mono-${MV}.msi )
-	pipelight? ( https://github.com/wine-compholio/wine-staging/archive/v${PV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
-	pulseaudio? ( https://github.com/wine-compholio/wine-staging/archive/v${PV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
-	experimental? ( https://github.com/wine-compholio/wine-staging/archive/v${PV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
+	pipelight? ( https://github.com/wine-compholio/wine-staging/archive/v${CV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
+	pulseaudio? ( https://github.com/wine-compholio/wine-staging/archive/v${CV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
+	experimental? ( https://github.com/wine-compholio/wine-staging/archive/v${CV}.tar.gz -> ${COMPHOLIO_P}.tar.gz )
 	http://dev.gentoo.org/~tetromino/distfiles/${PN}/${WINE_GENTOO}.tar.bz2"
 
 LICENSE="LGPL-2.1"
