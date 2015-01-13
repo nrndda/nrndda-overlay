@@ -135,7 +135,9 @@ src_compile() {
 	for t in ${TARGET_MAKE_SIMPLE[@]} ; do
 		dir=${t/:*} target=${t/*:}
 		einfo "Building $dir => $target"
-		emake -C $dir ARCH=${karch} $target
+		cd $S/$dir
+		emake ARCH=${karch} $target
+		cd $S
 	done
 }
 
