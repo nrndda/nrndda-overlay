@@ -3,7 +3,6 @@
 =media-sound/pulseaudio-9999
 
 =media-libs/mesa-10.4.9999
-=media-libs/mesa-10.4.2
 
 #Wrong Makefile
 #=www-plugins/mozplugger-2.1.2
