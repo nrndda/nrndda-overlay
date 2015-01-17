@@ -5,8 +5,9 @@
 EAPI=5
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
+EGIT_BRANCH="${PV/.9999}"
 
-if [[ ${PV} = 9999* ]]; then
+if [[ ${PV} = *9999* ]]; then
 	GIT_ECLASS="git-r3"
 	EXPERIMENTAL="true"
 fi
@@ -22,13 +23,17 @@ MY_PN="${PN/m/M}"
 MY_P="${MY_PN}-${PV/_/-}"
 MY_SRC_P="${MY_PN}Lib-${PV/_/-}"
 
-FOLDER="${PV/.0/}"
+if [[ $PV = *9999* ]]; then
+	FOLDER="${PV/_rc*/}"
+else
+	FOLDER="${PV/.0/}"
+fi
 
 DESCRIPTION="OpenGL-like graphic library for Linux"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
 
 #SRC_PATCHES="mirror://gentoo/${P}-gentoo-patches-01.tar.bz2"
-if [[ $PV = 9999* ]]; then
+if [[ $PV = *9999* ]]; then
 	SRC_URI="${SRC_PATCHES}"
 else
 	SRC_URI="ftp://ftp.freedesktop.org/pub/mesa/${FOLDER}/${MY_SRC_P}.tar.bz2
@@ -50,13 +55,12 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm +nptl
-	opencl openvg osmesa pax_kernel openmax pic r600-llvm-compiler selinux
+	opencl osmesa pax_kernel openmax pic r600-llvm-compiler selinux
 	+udev vaapi vdpau wayland xvmc xa kernel_FreeBSD kernel_linux"
 
 REQUIRED_USE="
 	d3d9? ( gallium dri3 )
 	llvm?   ( gallium )
-	openvg? ( egl gallium )
 	opencl? (
 		gallium
 		llvm
@@ -129,6 +133,10 @@ RDEPEND="
 	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
+				|| (
+					>=dev-libs/elfutils-0.155-r1:=[${MULTILIB_USEDEP}]
+					>=dev-libs/libelf-0.8.13-r2:=[${MULTILIB_USEDEP}]
+				)
 			)
 	openmax? ( >=media-libs/libomxil-bellagio-0.9.3:=[${MULTILIB_USEDEP}] )
 	vaapi? ( >=x11-libs/libva-0.35.0:=[${MULTILIB_USEDEP}] )
@@ -200,20 +208,12 @@ pkg_setup() {
 
 src_unpack() {
 	default
-	[[ $PV = 9999* ]] && git-r3_src_unpack
+	[[ $PV = *9999* ]] && git-r3_src_unpack
 }
 
 src_prepare() {
-	#Fix build against >llvm-3.6
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0001.patch
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0002.patch
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0003.patch
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0004.patch
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0005.patch
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0006.patch
-
 	# apply patches
-	if [[ ${PV} != 9999* && -n ${SRC_PATCHES} ]]; then
+	if [[ ${PV} != *9999* && -n ${SRC_PATCHES} ]]; then
 		EPATCH_FORCE="yes" \
 		EPATCH_SOURCE="${WORKDIR}/patches" \
 		EPATCH_SUFFIX="patch" \
@@ -221,7 +221,7 @@ src_prepare() {
 	fi
 
 	# fix for hardened pax_kernel, bug 240956
-	[[ ${PV} != 9999* ]] && epatch "${FILESDIR}"/glx_ro_text_segm.patch
+	[[ ${PV} != *9999* ]] && epatch "${FILESDIR}"/glx_ro_text_segm.patch
 
 	# Solaris needs some recent POSIX stuff in our case
 	if [[ ${CHOST} == *-solaris* ]] ; then
@@ -269,8 +269,6 @@ multilib_src_configure() {
 		myconf+="
 			$(use_enable d3d9 nine)
 			$(use_enable llvm gallium-llvm)
-			$(use_enable openvg)
-			$(use_enable openvg gallium-egl)
 			$(use_enable openmax omx)
 			$(use_enable r600-llvm-compiler)
 			$(use_enable vaapi va)
@@ -301,7 +299,6 @@ multilib_src_configure() {
 		if use opencl; then
 			myconf+="
 				$(use_enable opencl)
-				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
 				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
 		fi

@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Header: /var/cvsroot/gentoo-x86/media-libs/mesa/mesa-10.3.5-r1.ebuild,v 1.2 2014/12/08 18:50:55 mattst88 Exp $
 
 EAPI=5
 
@@ -23,7 +23,11 @@ MY_PN="${PN/m/M}"
 MY_P="${MY_PN}-${PV/_/-}"
 MY_SRC_P="${MY_PN}Lib-${PV/_/-}"
 
-FOLDER="${PV/_rc*/}"
+if [[ $PV = *9999* ]]; then
+	FOLDER="${PV/_rc*/}"
+else
+	FOLDER="${PV/.0/}"
+fi
 
 DESCRIPTION="OpenGL-like graphic library for Linux"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
@@ -40,11 +44,7 @@ fi
 # GLES[2]/gl[2]{,ext,platform}.h are SGI-B-2.0
 LICENSE="MIT SGI-B-2.0"
 SLOT="0"
-if [[ $PV = *9999* ]]; then
-	KEYWORDS=""
-else
-	KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
-fi
+KEYWORDS=""
 
 INTEL_CARDS="i915 i965 ilo intel"
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
@@ -54,15 +54,16 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm
-	+nptl opencl osmesa pax_kernel openmax pic r600-llvm-compiler selinux
-	vaapi vdpau wayland xvmc xa kernel_FreeBSD"
+	bindist +classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm +nptl
+	opencl osmesa pax_kernel openmax pic r600-llvm-compiler selinux
+	+udev vaapi vdpau wayland xvmc xa kernel_FreeBSD kernel_linux"
 
 REQUIRED_USE="
 	d3d9? ( gallium dri3 )
 	llvm?   ( gallium )
 	opencl? (
 		gallium
+		llvm
 		video_cards_r600? ( r600-llvm-compiler )
 		video_cards_radeon? ( r600-llvm-compiler )
 		video_cards_radeonsi? ( r600-llvm-compiler )
@@ -101,6 +102,7 @@ RDEPEND="
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.3.0
+	udev? ( kernel_linux? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] ) )
 	>=dev-libs/expat-2.1.0-r3:=[${MULTILIB_USEDEP}]
 	gbm? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] )
 	dri3? ( >=virtual/libudev-215:=[${MULTILIB_USEDEP}] )
@@ -125,12 +127,16 @@ RDEPEND="
 				>=dev-libs/libelf-0.8.13-r2:=[${MULTILIB_USEDEP}]
 				) )
 		)
-		>=sys-devel/llvm-3.3-r3:=[${MULTILIB_USEDEP}]
+		>=sys-devel/llvm-3.4.2:=[${MULTILIB_USEDEP}]
 		<sys-devel/llvm-3.6.0:=[${MULTILIB_USEDEP}]
 	)
 	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
+				|| (
+					>=dev-libs/elfutils-0.155-r1:=[${MULTILIB_USEDEP}]
+					>=dev-libs/libelf-0.8.13-r2:=[${MULTILIB_USEDEP}]
+				)
 			)
 	openmax? ( >=media-libs/libomxil-bellagio-0.9.3:=[${MULTILIB_USEDEP}] )
 	vaapi? ( >=x11-libs/libva-0.35.0:=[${MULTILIB_USEDEP}] )
@@ -158,8 +164,8 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.3-r3:=[${MULTILIB_USEDEP}]
-				>=sys-devel/clang-3.3:=[${MULTILIB_USEDEP}]
+				>=sys-devel/llvm-3.4.2:=[${MULTILIB_USEDEP}]
+				>=sys-devel/clang-3.4.2:=[${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
 	sys-devel/bison
@@ -206,14 +212,6 @@ src_unpack() {
 }
 
 src_prepare() {
-        #Fix build against >llvm-3.6
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0001.patch
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0002.patch
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0003.patch
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0004.patch
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0005.patch
-        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0006.patch
-
 	# apply patches
 	if [[ ${PV} != *9999* && -n ${SRC_PATCHES} ]]; then
 		EPATCH_FORCE="yes" \
@@ -301,7 +299,6 @@ multilib_src_configure() {
 		if use opencl; then
 			myconf+="
 				$(use_enable opencl)
-				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
 				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
 		fi
@@ -336,6 +333,7 @@ multilib_src_configure() {
 		$(use_enable gles2) \
 		$(use_enable nptl glx-tls) \
 		$(use_enable osmesa) \
+		$(use_enable !udev sysfs) \
 		--enable-llvm-shared-libs \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
