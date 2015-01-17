@@ -1,0 +1,59 @@
+From 977b18e48647f9a86a91c5032ed0041fc509b5d3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jos=C3=A9=20Fonseca?= <jfonseca@vmware.com>
+Date: Wed, 12 Nov 2014 10:32:38 +0000
+Subject: gallivm: Fix build with LLVM 3.6 (r221751).
+
+Tested with LLVM 3.3, 3.4, 3.5, and 3.6.
+
+Trivial.
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_debug.cpp b/src/gallium/auxiliary/gallivm/lp_bld_debug.cpp
+index 4f9546a..402d29e 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_debug.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_debug.cpp
+@@ -32,10 +32,11 @@
+ #include <llvm/Target/TargetInstrInfo.h>
+ #include <llvm/Support/raw_ostream.h>
+ #include <llvm/Support/Format.h>
+-#include <llvm/Support/MemoryObject.h>
+ 
+ #if HAVE_LLVM >= 0x0306
+ #include <llvm/Target/TargetSubtargetInfo.h>
++#else
++#include <llvm/Support/MemoryObject.h>
+ #endif
+ 
+ #include <llvm/Support/TargetRegistry.h>
+@@ -142,6 +143,8 @@ lp_debug_dump_value(LLVMValueRef value)
+ }
+ 
+ 
++#if HAVE_LLVM < 0x0306
++
+ /*
+  * MemoryObject wrapper around a buffer of memory, to be used by MC
+  * disassembler.
+@@ -177,6 +180,8 @@ public:
+    }
+ };
+ 
++#endif /* HAVE_LLVM < 0x0306 */
++
+ 
+ /*
+  * Disassemble a function, using the LLVM MC disassembler.
+@@ -280,7 +285,11 @@ disassemble(const void* func, llvm::raw_ostream & Out)
+    /*
+     * Wrap the data in a MemoryObject
+     */
++#if HAVE_LLVM >= 0x0306
++   ArrayRef<uint8_t> memoryObject((const uint8_t *)bytes, extent);
++#else
+    BufferMemoryObject memoryObject((const uint8_t *)bytes, extent);
++#endif
+ 
+    uint64_t pc;
+    pc = 0;
+-- 
+cgit v0.10.2
+

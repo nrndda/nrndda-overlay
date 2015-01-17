@@ -205,6 +205,9 @@ src_unpack() {
 }
 
 src_prepare() {
+        #Fix build against >llvm-3.6
+        epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6.patch
+
 	# apply patches
 	if [[ ${PV} != *9999* && -n ${SRC_PATCHES} ]]; then
 		EPATCH_FORCE="yes" \
