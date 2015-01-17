@@ -1,0 +1,40 @@
+From c04a6d5c298f102469df45a7dbe81f40c6faed5f Mon Sep 17 00:00:00 2001
+From: Vinson Lee <vlee@freedesktop.org>
+Date: Tue, 19 Aug 2014 23:17:40 -0700
+Subject: gallivm: Fix build with LLVM >= 3.6 r215967.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This LLVM 3.6 commit changed EngineBuilder constructor.
+
+commit 3f4ed32b4398eaf4fe0080d8001ba01e6c2f43c8
+Author: Rafael Espindola <rafael.espindola@gmail.com>
+Date:   Tue Aug 19 04:04:25 2014 +0000
+
+    Make it explicit that ExecutionEngine takes ownership of the modules.
+
+    git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@215967 91177308-0d34-0410-b5e6-96231b3b80d8
+
+Signed-off-by: Vinson Lee <vlee@freedesktop.org>
+Reviewed-and-Tested-by: Michel Dänzer <michel.daenzer@amd.com>
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index 6bea964..55aa8b9 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -421,7 +421,11 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
+    using namespace llvm;
+ 
+    std::string Error;
++#if HAVE_LLVM >= 0x0306
++   EngineBuilder builder(std::unique_ptr<Module>(unwrap(M)));
++#else
+    EngineBuilder builder(unwrap(M));
++#endif
+ 
+    /**
+     * LLVM 3.1+ haven't more "extern unsigned llvm::StackAlignmentOverride" and
+-- 
+cgit v0.10.2
+

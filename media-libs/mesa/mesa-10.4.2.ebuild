@@ -124,6 +124,7 @@ RDEPEND="
 				) )
 		)
 		>=sys-devel/llvm-3.4.2:=[${MULTILIB_USEDEP}]
+		<sys-devel/llvm-3.6.0:=[${MULTILIB_USEDEP}]
 	)
 	opencl? (
 				app-admin/eselect-opencl
@@ -204,7 +205,12 @@ src_unpack() {
 
 src_prepare() {
 	#Fix build against >llvm-3.6
-	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0001.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0002.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0003.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0004.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0005.patch
+	epatch "${FILESDIR}"/mesa-10.4.2-fix-build-llvm-3.6-0006.patch
 
 	# apply patches
 	if [[ ${PV} != 9999* && -n ${SRC_PATCHES} ]]; then

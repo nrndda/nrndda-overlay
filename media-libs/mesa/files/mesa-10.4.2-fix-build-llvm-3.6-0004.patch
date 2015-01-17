@@ -1,0 +1,70 @@
+From 8f4ee56e49911ca12ad2c006bf7f94c85ceeb404 Mon Sep 17 00:00:00 2001
+From: Tom Stellard <thomas.stellard@amd.com>
+Date: Tue, 23 Sep 2014 16:15:52 -0400
+Subject: gallivm: Disable gallivm to fix build with LLVM 3.6
+
+LLVM commit r218316 removes the JITMemoryManager class, which is
+the parent for a seemingly important class in gallivm.  In order to
+fix the build, I've wrapped most of lp_bld_misc.cpp in
+if HAVE_LLVM < 0x0306 and modifyed the
+lp_build_create_jit_compiler_for_module() function to return false
+for 3.6 and newer which effectively disables the gallivm functionality.
+
+I realize this is overkill, but I could not come up with a simple
+solution to fix the build.  Also, since 3.6 will be the first release
+without the old JIT, it would be really great if we could
+move gallivm to use the C API only for accessing MCJIT.  There
+is still time before the 3.6 release to extend the C API in
+case it is missing some functionality that is required by gallivm.
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index 2fd85a8..1c42e8f 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -143,6 +143,7 @@ lp_set_store_alignment(LLVMValueRef Inst,
+    llvm::unwrap<llvm::StoreInst>(Inst)->setAlignment(Align);
+ }
+ 
++#if HAVE_LLVM < 0x0306
+ 
+ /*
+  * Delegating is tedious but the default manager class is hidden in an
+@@ -398,6 +399,7 @@ class ShaderMemoryManager : public DelegatingJITMemoryManager {
+ llvm::JITMemoryManager *ShaderMemoryManager::TheMM = 0;
+ unsigned ShaderMemoryManager::NumUsers = 0;
+ 
++#endif
+ 
+ /**
+  * Same as LLVMCreateJITCompilerForModule, but:
+@@ -420,6 +422,11 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
+ {
+    using namespace llvm;
+ 
++#if HAVE_LLVM >= 0x0306
++   *OutError = strdup("MCJIT not supported");
++   return 1;
++#else
++
+    std::string Error;
+ #if HAVE_LLVM >= 0x0306
+    EngineBuilder builder(std::unique_ptr<Module>(unwrap(M)));
+@@ -528,6 +535,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
+    delete MM;
+    *OutError = strdup(Error.c_str());
+    return 1;
++#endif
+ }
+ 
+ 
+@@ -535,5 +543,7 @@ extern "C"
+ void
+ lp_free_generated_code(struct lp_generated_code *code)
+ {
++#if HAVE_LLVM < 0x0306
+    ShaderMemoryManager::freeGeneratedCode(code);
++#endif
+ }
+-- 
+cgit v0.10.2
+
