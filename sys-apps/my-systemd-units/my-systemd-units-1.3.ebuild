@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
 	git iptables miniupnpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio"
+	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
 DEPEND="sys-apps/systemd
 	distccd? ( sys-devel/distcc )
@@ -34,7 +34,8 @@ DEPEND="sys-apps/systemd
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	screen? ( app-misc/screen )
 	hdparm? ( sys-apps/hdparm )
-	mpd? ( media-sound/mpd )"
+	mpd? ( media-sound/mpd )
+	touchegg? ( x11-misc/touchegg )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -175,6 +176,9 @@ src_install() {
 		dosbin "${FILESDIR}"/vfio-bind || die "dosbin failed"
 		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci || die "newconfd failed"
 	fi
+	if use touchegg ; then
+		install_service touchegg.service || die "install_service failed"
+	fi
 
 	einfo "Services installed into ${DESTINATION_SERVICES_DIR}"
 	einfo "Sockets installed into ${DESTINATION_SOCKETS_DIR}"
@@ -182,7 +186,7 @@ src_install() {
 	einfo "Targets installed into ${DESTINATION_TARGETS_DIR}"
 	einfo "Pathes installed into ${DESTINATION_PATH_DIR}"
 	einfo "Mounts installed into ${DESTINATION_MOUNTS_DIR}"
-	
+
 	einfo
 	einfo "For enable unit type:"
 	einfo "systemctl enable unit.service"
