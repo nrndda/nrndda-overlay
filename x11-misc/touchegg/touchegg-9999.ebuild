@@ -30,7 +30,8 @@ src_configure() {
 }
 
 src_install() {
-	eqmake4 DESTDIR="${D}" install
+	#emake DESTDIR="${D}" install
+	einstall
 
 	insinto "/etc/systemd/system"
 	doins "${FILESDIR}/touchegg.service"
