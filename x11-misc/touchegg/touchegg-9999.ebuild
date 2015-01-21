@@ -28,3 +28,8 @@ RDEPEND="${DEPEND}"
 src_configure() {
 	eqmake4 "${S}"/${PN}.pro
 }
+
+src_install() {
+	insinto "/etc/systemd/system"
+	doins "${FILESDIR}/touchegg.service"
+}
