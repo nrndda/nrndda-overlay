@@ -14,7 +14,7 @@ EGIT_REPO_URI="https://github.com/Raffarti/Touchegg-gce"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS=""
 IUSE=""
 
 DEPEND="
