@@ -22,11 +22,11 @@ IUSE=""
 RDEPEND=""
 DEPEND="${RDEPEND}
 	x11-libs/utouch-grail"
-PYTHON_DEPEND="2 3"
+PYTHON_DEPEND="2:2.7 3:3.3"
 
 S="${WORKDIR}/${MY_P}"
 
 src_prepare() {
 	sed -i 's/python >= 2.7/python-2.7 >= 2.7/g' configure;
-	sed -i 's/python3 >= 3.2/python >= 3.2/g' configure;
+	sed -i 's/python3 >= 3.2/python-3.3 >= 3.3/g' configure;
 }
