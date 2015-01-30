@@ -4,7 +4,6 @@ After=display-manager.service
 Requires=graphical.target
 
 [Service]
-DefaultEnvironment=DISPLAY=:0 
 Environment=DISPLAY=:0
 ExecStart=/usr/bin/touchegg
 StandardOutput=null
