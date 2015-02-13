@@ -3,7 +3,9 @@
 # $Header: $
 
 EAPI="5"
-inherit base python
+
+PYTHON_COMPAT=( python{2_7,3_{2,3,4}} )
+inherit base python-r1
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -22,11 +24,16 @@ IUSE=""
 RDEPEND=""
 DEPEND="${RDEPEND}
 	x11-libs/utouch-grail"
-PYTHON_DEPEND="2:2.7 3:3.3"
 
 S="${WORKDIR}/${MY_P}"
 
 src_prepare() {
-	sed -i 's/python >= 2.7/python-2.7 >= 2.7/g' configure;
-	sed -i 's/python3 >= 3.2/python-3.3 >= 3.3/g' configure;
+	sed -i 's/python >= 2.7/python-2.7/g' configure;
+	if use python_targets_python3_4; then
+		sed -i 's/python3 >= 3.2/python-3.4/g' configure;
+	elif use python_targets_python3_3; then
+		sed -i 's/python3 >= 3.2/python-3.3/g' configure;
+	elif use python_targets_python3_2; then
+		sed -i 's/python3 >= 3.2/python-3.2/g' configure;
+	fi
 }
