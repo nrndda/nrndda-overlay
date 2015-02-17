@@ -21,7 +21,7 @@ IUSE="debug"
 RDEPEND="
 	|| (
 		$(add_kdebase_dep konsole)
-		$(add_kdeapps_dep konsole)
+		kde-apps/konsole
 	)
 	x11-libs/libX11
 "
