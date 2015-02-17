@@ -22,8 +22,14 @@ DEPEND="
 	x11-misc/shared-mime-info
 "
 RDEPEND="${DEPEND}
-	$(add_kdebase_dep kdebase-data)
-	$(add_kdebase_dep konsole)
+	|| (
+		$(add_kdebase_dep kdebase-data)
+		kde-apps/kdebase-data
+	)
+	|| (
+		$(add_kdebase_dep konsole)
+		kde-apps/konsole
+	)
 	|| (
 		$(add_kdebase_dep okular 'pdf?,postscript')
 		kde-apps/okular[pdf?,postscript]
