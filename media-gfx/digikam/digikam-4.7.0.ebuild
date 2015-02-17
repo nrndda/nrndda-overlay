@@ -31,7 +31,7 @@ IUSE="addressbook debug doc gphoto2 mysql semantic-desktop +thumbnails video"
 
 CDEPEND="
 	|| (
-		(	|| ( kde-apps/kdebase-kioslaves:4 kde-plasma/kio-extras )
+		(	kde-apps/kdebase-kioslaves:4
 			kde-apps/libkdcraw:4=
 			kde-apps/libkexiv2:4=
 			kde-apps/libkipi:4
