@@ -78,20 +78,22 @@ function get_broadcast()
 
 function get_dev()
 {
-  systemd_dir="/etc/systemd/system/network.target.*"
-  DEV=`ls ${systemd_dir}/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
+  #systemd_dir="/etc/systemd/system/network.target.*"
+  #DEV=`ls ${systemd_dir}/$1 | cut -d "@" -f 2- | cut -d "." -f -1`
+  systemd_dir="/etc/systemd/system/"
+  DEV=`find ${systemd_dir} * | grep -i $1 | cut -d "@" -f 2- | cut -d "@" -f 2- | cut -d "." -f -1`
   echo $DEV;
 }
 
 function get_ext_lan_if()
 {
-  IF=`get_dev "ext_lan\@enp*"`
+  IF=`get_dev "ext_lan\@enp.*"`
   echo $IF;
 }
 
 function get_inet_if()
 {
-  IF=`get_dev "inet\@ppp*"`
+  IF=`get_dev "inet\@ppp.*"`
   echo $IF;
 }
 ######################################################################
