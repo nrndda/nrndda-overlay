@@ -8,7 +8,6 @@ Before=miniupnpd.service
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStartPre=/usr/bin/sleep 2
 ExecStart=/usr/local/sbin/fw_full.sh
 ExecStop=/usr/local/sbin/fw_flush_all_rules.sh
 
