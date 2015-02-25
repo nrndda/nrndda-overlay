@@ -200,3 +200,8 @@ src_install() {
 	einfo
 
 }
+
+pkg_postinst() {
+	einfo "Reloading systemd rules."
+	systemctl daemon-reload
+}
