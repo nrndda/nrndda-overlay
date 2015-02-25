@@ -1,6 +1,8 @@
 [Unit]
 Description=P-T-K internal lan connection (%i)
 After=systemd-modules-load.service systemd-udev-trigger.service sys-subsystem-net-devices-%i.device
+Before=ext_lan.target
+Requires=sys-subsystem-net-devices-%i.device
 
 [Service]
 RestartSec=5
@@ -19,4 +21,5 @@ ExecStop=/sbin/dhcpcd -k %i
 ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
 
 [Install]
+WantedBy=ext_lan.target
 WantedBy=network.target

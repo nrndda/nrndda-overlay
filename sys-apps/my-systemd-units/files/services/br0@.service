@@ -1,6 +1,7 @@
 [Unit]
 Description=br0 Static Network Connectivity
 After=sys-subsystem-net-devices-%i.device
+Before=br0.target
 Requires=sys-subsystem-net-devices-%i.device
 Conflicts=NetworkManager.service
 
@@ -24,6 +25,5 @@ ExecStop=/bin/bash -c " if ! ( brctl show | grep -q %i ); then /sbin/brctl delif
 ExecStop=/bin/bash -c " if ! ( brctl show | grep -q br0 ); then /sbin/brctl delbr br0; fi "
 
 [Install]
+WantedBy=br0.target
 RequiredBy=network.target
-RequiredBy=hostapd@.service
-RequiredBy=ext_lan@.service

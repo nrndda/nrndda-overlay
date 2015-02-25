@@ -1,7 +1,7 @@
 [Unit]
 Description=My firewall rules
-After=br0@.service ext_lan@.service inet@.service
-Requires=br0@.service ext_lan@.service
+After=br0.target ext_lan.target inet.target
+Requires=br0.target ext_lan.target
 Before=miniupnpd.service
 
 [Service]

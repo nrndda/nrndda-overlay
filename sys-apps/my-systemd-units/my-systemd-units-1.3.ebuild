@@ -106,6 +106,7 @@ src_install() {
 	done
 	if use br0; then
 		install_service br0@.service || die "install_service failed"
+		install_target br0.target || die "install_service failed"
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/crda_set.sh
 	fi
@@ -123,7 +124,9 @@ src_install() {
 	fi
 	if use inet ; then
 		install_service inet@.service || die "install_service failed"
+		install_target inet.target || die "install_service failed"
 		install_service ext_lan@.service || die "install_service failed"
+		install_target ext_lan.target || die "install_service failed"
 		install_service firewall.service || die "install_service failed"
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh

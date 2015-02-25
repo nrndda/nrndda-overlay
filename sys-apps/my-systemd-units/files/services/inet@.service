@@ -1,8 +1,8 @@
 [Unit]
 Description=PPPoE connection (%i)
-After=systemd-modules-load.service systemd-udev-trigger.service ext_lan@.service
-Before=time-sync.target network.target firewall.service radvd.service miniupnpd.service fail2ban.service ddclient.service ntpdate.service ntpd.service
-Requires=firewall.service ext_lan@.service
+After=systemd-modules-load.service systemd-udev-trigger.service ext_lan.target
+Before=inet.target ext_lan.target time-sync.target network.target firewall.service radvd.service miniupnpd.service fail2ban.service ddclient.service ntpdate.service ntpd.service
+Requires=firewall.service ext_lan.target
 
 [Service]
 Type=forking
@@ -37,4 +37,5 @@ ExecStop=/usr/sbin/pppoe-stop
 PIDFile=/var/run/-pppoe.pid
 
 [Install]
+WantedBy=inet.target
 WantedBy=network.target

@@ -1,7 +1,8 @@
 [Unit]
 Description=Hostapd wifi ap
 After=sys-subsystem-net-devices-%i.device
-Requires=sys-subsystem-net-devices-%i.device
+Before=hostapd.target br0.target
+Requires=sys-subsystem-net-devices-%i.device br0.target
 
 [Service]
 Type=forking
@@ -20,4 +21,4 @@ PIDFile=/run/hostapd/hostapd_%i.pid
 [Install]
 WantedBy=multi-user.target
 WantedBy=network.target
-RequiredBy=ext_lan@.service
+WantedBy=hostapd.target
