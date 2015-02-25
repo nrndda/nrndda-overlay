@@ -1,8 +1,8 @@
 [Unit]
-Description=PPPoE connection with firewall
-After=systemd-modules-load.service systemd-udev-trigger.service
-Before=time-sync.target network.target firewall.service
-Requires=firewall.service
+Description=PPPoE connection (%i)
+After=systemd-modules-load.service systemd-udev-trigger.service ext_lan@.service
+Before=time-sync.target network.target firewall.service radvd.service miniupnpd.service fail2ban.service ddclient.service ntpdate.service ntpd.service
+Requires=firewall.service ext_lan@.service
 
 [Service]
 Type=forking
@@ -11,7 +11,7 @@ TimeoutStartSec=40s
 Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
-#ExecStartPost=/usr/bin/sleep 2
+ExecStartPost=/usr/bin/sleep 2
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.forwarding=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.accept_ra=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.autoconf=1
