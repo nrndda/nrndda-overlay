@@ -39,3 +39,6 @@ PIDFile=/var/run/-pppoe.pid
 [Install]
 WantedBy=inet.target
 WantedBy=network.target
+RequiredBy=miniupnpd.service
+RequiredBy=ntpd.service
+RequiredBy=ntpdate.service
