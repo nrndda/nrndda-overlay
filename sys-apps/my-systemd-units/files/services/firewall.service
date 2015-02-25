@@ -12,5 +12,4 @@ ExecStart=/usr/local/sbin/fw_full.sh
 ExecStop=/usr/local/sbin/fw_flush_all_rules.sh
 
 [Install]
-RequiredBy=ext_lan@.service
-RequiredBy=inet@.service
+WantedBy=network.target
