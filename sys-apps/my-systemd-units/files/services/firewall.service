@@ -5,9 +5,6 @@ Requires=br0@.service ext_lan@.service
 Before=miniupnpd.service
 
 [Service]
-RestartSec=5
-Restart=on-abnormal
-
 Type=oneshot
 RemainAfterExit=yes
 
