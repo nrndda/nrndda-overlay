@@ -1,7 +1,6 @@
 [Unit]
 Description=P-T-K internal lan connection (%i)
 After=systemd-modules-load.service systemd-udev-trigger.service sys-subsystem-net-devices-%i.device
-Requires=sys-subsystem-net-devices-%i.device
 
 [Service]
 RestartSec=5
