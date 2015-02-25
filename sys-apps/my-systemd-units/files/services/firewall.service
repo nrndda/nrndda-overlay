@@ -1,7 +1,8 @@
 [Unit]
 Description=My firewall rules
-After=br0@.service ext_lan@.service NetworkManager.service inet@.service
-Requires=br0@.service ext_lan@.service NetworkManager.service
+After=br0@.service ext_lan@.service inet@.service
+Requires=br0@.service ext_lan@.service
+Before=miniupnpd.service
 
 [Service]
 RestartSec=5
@@ -10,6 +11,7 @@ Restart=on-abnormal
 Type=oneshot
 RemainAfterExit=yes
 
+ExecStartPre=/usr/bin/sleep 2
 ExecStart=/usr/local/sbin/fw_full.sh
 ExecStop=/usr/local/sbin/fw_flush_all_rules.sh
 

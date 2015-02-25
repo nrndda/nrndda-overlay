@@ -1,7 +1,8 @@
 [Unit]
 Description=PPPoE connection with firewall
 After=systemd-modules-load.service systemd-udev-trigger.service
-Before=time-sync.target
+Before=time-sync.target network.target firewall.service
+Requires=firewall.service
 
 [Service]
 Type=forking
@@ -10,7 +11,7 @@ TimeoutStartSec=40s
 Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
-ExecStartPost=/usr/bin/sleep 1
+#ExecStartPost=/usr/bin/sleep 2
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.forwarding=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.accept_ra=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.autoconf=1
@@ -26,7 +27,7 @@ ExecStartPost=/usr/bin/sleep 1
 #Remove Router advertisement for not to stain routing table. I think I can disable it and set IPv6 addresses by myself.
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.autoconf=0
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
-ExecStartPost=-/usr/local/sbin/fw_full.sh
+#ExecStartPost=-/usr/local/sbin/fw_full.sh
 #ExecStartPost=-/etc/miniupnpd/iptables_init.sh
 #ExecStartPost=-/etc/miniupnpd/ip6tables_init.sh
 #ExecStop=/bin/sh -c "/bin/ip -6 addr del `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
@@ -37,10 +38,10 @@ PIDFile=/var/run/-pppoe.pid
 
 [Install]
 WantedBy=network.target
-#RequiredBy=time-sync.target
-#RequiredBy=ntpd.service
-#RequiredBy=ntpdate.service
-#RequiredBy=ddclient.service
-#RequiredBy=fail2ban.service
-#RequiredBy=miniupnpd.service
-#RequiredBy=radvd.service
+RequiredBy=time-sync.target
+RequiredBy=ntpd.service
+RequiredBy=ntpdate.service
+RequiredBy=ddclient.service
+RequiredBy=fail2ban.service
+RequiredBy=miniupnpd.service
+RequiredBy=radvd.service

@@ -124,6 +124,7 @@ src_install() {
 	if use inet ; then
 		install_service inet@.service || die "install_service failed"
 		install_service ext_lan@.service || die "install_service failed"
+		install_service firewall.service || die "install_service failed"
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
 	        doexe "${FILESDIR}"/fw_full.sh
