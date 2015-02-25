@@ -14,7 +14,7 @@ Restart=always
 #ExecStartPre=/usr/bin/sleep 1
 #ExecStart=/sbin/dhcpcd -q -B -w4 -w6 %i
 ExecStart=/sbin/dhcpcd -q -B -c /usr/local/sbin/fw_with_dhcpcd_hooks.sh %i
-#ExecStartPre=/usr/bin/sleep 32
+ExecStartPost=/usr/bin/sleep 2
 #ExecStartPre=-/usr/local/sbin/fw_full.sh
 
 ExecStop=/sbin/dhcpcd -k %i
