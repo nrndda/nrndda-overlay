@@ -1,0 +1,23 @@
+[Unit]
+Description=P-T-K internal lan connection (%i)
+After=systemd-modules-load.service systemd-udev-trigger.service sys-subsystem-net-devices-%i.device
+Before=ext_lan.target
+Requires=sys-subsystem-net-devices-%i.device
+
+[Service]
+RestartSec=5
+Restart=always
+
+#ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
+#ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.accept_ra=0
+#ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.autoconf=0
+#ExecStartPre=/usr/bin/sleep 1
+ExecStart=/sbin/dhcpcd -q -B -c /usr/local/sbin/fw_with_dhcpcd_hooks.sh %i
+ExecStartPost=/usr/bin/sleep 2
+
+ExecStop=/sbin/dhcpcd -k %i
+ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
+
+[Install]
+WantedBy=ext_lan.target
+WantedBy=network.target
