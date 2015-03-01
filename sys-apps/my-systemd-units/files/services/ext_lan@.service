@@ -1,7 +1,7 @@
 [Unit]
 Description=P-T-K internal lan connection (%i)
 After=systemd-modules-load.service systemd-udev-trigger.service sys-subsystem-net-devices-%i.device
-Before=ext_lan.target
+Before=ext_lan.target firewall.service
 Requires=sys-subsystem-net-devices-%i.device
 
 [Service]
@@ -21,3 +21,4 @@ ExecStop=/sbin/dhcpcd -k %i
 [Install]
 WantedBy=ext_lan.target
 WantedBy=network.target
+RequiredBy=firewall.service
