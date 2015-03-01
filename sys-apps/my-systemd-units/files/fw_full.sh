@@ -25,21 +25,21 @@ IPv6_LINK_LOCAL="fe80::/10"
 
 # 1.1 Internal Local Area Network configuration.
 LAN_IFACE_INT="br0"
-LAN_IP_INT=`10.0.0.1`
-LAN_IPv6_INT=`fe80::62eb:69ff:fe09:f7c2`
-LAN_IPv6_INT_ALL=`fe80::62eb:69ff:fe09:f7c2 fe80::4e0f:6eff:fe0d:4995`
-LAN_NETMASK_INT=`255.255.255.0`
-LAN_BROADCAST_INT=`10.0.0.255`
+LAN_IP_INT="10.0.0.1"
+LAN_IPv6_INT="fe80::62eb:69ff:fe09:f7c2"
+LAN_IPv6_INT_ALL="fe80::62eb:69ff:fe09:f7c2 fe80::4e0f:6eff:fe0d:4995"
+LAN_NETMASK_INT="255.255.255.0"
+LAN_BROADCAST_INT="10.0.0.255"
 LAN_IP_RANGE_INT="$LAN_IP_INT/$LAN_NETMASK_INT"
 IFACES_IN_BRIDGE="enp3s0 wlp9s0"
 
 #
 # 1.2 External Local Area Network configuration.
-LAN_IFACE_EXT=`enp0s18f2u1`
+LAN_IFACE_EXT="enp0s18f2u1"
 
 #
 # 1.3 Internet Configuration.
-INET_IFACE=`ppp0`
+INET_IFACE="ppp0"
 if $IFCONFIG | grep -q $INET_IFACE; then
   WITH_INET="true";
 else
@@ -49,8 +49,8 @@ fi
 #
 # 1.3 Localhost Configuration.
 LO_IFACE="lo"
-LO_IP=`127.0.0.1`
-LO_IPv6=`::1`
+LO_IP="127.0.0.1"
+LO_IPv6="::1"
 
 ######################################################################
 flush
