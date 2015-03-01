@@ -1,5 +1,5 @@
 [Unit]
-Description=My firewall rules
+Description=My firewall rules for inet
 After=br0.target inet.target
 Requires=br0.target inet.target
 Before=miniupnpd.service
