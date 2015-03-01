@@ -15,7 +15,7 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="distccd br0 hostapd inet hwclock microcode_ctl \
+IUSE="distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	git iptables miniupnpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
@@ -25,6 +25,7 @@ DEPEND="sys-apps/systemd
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
+	dhcpcd_firewall_hook? ( net-misc/dhcpcd )
 	hwclock? ( sys-apps/util-linux )
 	iptables? ( net-firewall/iptables )
 	miniupnpd? ( net-misc/miniupnpd )
@@ -129,10 +130,16 @@ src_install() {
 		install_service ext_lan@.service || die "install_service failed"
 		install_target ext_lan.target || die "install_target failed"
 		install_service firewall.service || die "install_service failed"
+		install_service firewall_inet.service || die "install_service failed"
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
 	        doexe "${FILESDIR}"/fw_full.sh
+	        doexe "${FILESDIR}"/fw_full_with_ip.sh
 	        doexe "${FILESDIR}"/fw_with_dhcpcd_hooks.sh
+	fi
+	if use dhcpcd_firewall_hook ; then
+		insinto /lib/dhcpcd/dhcpcd-hooks/
+		doins "${FILESDIR}"/99-dhcpcd_fw_hook.sh
 	fi
 	if use hdparm ; then
 		install_service hdparm_disableAPM@.service || die "install_service failed"

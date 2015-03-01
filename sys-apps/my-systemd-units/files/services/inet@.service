@@ -11,14 +11,13 @@ TimeoutStartSec=40s
 Restart=always
 
 ExecStart=-/usr/sbin/pppoe-start
-ExecStartPost=/usr/bin/sleep 2
+ExecStartPost=/usr/bin/sleep 5
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.forwarding=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.accept_ra=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.all.autoconf=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.forwarding=1
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.accept_ra=2
 #ExecStartPost=/sbin/sysctl net.ipv6.conf.%i.autoconf=1
-ExecStartPost=/usr/bin/sleep 2
 #ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev %i | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev %i"
 #ExecStartPost=-/bin/sh -c "/bin/ip -6 addr add `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
 #Prevent infinite loop in routing table
@@ -32,6 +31,7 @@ ExecStartPost=/usr/bin/sleep 2
 #ExecStartPost=-/etc/miniupnpd/ip6tables_init.sh
 #ExecStop=/bin/sh -c "/bin/ip -6 addr del `rdisc6 -q1 %i | cut -d '/' -f 1 | rev | cut -b 2- | rev``ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` dev br0"
 ExecStop=/usr/sbin/pppoe-stop
+ExecStopPost=-/usr/local/sbin/fw_full.sh
 #ExecStopPost=-/bin/sh -c "/bin/ip -6 addr del $(ip -6 addr show dev br0 scope global | grep -i `ip -6 addr show dev br0 | grep -i fe80 | grep -i '/64' | awk '{print $2}' | cut -d ':' -f 3-` | awk '{print $2}'| head -1) dev br0"
 
 PIDFile=/var/run/-pppoe.pid

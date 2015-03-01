@@ -1,15 +1,15 @@
 [Unit]
 Description=My firewall rules
-After=br0.target ext_lan.target
-Requires=br0.target ext_lan.target
-Before=miniupnpd.service inet.target
+After=br0.target inet.target
+Requires=br0.target inet.target
+Before=miniupnpd.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 
 ExecStart=/usr/local/sbin/fw_full.sh
-ExecStop=/usr/local/sbin/fw_flush_all_rules.sh
+ExecStop=/usr/local/sbin/fw_full.sh
 
 [Install]
 WantedBy=network.target

@@ -13,12 +13,10 @@ Restart=always
 #ExecStartPre=/sbin/sysctl net.ipv6.conf.%i.autoconf=0
 #ExecStartPre=/usr/bin/sleep 1
 #ExecStart=/sbin/dhcpcd -q -B -w4 -w6 %i
-ExecStart=/sbin/dhcpcd -q -B -c /usr/local/sbin/fw_with_dhcpcd_hooks.sh %i
+ExecStart=/sbin/dhcpcd -q -B %i
 ExecStartPost=/usr/bin/sleep 2
-#ExecStartPre=-/usr/local/sbin/fw_full.sh
 
 ExecStop=/sbin/dhcpcd -k %i
-ExecStopPost=/usr/local/sbin/fw_flush_all_rules.sh
 
 [Install]
 WantedBy=ext_lan.target
