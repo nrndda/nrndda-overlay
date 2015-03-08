@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/local/sbin/ssh_login.sh 2>/dev/null &
+#if `ps -A | grep -q aplay`; then killall -s 9 aplay; fi
+#if `ps -A | grep -q ssh_login.sh`; then killall -s 9 ssh_login.sh; fi
