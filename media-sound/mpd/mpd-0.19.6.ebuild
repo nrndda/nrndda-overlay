@@ -78,7 +78,7 @@ CDEPEND="!<sys-cluster/mpich2-1.4_rc2
 	openal? ( media-libs/openal )
 	opus? ( media-libs/opus )
 	pulseaudio? ( media-sound/pulseaudio )
-	samba? ( || ( >=net-fs/samba-3.4.6:0[smbclient] >=net-fs/samba-4:0[client] ) )
+	samba? ( || ( <net-fs/samba-4.0.0_alpha1[smbclient] >=net-fs/samba-4:0[client] ) )
 	sid? ( media-libs/libsidplay:2 )
 	sndfile? ( media-libs/libsndfile )
 	soundcloud? ( >=dev-libs/yajl-2 )
