@@ -16,8 +16,9 @@ SRC_URI=""
 
 LICENSE="GPL-2+"
 SLOT="0/1" # subslot = dbus interface version, i.e. N in org.freedesktop.ModemManager${N}
-IUSE="+introspection mbim policykit +qmi qmi-newest vala"
+IUSE="+introspection mbim policykit systemd upower +qmi qmi-newest vala"
 REQUIRED_USE="
+	^^ ( systemd upower )
 	qmi-newest? ( qmi )
 	vala? ( introspection )
 "
@@ -29,6 +30,8 @@ RDEPEND="
 	mbim? ( =net-libs/libmbim-9999 )
 	policykit? ( >=sys-auth/polkit-0.106[introspection] )
 	qmi? ( =net-libs/libqmi-9999 )
+        systemd? ( sys-apps/systemd:= )
+        upower? ( || ( sys-power/upower sys-power/upower-pm-utils ) )
 "
 DEPEND="${RDEPEND}
 	dev-util/gdbus-codegen
@@ -63,6 +66,8 @@ src_configure() {
 		--with-udev-base-dir="$(get_udevdir)" \
 		--disable-static \
 		--with-dist-version=${PVR} \
+		$(usex systemd --with-suspend-resume=systemd) \
+		$(usex upower --with-suspend-resume=upower) \
 		$(use_enable introspection) \
 		$(use_with mbim) \
 		$(use_with policykit polkit) \
@@ -84,8 +89,6 @@ src_install() {
 }
 
 pkg_postinst() {
-	default
-
 	use policykit && enewgroup plugdev
 
 	# The polkit rules file moved to /usr/share
