@@ -1,10 +1,10 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header:
 
-EAPI="4"
+EAPI="5"
 
 KDE_OVERRIDE_MINIMAL="4.7"
-inherit kde4-base git-2 cmake-utils
+inherit kde4-base git-r3 cmake-utils
 
 DESCRIPTION="Provides Dropbox integration in Dolphin."
 EGIT_REPO_URI="git://anongit.kde.org/scratch/trichard/dolphin-box-plugin"
