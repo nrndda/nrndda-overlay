@@ -1,8 +1,8 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-voip/ekiga/ekiga-4.0.1.ebuild,v 1.2 2014/05/15 12:05:52 ulm Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-voip/ekiga/ekiga-4.0.1.ebuild,v 1.4 2015/01/28 23:03:46 mgorny Exp $
 
-EAPI="4"
+EAPI=5
 
 KDE_REQUIRED="optional"
 CMAKE_REQUIRED="never"
@@ -18,7 +18,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="avahi dbus debug doc eds gconf gnome gstreamer h323 kde kontact ldap
-libnotify mmx nls pulseaudio +shm static v4l xcap xv"
+libnotify cpu_flags_x86_mmx nls pulseaudio +shm static v4l xcap xv"
 
 RDEPEND=">=dev-libs/glib-2.24.0:2
 	>=dev-libs/boost-1.49
@@ -99,7 +99,7 @@ pkg_setup() {
 		$(use_enable kontact kab)
 		$(use_enable ldap)
 		$(use_enable libnotify notify)
-		$(use_enable mmx)
+		$(use_enable cpu_flags_x86_mmx mmx)
 		$(use_enable nls)
 		$(use_enable shm)
 		$(use_enable static static-libs)
