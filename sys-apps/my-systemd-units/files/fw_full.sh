@@ -136,7 +136,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##ktorrent_10.0.0.9
   $i -A tcp_packets -p TCP -m multiport --dport 6886:6890 -j allowed
   ##amule
-  # $i -A tcp_packets -p TCP -m multiport --dport 4662:4672,50000 -j allowed
+  $i -A tcp_packets -p TCP -m multiport --dport 4662:4672,50000 -j allowed
   ##proftpd
   # $i -A tcp_packets -p TCP -m multiport --dport 20,21 -j allowed
   ##ssh
@@ -144,7 +144,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##sftp
   $i -A tcp_packets -p TCP --dport 115 -j allowed
   ##apache
-#   $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -j allowed
+  # $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -j allowed
   #same as previous but prevent DoS attack
   $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -m limit --limit 25/m --limit-burst 100 -j allowed
   ##messengers
@@ -169,7 +169,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##ktorrent_10.0.0.9
   $i -A udp_packets -p UDP -m multiport --dport 6886:6890 -j ACCEPT
   ##amule
-  # $i -A udp_packets -p UDP -m multiport --dport 4662:4672,50000 -j ACCEPT
+  $i -A udp_packets -p UDP -m multiport --dport 4662:4672,50000 -j ACCEPT
   ##proftpd
   # $i -A udp_packets -p UDP -m multiport --dport 20,21 -j ACCEPT
   ##ssh
