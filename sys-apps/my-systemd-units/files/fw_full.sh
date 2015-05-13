@@ -136,7 +136,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##ktorrent_10.0.0.9
   $i -A tcp_packets -p TCP -m multiport --dport 6886:6890 -j allowed
   ##amule
-  $i -A tcp_packets -p TCP -m multiport --dport 4662:4672,50000 -j allowed
+  $i -A tcp_packets -p TCP -m multiport --dport 4661:4672,50000 -j allowed
   ##proftpd
   # $i -A tcp_packets -p TCP -m multiport --dport 20,21 -j allowed
   ##ssh
@@ -169,7 +169,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##ktorrent_10.0.0.9
   $i -A udp_packets -p UDP -m multiport --dport 6886:6890 -j ACCEPT
   ##amule
-  $i -A udp_packets -p UDP -m multiport --dport 4662:4672,50000 -j ACCEPT
+  $i -A udp_packets -p UDP -m multiport --dport 4661:4672,50000 -j ACCEPT
   ##proftpd
   # $i -A udp_packets -p UDP -m multiport --dport 20,21 -j ACCEPT
   ##ssh
@@ -392,8 +392,8 @@ $IP6TABLES -A OUTPUT -j logging
 #
 #
 ##aMule
-$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
-$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
+$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
+$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
 ##rtorrent
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
@@ -408,8 +408,8 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 506
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 if $WITH_INET; then
   ##aMule
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 4662:4672 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
   ##rtorrent
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
