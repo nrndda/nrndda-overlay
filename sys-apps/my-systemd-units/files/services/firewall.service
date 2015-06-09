@@ -2,11 +2,13 @@
 Description=My firewall rules
 After=br0.target ext_lan.target
 Requires=br0.target ext_lan.target
-Before=miniupnpd.service inet.target
+Before=miniupnpd.service fail2ban.service inet.target
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+RestartSec=5s
+Restart=on-failure
+#RemainAfterExit=yes
 
 ExecStart=/usr/local/sbin/fw_full.sh
 ExecStop=/usr/local/sbin/fw_flush_all_rules.sh
