@@ -7,8 +7,6 @@ Before=miniupnpd.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-RestartSec=20s
-Restart=always
 
 ExecStart=/usr/local/sbin/fw_full.sh
 ExecStop=/usr/local/sbin/fw_full.sh
