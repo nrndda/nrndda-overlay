@@ -143,6 +143,8 @@ for i in $IPTABLES $IP6TABLES; do
   $i -A tcp_packets -p TCP --dport 22 -j allowed
   ##sftp
   $i -A tcp_packets -p TCP --dport 115 -j allowed
+  ##pptp
+  $i -A tcp_packets -p TCP --dport 47 -j allowed
   ##apache
   # $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -j allowed
   #same as previous but prevent DoS attack
@@ -178,6 +180,8 @@ for i in $IPTABLES $IP6TABLES; do
   $i -A udp_packets -p UDP -m multiport --dport 60000:61000 -j ACCEPT
   ##sftp
   $i -A udp_packets -p UDP --dport 115 -j ACCEPT
+  ##pptp
+  $i -A udp_packets -p UDP --dport 47 -j ACCEPT
   ##apache
   $i -A udp_packets -p UDP -m multiport --dport 80,8080:8081,443 -j ACCEPT
   ##messengers
@@ -403,6 +407,9 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 518
 #Forward port for ssh to nrndda_core
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+#Forward port for pptp to nrndda_core
+$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp --dport 47 -j DNAT --to-destination 10.0.0.2
+$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp --dport 47 -j DNAT --to-destination 10.0.0.2
 ##C610A IP
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
