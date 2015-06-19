@@ -144,6 +144,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##sftp
   $i -A tcp_packets -p TCP --dport 115 -j allowed
   ##pptp
+  $i -A INPUT -p gre -j ACCEPT
   $i -A tcp_packets -p TCP --dport 47 -j allowed
   ##apache
   # $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -j allowed
@@ -426,6 +427,9 @@ if $WITH_INET; then
   #Forward port for ssh to nrndda_core
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+  #Forward port for pptp to nrndda_core
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp --dport 47 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp --dport 47 -j DNAT --to-destination 10.0.0.2
   ##C610A IP
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
