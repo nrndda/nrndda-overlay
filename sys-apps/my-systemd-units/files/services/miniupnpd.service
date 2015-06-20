@@ -1,7 +1,8 @@
 [Unit]
 Description=Lightweight UPnP IGD daemon
-After=network.target
+After=network.target firewall_inet.service
 Requires=network.target
+Wants=firewall_inet.service
 
 [Service]
 Type=forking
