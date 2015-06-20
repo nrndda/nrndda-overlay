@@ -144,9 +144,8 @@ for i in $IPTABLES $IP6TABLES; do
   ##sftp
   $i -A tcp_packets -p TCP --dport 115 -j allowed
   ##pptp
-  $i -A INPUT -p gre -j ACCEPT
-  $i -A tcp_packets -p TCP --dport 47 -j allowed
-  $i -A tcp_packets -p TCP --dport 1723 -j allowed
+  $i -A INPUT -p GRE -j ACCEPT
+  $i -A tcp_packets -p TCP -m multiport --dport 47,1723 -j allowed
   ##apache
   # $i -A tcp_packets -p TCP -m multiport --dport 80,8080:8081,443 -j allowed
   #same as previous but prevent DoS attack
@@ -183,8 +182,7 @@ for i in $IPTABLES $IP6TABLES; do
   ##sftp
   $i -A udp_packets -p UDP --dport 115 -j ACCEPT
   ##pptp
-  $i -A udp_packets -p UDP --dport 47 -j ACCEPT
-  $i -A udp_packets -p UDP --dport 1723 -j ACCEPT
+  $i -A udp_packets -p UDP -m multiport --dport 47,1723 -j ACCEPT
   ##apache
   $i -A udp_packets -p UDP -m multiport --dport 80,8080:8081,443 -j ACCEPT
   ##messengers
