@@ -26,7 +26,7 @@ RDEPEND="
 	selinux? ( sec-policy/selinux-fail2ban )
 	systemd? ( $(python_gen_cond_dep '|| (
 		dev-python/python-systemd[${PYTHON_USEDEP}]
-		sys-apps/systemd[${PYTHON_USEDEP}]
+		sys-apps/systemd
 	)' 'python*' ) )
 "
 
