@@ -4,8 +4,8 @@ Description=CPU microcode updater
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/bin/bash -c " /bin/grep -qs ' microcode$' /proc/misc || /usr/bin/modprobe -q microcode "
-ExecStart=/usr/sbin/microcode_ctl -qu -f /lib/firmware/microcode.dat
+ExecStartPre=-/bin/bash -c " /bin/grep -qs ' microcode$' /proc/misc || /usr/bin/modprobe -q microcode "
+ExecStart=-/usr/sbin/microcode_ctl -f /lib/firmware/intel-ucode
 
 [Install]
 WantedBy=multi-user.target
