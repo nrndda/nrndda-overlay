@@ -26,3 +26,14 @@ DEPEND="${RDEPEND}
 	x11-libs/utouch-grail"
 
 S="${WORKDIR}/${MY_P}"
+
+src_prepare() {
+	sed -i 's/python >= 2.7/python-2.7/g' configure;
+	if use python_targets_python3_4; then
+		sed -i 's/python3 >= 3.2/python-3.4/g' configure;
+	elif use python_targets_python3_3; then
+		sed -i 's/python3 >= 3.2/python-3.3/g' configure;
+	elif use python_targets_python3_2; then
+		sed -i 's/python3 >= 3.2/python-3.2/g' configure;
+	fi
+}
