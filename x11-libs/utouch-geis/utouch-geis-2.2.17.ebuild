@@ -11,7 +11,7 @@ MY_P="${P:7}"
 MY_PN="${PN:7}"
 
 DESCRIPTION="An implementation of the GEIS (Gesture Engine Interface and Support) interface."
-SRC_URI="https://launchpad.net/${MY_PN}/trunk/${PV}/+download/${MY_P}.tar.gz"
+SRC_URI="https://launchpad.net/${MY_PN}/trunk/${PV}/+download/${MY_P}.tar.xz"
 
 RESTRICT="mirror"
 

@@ -4,16 +4,20 @@
 
 EAPI=5
 
-inherit eutils qt4-r2 git-2
+inherit eutils qt4-r2
+
+MY_P="${P::8}"
+MY_PN="${PN::8}"
 
 DESCRIPTION="Multitouch gesture recognizer"
 HOMEPAGE="https://code.google.com/p/touchegg"
-SRC_URI=""
-EGIT_REPO_URI="https://github.com/JoseExposito/touchegg.git"
+SRC_URI="https://touchegg.googlecode.com/files/${MY_P}-${PV}.tar.gz"
+
+RESTRICT="mirror"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 DEPEND="
@@ -25,19 +29,6 @@ DEPEND="
 	x11-libs/utouch-geis"
 RDEPEND="${DEPEND}"
 
-S="${S}/${PN}"
-
 src_configure() {
-	cd "${WORKDIR}/${P}/${PN}"
-	eqmake4 ${PN}.pro
-}
-
-src_compile() {
-  cd "${WORKDIR}/${P}/${PN}"
-  emake
-}
-
-src_install() {
-  cd "${WORKDIR}/${P}/${PN}"
-  emake install INSTALL_ROOT="${D}"
+	eqmake4 "${S}"/${PN}.pro
 }
