@@ -1,12 +1,12 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-analyzer/fail2ban/fail2ban-0.9.2.ebuild,v 1.8 2015/07/10 01:01:59 floppym Exp $
+# $Id$
 
 EAPI=5
 PYTHON_COMPAT=( python{2_7,3_3,3_4} pypy )
 DISTUTILS_SINGLE_IMPL=1
 
-inherit distutils-r1 systemd vcs-snapshot
+inherit distutils-r1 eutils systemd vcs-snapshot
 
 DESCRIPTION="scans log files and bans IPs that show malicious signs"
 HOMEPAGE="http://www.fail2ban.org/"
@@ -14,15 +14,14 @@ SRC_URI="https://github.com/${PN}/${PN}/tarball/${PV} -> ${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 arm hppa ppc ppc64 ~sparc x86 ~x86-fbsd"
+KEYWORDS="~amd64 ~arm ~hppa ~ppc ~ppc64 ~sparc ~x86 ~x86-fbsd"
 IUSE="selinux systemd"
 
-DEPEND=""
 RDEPEND="
-	net-misc/whois
-	virtual/mta
-	virtual/logger
 	net-firewall/iptables
+	net-misc/whois
+	virtual/logger
+	virtual/mta
 	selinux? ( sec-policy/selinux-fail2ban )
 	systemd? ( $(python_gen_cond_dep '|| (
 		dev-python/python-systemd[${PYTHON_USEDEP}]
@@ -38,6 +37,12 @@ src_prepare() {
 	# Replace /var/run with /run, but not in the top source directory
 	sed -i -e 's|/var\(/run/fail2ban\)|\1|g' $( find . -type f -mindepth 2 ) || die
 
+	# Fix bashisms and do not direct useful output to /dev/null (bug #536320)
+	# Remove global logrotate settings (bug #549856)
+	epatch \
+		"${FILESDIR}"/${PN}-0.9.2-initd.patch \
+		"${FILESDIR}"/${PN}-0.9.2-logrotate.patch
+
 	distutils-r1_src_prepare
 }
 
@@ -48,7 +53,7 @@ python_test() {
 src_install() {
 	distutils-r1_src_install
 
-	rm -rf "${D}"/usr/share/doc/${PN}
+	rm -rf "${D}"/usr/share/doc/${PN} "${D}"/run
 
 	# not FILESDIR
 	newconfd files/gentoo-confd ${PN}
