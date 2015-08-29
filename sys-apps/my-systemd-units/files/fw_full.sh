@@ -47,7 +47,16 @@ else
 fi
 
 #
-# 1.3 Localhost Configuration.
+# 1.4 VPN Configuration.
+VPN_IFACE="tun0"
+if $IFCONFIG | grep -q $VPN_IFACE; then
+  WITH_VPN="true";
+else
+  WITH_VPN="false";
+fi
+
+#
+# 1.5 Localhost Configuration.
 LO_IFACE="lo"
 LO_IP="127.0.0.1"
 LO_IPv6="::1"
@@ -70,6 +79,9 @@ echo "1" > /proc/sys/net/ipv6/conf/default/forwarding
 echo "2" > /proc/sys/net/ipv6/conf/$LAN_IFACE_EXT/accept_ra
 if $WITH_INET; then
   echo "2" > /proc/sys/net/ipv6/conf/$INET_IFACE/accept_ra
+fi
+if $WITH_VPN; then
+  echo "2" > /proc/sys/net/ipv6/conf/$VPN_IFACE/accept_ra
 fi
 ######################################################################
 #####
@@ -220,6 +232,11 @@ if $WITH_INET; then
   $IPTABLES  -A udp_packets -p UDP -i $INET_IFACE -d $GLOBAL_BROADCAST --dport 67:68 -j DROP
 fi
 
+if $WITH_VPN; then
+  $IPTABLES  -A udp_packets -p UDP -i $VPN_IFACE -d $GLOBAL_BROADCAST --dport 135:139 -j DROP
+  $IPTABLES  -A udp_packets -p UDP -i $VPN_IFACE -d $GLOBAL_BROADCAST --dport 67:68 -j DROP
+fi
+
 $IPTABLES  -A icmp_packets -p ICMP --icmp-type 8 --match limit --limit 30/minute -j ACCEPT
 $IP6TABLES -A icmp_packets -p ICMPv6 --icmpv6-type 128 --match limit --limit 30/minute -j ACCEPT
 
@@ -238,8 +255,13 @@ $IPTABLES  -A INPUT -p tcp -j bad_tcp_packets
 $IP6TABLES -A INPUT -p tcp -j bad_tcp_packets
 
 $IPTABLES  -A INPUT -i $LAN_IFACE_EXT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
 if $WITH_INET; then
   $IPTABLES  -A INPUT -i $INET_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+fi
+
+if $WITH_VPN; then
+  $IPTABLES  -A INPUT -i $VPN_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 fi
 
 # allow ipv6 in ipv4
@@ -290,6 +312,9 @@ fi
 $IPTABLES -A INPUT -i $LAN_IFACE_EXT -d 224.0.0.0/8 -j DROP
 if $WITH_INET; then
   $IPTABLES -A INPUT -i $INET_IFACE -d 224.0.0.0/8 -j DROP
+fi
+if $WITH_VPN; then
+  $IPTABLES -A INPUT -i $VPN_IFACE -d 224.0.0.0/8 -j DROP
 fi
 #
 # Log weird packets that don't match the above.
@@ -350,6 +375,13 @@ if $WITH_INET; then
   $IP6TABLES -A FORWARD -o $INET_IFACE -j ACCEPT
 fi
 
+if $WITH_VPN; then
+#   $IPTABLES  -A FORWARD -i $INET_IFACE -j ACCEPT
+#   $IP6TABLES -A FORWARD -i $INET_IFACE -j ACCEPT
+  $IPTABLES  -A FORWARD -o $VPN_IFACE -j ACCEPT
+  $IP6TABLES -A FORWARD -o $VPN_IFACE -j ACCEPT
+fi
+
 ## TODO Conflicts with miniupnpd as it inserts his rules at the end of the list
 # $IPTABLES  -A FORWARD -j logging
 # $IP6TABLES -A FORWARD -j logging
@@ -383,6 +415,11 @@ $IP6TABLES -A OUTPUT -o $LAN_IFACE_EXT -j ACCEPT
 if $WITH_INET; then
   $IPTABLES  -A OUTPUT -o $INET_IFACE -j ACCEPT
   $IP6TABLES -A OUTPUT -o $INET_IFACE -j ACCEPT
+fi
+
+if $WITH_VPN; then
+  $IPTABLES  -A OUTPUT -o $VPN_IFACE -j ACCEPT
+  $IP6TABLES -A OUTPUT -o $VPN_IFACE -j ACCEPT
 fi
 
 #
@@ -435,6 +472,26 @@ if $WITH_INET; then
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 fi
+if $WITH_VPN; then
+  ##aMule
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 4661:4672 -j DNAT --to-destination 10.0.0.2
+  ##rtorrent
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 8650:8655,6882:6884 -j DNAT --to-destination 10.0.0.2
+  ##messengers
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 5180:5190,5223:5225,8222:8223,9000:9005,22397:22399 -j DNAT --to-destination 10.0.0.2
+  #Forward port for ssh to nrndda_core
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
+  #Forward port for pptp to nrndda_core
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+  ##C610A IP
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
+  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
+fi
 #
 # 4.2.2 POSTROUTING chain
 #
@@ -445,4 +502,8 @@ $IP6TABLES -t nat -A POSTROUTING -o $LAN_IFACE_EXT -j MASQUERADE
 if $WITH_INET; then
   $IPTABLES  -t nat -A POSTROUTING -o $INET_IFACE -j MASQUERADE
   $IP6TABLES -t nat -A POSTROUTING -o $INET_IFACE -j MASQUERADE
+fi
+if $WITH_VPN; then
+  $IPTABLES  -t nat -A POSTROUTING -o $VPN_IFACE -j MASQUERADE
+  $IP6TABLES -t nat -A POSTROUTING -o $VPN_IFACE -j MASQUERADE
 fi
