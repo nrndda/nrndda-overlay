@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit base bzr
+inherit eutils base bzr autotools
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -17,7 +17,7 @@ HOMEPAGE="https://launchpad.net/libgrip"
 KEYWORDS=""
 SLOT="0"
 LICENSE="GPV-3"
-IUSE=""
+IUSE="doc"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
@@ -25,4 +25,15 @@ DEPEND="${RDEPEND}
 	>=x11-libs/utouch-geis-2.1.1
 	dev-libs/gobject-introspection
 	"
-S="${WORKDIR}/${MY_P}"
+#S="${WORKDIR}/${MY_P}"
+
+src_prepare() {
+	cd ${S}
+	if ! use doc; then
+                sed -i -e '/gtk-doc.make/d' Makefile.am || die
+                sed -i 's/--enable-gtk-doc//' autogen.sh || die
+                sed -i 's/--enable-gtk-doc//' Makefile.am || die
+                sed -i 's/.*gtk-doc.make.*/EXTRA_DIST = /' doc/reference/Makefile.am || die
+        fi
+	eautoreconf || die "failed running autoreconf"
+}

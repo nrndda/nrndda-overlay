@@ -28,5 +28,16 @@ RDEPEND="${DEPEND}"
 S="${S}/${PN}"
 
 src_configure() {
-	eqmake4 "${S}"/${PN}.pro
+	cd "${WORKDIR}/${P}/${PN}"
+	eqmake4 ${PN}.pro
+}
+
+src_compile() {
+  cd "${WORKDIR}/${P}/${PN}"
+  emake
+}
+
+src_install() {
+  cd "${WORKDIR}/${P}/${PN}"
+  emake install INSTALL_ROOT="${D}"
 }
