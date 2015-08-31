@@ -57,7 +57,7 @@ fi
 
 #
 # 1.5 VPN Configuration.
-PPTP_IFACE="tun0"
+PPTP_IFACE="ppp1"
 if $IFCONFIG | grep -q $PPTP_IFACE; then
   WITH_PPTP="true";
 else
