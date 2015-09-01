@@ -272,17 +272,21 @@ $IPTABLES  -A INPUT -p tcp -j bad_tcp_packets
 $IP6TABLES -A INPUT -p tcp -j bad_tcp_packets
 
 $IPTABLES  -A INPUT -i $LAN_IFACE_EXT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IP6TABLES  -A INPUT -i $LAN_IFACE_EXT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 if $WITH_INET; then
   $IPTABLES  -A INPUT -i $INET_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  $IP6TABLES  -A INPUT -i $INET_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 fi
 
 if $WITH_VPN; then
   $IPTABLES  -A INPUT -i $VPN_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  $IP6TABLES  -A INPUT -i $VPN_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 fi
 
 if $WITH_PPTP; then
   $IPTABLES  -A INPUT -i $PPTP_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  $IP6TABLES  -A INPUT -i $PPTP_IFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 fi
 
 # allow ipv6 in ipv4
@@ -324,6 +328,24 @@ if $WITH_INET; then
   $IP6TABLES -A INPUT -p UDP -i $INET_IFACE -j udp_packets
   $IPTABLES  -A INPUT -p ICMP -i $INET_IFACE -j icmp_packets
   $IP6TABLES -A INPUT -p ICMPv6 -i $INET_IFACE -j icmp_packets
+fi
+
+if $WITH_VPN; then
+  $IPTABLES  -A INPUT -p TCP -i $VPN_IFACE -j tcp_packets
+  $IP6TABLES -A INPUT -p TCP -i $VPN_IFACE -j tcp_packets
+  $IPTABLES  -A INPUT -p UDP -i $VPN_IFACE -j udp_packets
+  $IP6TABLES -A INPUT -p UDP -i $VPN_IFACE -j udp_packets
+  $IPTABLES  -A INPUT -p ICMP -i $VPN_IFACE -j icmp_packets
+  $IP6TABLES -A INPUT -p ICMPv6 -i $VPN_IFACE -j icmp_packets
+fi
+
+if $WITH_PPTP; then
+  $IPTABLES  -A INPUT -p TCP -i $PPTP_IFACE -j tcp_packets
+  $IP6TABLES -A INPUT -p TCP -i $PPTP_IFACE -j tcp_packets
+  $IPTABLES  -A INPUT -p UDP -i $PPTP_IFACE -j udp_packets
+  $IP6TABLES -A INPUT -p UDP -i $PPTP_IFACE -j udp_packets
+  $IPTABLES  -A INPUT -p ICMP -i $PPTP_IFACE -j icmp_packets
+  $IP6TABLES -A INPUT -p ICMPv6 -i $PPTP_IFACE -j icmp_packets
 fi
 
 #
