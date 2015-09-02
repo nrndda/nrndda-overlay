@@ -394,12 +394,12 @@ $IP6TABLES -A FORWARD -p ICMPv6 -j ACCEPT
 # Accept the packets we actually want to forward
 $IPTABLES  -A FORWARD -i $LO_IFACE -j ACCEPT
 $IP6TABLES -A FORWARD -i $LO_IFACE -j ACCEPT
-# $IPTABLES  -A FORWARD -o $LO_IFACE -j ACCEPT
-# $IP6TABLES -A FORWARD -o $LO_IFACE -j ACCEPT
+$IPTABLES  -A FORWARD -o $LO_IFACE -j ACCEPT
+$IP6TABLES -A FORWARD -o $LO_IFACE -j ACCEPT
 $IPTABLES  -A FORWARD -i $LAN_IFACE_INT -j ACCEPT
 $IP6TABLES -A FORWARD -i $LAN_IFACE_INT -j ACCEPT
-# $IPTABLES  -A FORWARD -o $LAN_IFACE_INT -j ACCEPT
-# $IP6TABLES -A FORWARD -o $LAN_IFACE_INT -j ACCEPT
+$IPTABLES  -A FORWARD -o $LAN_IFACE_INT -j ACCEPT
+$IP6TABLES -A FORWARD -o $LAN_IFACE_INT -j ACCEPT
 
 for i in $IFACES_IN_BRIDGE; do
   for j in $IPTABLES $IP6TABLES; do
@@ -409,28 +409,28 @@ for i in $IFACES_IN_BRIDGE; do
   done
 done
 
-# $IPTABLES  -A FORWARD -i $LAN_IFACE_EXT -j ACCEPT
-# $IP6TABLES -A FORWARD -i $LAN_IFACE_EXT -j ACCEPT
+$IPTABLES  -A FORWARD -i $LAN_IFACE_EXT -j ACCEPT
+$IP6TABLES -A FORWARD -i $LAN_IFACE_EXT -j ACCEPT
 $IPTABLES  -A FORWARD -o $LAN_IFACE_EXT -j ACCEPT
 $IP6TABLES -A FORWARD -o $LAN_IFACE_EXT -j ACCEPT
 
 if $WITH_INET; then
-#   $IPTABLES  -A FORWARD -i $INET_IFACE -j ACCEPT
-#   $IP6TABLES -A FORWARD -i $INET_IFACE -j ACCEPT
+  $IPTABLES  -A FORWARD -i $INET_IFACE -j ACCEPT
+  $IP6TABLES -A FORWARD -i $INET_IFACE -j ACCEPT
   $IPTABLES  -A FORWARD -o $INET_IFACE -j ACCEPT
   $IP6TABLES -A FORWARD -o $INET_IFACE -j ACCEPT
 fi
 
 if $WITH_VPN; then
-#   $IPTABLES  -A FORWARD -i $INET_IFACE -j ACCEPT
-#   $IP6TABLES -A FORWARD -i $INET_IFACE -j ACCEPT
+  $IPTABLES  -A FORWARD -i $VPN_IFACE -j ACCEPT
+  $IP6TABLES -A FORWARD -i $VPN_IFACE -j ACCEPT
   $IPTABLES  -A FORWARD -o $VPN_IFACE -j ACCEPT
   $IP6TABLES -A FORWARD -o $VPN_IFACE -j ACCEPT
 fi
 
 if $WITH_PPTP; then
-#   $IPTABLES  -A FORWARD -i $INET_IFACE -j ACCEPT
-#   $IP6TABLES -A FORWARD -i $INET_IFACE -j ACCEPT
+  $IPTABLES  -A FORWARD -i $PPTP_IFACE -j ACCEPT
+  $IP6TABLES -A FORWARD -i $PPTP_IFACE -j ACCEPT
   $IPTABLES  -A FORWARD -o $PPTP_IFACE -j ACCEPT
   $IP6TABLES -A FORWARD -o $PPTP_IFACE -j ACCEPT
 fi
@@ -505,8 +505,8 @@ $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 518
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
 #Forward port for pptp to nrndda_core
-$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
-$IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+# $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+# $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
 ##C610A IP
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
 $IPTABLES -t nat -A PREROUTING -i $LAN_IFACE_EXT -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
@@ -524,8 +524,8 @@ if $WITH_INET; then
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   #Forward port for pptp to nrndda_core
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
-  $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
   ##C610A IP
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $INET_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
@@ -544,8 +544,8 @@ if $WITH_VPN; then
   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   #Forward port for pptp to nrndda_core
-  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
-  $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
   ##C610A IP
   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $VPN_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
@@ -564,8 +564,8 @@ if $WITH_PPTP; then
   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p tcp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p udp --dport 11111 -j DNAT --to-destination 10.0.0.2:22
   #Forward port for pptp to nrndda_core
-  $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
-  $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p tcp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
+#   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p udp -m multiport --dport 47,1723 -j DNAT --to-destination 10.0.0.2
   ##C610A IP
   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p tcp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
   $IPTABLES -t nat -A PREROUTING -i $PPTP_IFACE -p udp -m multiport --dport 5060:5076,3478,11024,5004:5020,10000:20000 -j DNAT --to-destination 10.0.0.3
