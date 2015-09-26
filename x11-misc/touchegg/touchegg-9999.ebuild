@@ -25,7 +25,7 @@ DEPEND="
 	x11-libs/utouch-geis"
 RDEPEND="${DEPEND}"
 
-S="${S}/${PN}"
+#S="${S}/${PN}"
 
 src_configure() {
 	cd "${WORKDIR}/${P}/${PN}"
