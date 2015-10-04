@@ -10,8 +10,8 @@ Before=basic.target shutdown.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/cgconfigparser -l /etc/cgroup/cgconfig.conf -s 1664
-ExecStop=/usr/bin/cgclear -l /etc/cgroup/cgconfig.conf -e
+ExecStart=/usr/sbin/cgconfigparser -l /etc/cgroup/cgconfig.conf -s 1664
+ExecStop=/usr/sbin/cgclear -l /etc/cgroup/cgconfig.conf -e
 
 [Install]
 WantedBy=sysinit.target
