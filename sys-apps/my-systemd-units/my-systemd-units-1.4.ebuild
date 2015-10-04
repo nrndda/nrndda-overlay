@@ -95,6 +95,8 @@ src_install() {
 	install_service autosuspend_usb@.service || die "install_service failed"
 	install_service autosuspend_pci@.service || die "install_service failed"
 	install_service autosuspend_pcie@.service || die "install_service failed"
+	install_service cgconfig.service || die "install_service failed"
+	install_service cgrules.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
 	insinto /etc/systemd/system/getty@tty1.service.d/
