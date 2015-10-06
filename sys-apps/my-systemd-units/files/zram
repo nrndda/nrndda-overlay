@@ -1,19 +1,14 @@
 #!/bin/bash
 
 devices_num() {
-	if `modinfo zram 1>&2 2>/dev/null`; then
+	DEVICES_NUMBER=$( grep -oi "zram.num_devices=[[:digit:]]" /proc/cmdline | cut -d '=' -f 2 )
+	if [[ "x${DEVICES_NUMBER}x" == 'xx' ]]; then
 		if ( grep -qi "portage_tmp_zram" /proc/cmdline); then
 			DEVICES_NUMBER=$((${DEVICES_NUMBER}+1))
 		fi
 		if ( grep -qi "swap_zram" /proc/cmdline); then
 			DEVICES_NUMBER=$((${DEVICES_NUMBER}+${CPUS}))
 		fi
-	else
-		DEVICES_NUMBER=$( grep -oi "zram.num_devices=[[:digit:]]" /proc/cmdline | cut -d '=' -f 2 )
-	fi
-
-	if [[ "x${DEVICES_NUMBER}x"='xx' ]]; then
-			DEVICES_NUMBER=$((1))
 	fi
 
 	echo ${DEVICES_NUMBER}
