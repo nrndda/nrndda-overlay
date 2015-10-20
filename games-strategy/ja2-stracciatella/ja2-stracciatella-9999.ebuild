@@ -2,12 +2,14 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-inherit eutils multilib games subversion
+EAPI=5
 
-ESVN_REPO_URI="svn://tron.homeunix.org/ja2/trunk"
+inherit eutils multilib games git-r3
+
+EGIT_REPO_URI="https://bitbucket.org/gennady/ja2-stracciatella.git"
 
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL"
-HOMEPAGE="http://ja2.dragonriders.de/"
+HOMEPAGE="https://bitbucket.org/gennady/ja2-stracciatella/overview"
 SRC_URI=""
 
 LICENSE="SFI"
@@ -21,12 +23,11 @@ RDEPEND="sys-libs/zlib
 	media-libs/libsdl"
 DEPEND="${RDEPEND}"
 
-S="${WORKDIR}/ja2-${PV}"
 SGPDATADIR="${GAMES_PREFIX_OPT}/${PN}"
 
 pkg_setup() {
 	games_pkg_setup
-	
+
 	langcount=0
 	for i in ${LINGUAS}
 	do
@@ -50,29 +51,18 @@ pkg_setup() {
 	done
 }
 
+src_configure() {
+	econf --prefix=${D}
+}
+
 src_compile() {
 	use amd64 && multilib_toolchain_setup x86
 
 	emake LNG=${LNG} WITH_ZLIB=1 || die "emake"
 }
 
-src_install() {
-	mkdir -p "${D}/${SGPDATADIR}"
-	cp ja2 "${D}/${SGPDATADIR}/"
-
-	newgamesbin "${FILESDIR}/ja2-wrapper.sh" ja2 || die "newgamesbin ${PN} failed"
-
-	doman ja2.6
-	dodoc Changelog TODO
-	
-	doicon "${FILESDIR}/${PN}.png"
-	make_desktop_entry "ja2 -fullscreen" "Jagged Alliance 2 - Stracciatella"
-
-	prepgamesdirs
-}
-
 pkg_postinst() {
-	elog "Remember to place your datafiles in $SGPDATADIR, converted to lowercase."
-	elog "For more information see $HOMEPAGE" 
+	elog "Edit configuration file and set parameter data_dir to point on the directory where the original game files was installed."
+	elog "The configuration file is: ~/.ja2/ja2.ini"
 }
 
