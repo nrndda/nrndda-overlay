@@ -11,48 +11,18 @@ EGIT_REPO_URI="https://bitbucket.org/gennady/ja2-stracciatella.git"
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL"
 HOMEPAGE="https://bitbucket.org/gennady/ja2-stracciatella/overview"
 SRC_URI=""
-
 LICENSE="SFI"
 SLOT="0"
-
 KEYWORDS=""
-IUSE="linguas_nl linguas_en linguas_fr linguas_de linguas_it linguas_pl
-linguas_ru linguas_ru_gold"
+IUSE=""
 
 RDEPEND="sys-libs/zlib
 	media-libs/libsdl"
 DEPEND="${RDEPEND}"
 
-SGPDATADIR="${GAMES_PREFIX_OPT}/${PN}"
-
-pkg_setup() {
-	games_pkg_setup
-
-	langcount=0
-	for i in ${LINGUAS}
-	do
-		let $((++langcount))
-		if [[ $langcount = 2 ]]
-		then
-			eerror "${PN} only supports one localization at once!"
-			die "Localization is only supported when ${PN} is in a single language!"
-		fi
-
-		case ${i} in
-			nl) LNG=DUTCH;;
-			fr) LNG=FRENCH;;
-			de) LNG=GERMAN;;
-			it) LNG=ITALIAN;;
-			pl) LNG=POLISH;;
-			ru) LNG=RUSSIAN;;
-			ru_gold) LNG=RUSSIAN_GOLD;;
-			*) LNG=ENGLISH;;
-		esac
-	done
-}
-
 src_configure() {
-	econf --prefix=${D}
+	econf
+	sed -i 's/\/usr\//${D}\/usr\//' ${S}/Makefile.config
 }
 
 src_compile() {
