@@ -90,7 +90,7 @@ src_unpack() {
 
 src_install() {
 	install_service configure-printer@.service || die "install_service failed"
-	install_service cpufreq_governor.service || die "install_service failed"
+	install_service cpufreq_governor@.service || die "install_service failed"
 	install_service wpa_supplicant.service || die "install_service failed"
 	install_service autosuspend_usb@.service || die "install_service failed"
 	install_service autosuspend_pci@.service || die "install_service failed"
