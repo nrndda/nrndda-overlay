@@ -11,6 +11,11 @@ devices_num() {
 		fi
 	fi
 
+	#If there is no kernel parameters at all set devices number to 1.
+	if [[ "x${DEVICES_NUMBER}x" == 'xx' ]]; then
+		DEVICES_NUMBER=1
+	fi
+
 	echo ${DEVICES_NUMBER}
 }
 
