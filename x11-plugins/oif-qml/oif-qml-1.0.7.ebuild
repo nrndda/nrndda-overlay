@@ -18,5 +18,6 @@ KEYWORDS="~amd64 ~x86"
 
 RDEPEND="
 	dev-qt/qtgui:4
+	x11-libs/utouch-geis
 "
 #S="${WORKDIR}/${PN}-${PN}-master-${PV}"
