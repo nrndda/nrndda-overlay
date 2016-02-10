@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -27,16 +27,16 @@ MV="4.5.6"
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
 WINE_GENTOO="wine-gentoo-2015.03.07"
-GST_P="wine-1.7.34-gstreamer-v5"
+GST_P="wine-1.7.55-gstreamer-v5"
 DESCRIPTION="Free implementation of Windows(tm) on Unix"
 HOMEPAGE="http://www.winehq.org/"
 SRC_URI="${SRC_URI}
 	gecko? (
-		abi_x86_32? ( mirror://sourceforge/${PN}/Wine%20Gecko/${GV}/wine_gecko-${GV}-x86.msi )
-		abi_x86_64? ( mirror://sourceforge/${PN}/Wine%20Gecko/${GV}/wine_gecko-${GV}-x86_64.msi )
+		abi_x86_32? ( https://dl.winehq.org/wine/wine-gecko/${GV}/wine_gecko-${GV}-x86.msi )
+		abi_x86_64? ( https://dl.winehq.org/wine/wine-gecko/${GV}/wine_gecko-${GV}-x86_64.msi )
 	)
-	mono? ( mirror://sourceforge/${PN}/Wine%20Mono/${MV}/wine-mono-${MV}.msi )
-	gstreamer? ( https://dev.gentoo.org/~tetromino/distfiles/${PN}/${GST_P}.patch.bz2 )
+	mono? ( https://dl.winehq.org/wine/wine-mono/${MV}/wine-mono-${MV}.msi )
+	gstreamer? ( https://dev.gentoo.org/~np-hardass/distfiles/${PN}/${GST_P}.patch.bz2 )
 	https://dev.gentoo.org/~tetromino/distfiles/${PN}/${WINE_GENTOO}.tar.bz2"
 
 if [[ ${PV} == "9999" ]] ; then
@@ -56,8 +56,8 @@ REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	pipelight? ( staging )
 	s3tc? ( staging )
 	vaapi? ( staging )
-	?? ( gstreamer staging )
 	osmesa? ( opengl )" #286560
+	#?? ( gstreamer staging ) #Should be fixed by pre/post patchset
 
 # FIXME: the test suite is unsuitable for us; many tests require net access
 # or fail due to Xvfb's opengl limitations.
@@ -203,7 +203,7 @@ pkg_setup() {
 src_unpack() {
 	if [[ ${PV} == "9999" ]] ; then
 		git-r3_src_unpack
-		if use staging || use pulseaudio; then
+		if use staging; then
 			EGIT_REPO_URI=${STAGING_EGIT_REPO_URI}
 			unset ${PN}_LIVE_REPO;
 			EGIT_CHECKOUT_DIR=${STAGING_DIR} git-r3_src_unpack
@@ -240,17 +240,16 @@ src_prepare() {
 		# patch on top.
 		if use staging; then
 			PATCHES+=(
-				"${FILESDIR}/${PN}-1.7.39-gstreamer-v5-staging-pre.patch"
+				"${FILESDIR}/${PN}-1.7.55-gstreamer-v5-staging-pre.patch"
 				"${WORKDIR}/${GST_P}.patch"
-				"${FILESDIR}/${PN}-1.7.39-gstreamer-v5-staging-post.patch" )
+				"${FILESDIR}/${PN}-1.7.55-gstreamer-v5-staging-post.patch" )
 		else
 			PATCHES+=( "${WORKDIR}/${GST_P}.patch" )
 		fi
 	fi
 	if use staging; then
-		ewarn "Applying the unofficial Wine-Staging patchset which is unsupported"
-		ewarn "by Wine developers. Please don't report bugs to Wine bugzilla"
-		ewarn "unless you can reproduce them with USE=-staging"
+		ewarn "Applying the Wine-Staging patchset. Any bug reports to the"
+		ewarn "Wine bugzilla should explicitly state that staging was used."
 
 		local STAGING_EXCLUDE=""
 		use pipelight || STAGING_EXCLUDE="${STAGING_EXCLUDE} -W Pipelight"
@@ -318,7 +317,7 @@ multilib_src_configure() {
 		$(use_with oss)
 		$(use_with pcap)
 		$(use_with png)
-		$(use_with pulseaudio)
+		$(use_with pulseaudio pulse)
 		$(use_with threads pthread)
 		$(use_with scanner sane)
 		$(use_enable test tests)
