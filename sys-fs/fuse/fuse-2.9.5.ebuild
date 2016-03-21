@@ -1,24 +1,21 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI=5
 inherit eutils libtool linux-info udev toolchain-funcs
 
-MY_P=${P/_/-}
 DESCRIPTION="An interface for filesystems implemented in userspace"
-HOMEPAGE="http://fuse.sourceforge.net"
-SRC_URI="mirror://sourceforge/fuse/${MY_P}.tar.gz"
+HOMEPAGE="https://github.com/libfuse/libfuse"
+SRC_URI="https://github.com/libfuse/libfuse/releases/download/${PN}_${PV//./_}/fuse-2.9.5.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux"
 IUSE="examples kernel_linux kernel_FreeBSD static-libs"
 
 PDEPEND="kernel_FreeBSD? ( sys-fs/fuse4bsd )"
 DEPEND="virtual/pkgconfig"
-
-S=${WORKDIR}/${MY_P}
 
 pkg_setup() {
 	if use kernel_linux ; then
@@ -53,9 +50,8 @@ src_configure() {
 src_install() {
 	default
 
-	dodoc AUTHORS ChangeLog Filesystems README \
-		README.NFS NEWS doc/how-fuse-works \
-		doc/kernel.txt FAQ
+	dodoc AUTHORS ChangeLog README.md \
+		README.NFS NEWS doc/how-fuse-works doc/kernel.txt
 
 	if use examples ; then
 		docinto examples
