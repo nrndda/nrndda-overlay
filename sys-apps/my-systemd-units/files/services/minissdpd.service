@@ -1,0 +1,12 @@
+[Unit]
+Description=MiniSSDP server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/minissdpd.pid
+EnvironmentFile=/etc/conf.d/minissdpd
+ExecStart=/usr/sbin/minissdpd -i "$MINISSDPD_IFACE"
+
+[Install]
+WantedBy=multi-user.target
