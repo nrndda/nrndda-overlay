@@ -170,6 +170,7 @@ src_install() {
 	fi
 	if use minissdpd ; then
 		install_service minissdpd.service || die "install_service failed"
+		install_tmpfile minissdpd.conf || die "install_tmpfile failed"
 	fi
 	if use mpd ; then
 		install_service mpd@.service || die "install_service failed"
