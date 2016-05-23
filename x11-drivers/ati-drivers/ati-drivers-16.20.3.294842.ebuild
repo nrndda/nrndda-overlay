@@ -11,7 +11,7 @@ DESCRIPTION="Ati precompiled drivers for Radeon Evergreen (HD5000 Series) and ne
 HOMEPAGE="http://support.amd.com/en-us/kb-articles/Pages/AMDGPU-PRO-Beta-Driver-for-Vulkan-Release-Notes.aspx"
 BUILD_VER=16.20.3-294842
 
-SRC_URI=""
+SRC_URI="https://www2.ati.com/drivers/beta/amdgpu-pro_16.20.3-294842.tar.xz"
 IUSE="gles2 opencl +opengl vdpau +vulkan"
 
 LICENSE="AMD GPL-2 QPL-1.0"
