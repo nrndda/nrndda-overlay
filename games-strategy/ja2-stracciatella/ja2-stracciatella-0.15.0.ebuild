@@ -4,16 +4,14 @@
 
 EAPI=5
 
-inherit eutils multilib games git-r3
-
-EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
+inherit eutils multilib games
 
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL"
 HOMEPAGE="http://ja2-stracciatella.github.io/"
-SRC_URI=""
+SRC_URI="https://github.com/ja2-stracciatella/${PN}/archive/v${PV}.tar.gz"
 LICENSE="SFI"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="sys-libs/zlib
