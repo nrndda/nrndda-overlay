@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
-	git iptables miniupnpd rtorrent screen hdparm \
+	git iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
 DEPEND="sys-apps/systemd
@@ -29,6 +29,7 @@ DEPEND="sys-apps/systemd
 	hwclock? ( sys-apps/util-linux )
 	iptables? ( net-firewall/iptables )
 	miniupnpd? ( net-misc/miniupnpd )
+	minissdpd? ( net-misc/minissdpd )
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
 	microcode_ctl? ( sys-apps/microcode-ctl )
@@ -166,6 +167,10 @@ src_install() {
 	if use miniupnpd ; then
 		install_service miniupnpd.service || die "install_service failed"
 		install_tmpfile miniupnpd.conf || die "install_tmpfile failed"
+	fi
+	if use minissdpd ; then
+		install_service minissdpd.service || die "install_service failed"
+		install_tmpfile minissdpd.conf || die "install_tmpfile failed"
 	fi
 	if use mpd ; then
 		install_service mpd@.service || die "install_service failed"
