@@ -268,10 +268,6 @@ multilib_src_install_all() {
 	# Allow users in plugdev group to modify system connections
 	insinto /usr/share/polkit-1/rules.d/
 	doins "${FILESDIR}/01-org.freedesktop.NetworkManager.settings.modify.system.rules"
-
-	keepdir /etc/NetworkManager
-	insinto /etc/NetworkManager/
-	doins "${FILESDIR}/NetworkManager.conf"
 }
 
 pkg_postinst() {
