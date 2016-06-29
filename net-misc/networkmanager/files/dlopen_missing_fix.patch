@@ -1,0 +1,10 @@
+--- a/libnm/Makefile.am	2016-06-29 13:52:21.046146276 +0300
++++ b/libnm/Makefile.am	2016-06-29 13:39:11.305735699 +0300
+@@ -135,6 +135,7 @@
+ GLIB_MKENUMS_C_FLAGS = --identifier-prefix NM --fhead '\#include "nm-default.h"\n'
+ 
+ libnm_la_LIBADD = \
++	-ldl \
+ 	$(top_builddir)/libnm-core/libnm-core.la \
+ 	$(top_builddir)/introspection/libnmdbus.la \
+ 	$(GLIB_LIBS) \
