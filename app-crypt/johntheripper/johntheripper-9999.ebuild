@@ -14,11 +14,11 @@ if [[ ${PV} == "9999" ]] ; then
         inherit git-2
         SRC_URI=""
         KEYWORDS="**"
-        if use minimal; then
-                EGIT_BRANCH="master"
-        else
+        #if use minimal; then
+        #        EGIT_BRANCH="master"
+        #else
                 EGIT_BRANCH="bleeding-jumbo"
-        fi
+        #fi
 else
 	inherit versionator
 	MY_PN="john"
