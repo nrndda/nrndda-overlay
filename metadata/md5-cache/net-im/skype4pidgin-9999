@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile install preinst unpack
+DEPEND=net-im/pidgin dbus? ( >sys-apps/dbus-1.0 ) net-im/skype >dev-libs/glib-2.0 dev-vcs/subversion net-misc/rsync
+DESCRIPTION=Skype API PLugin for Pidgin
+EAPI=0
+HOMEPAGE=https://code.google.com/p/skype4pidgin/
+IUSE=dbus nls
+KEYWORDS=~amd64 ~x86
+LICENSE=GPL-2 CCPL-Attribution-ShareAlike-NonCommercial-3.0
+RDEPEND=net-im/pidgin dbus? ( >sys-apps/dbus-1.0 ) net-im/skype
+SLOT=0
+_eclasses_=eutils	792f83d5ec9536cb5ccef375469d8bde	multilib	d062ae4ba2fc40a19c11de2ad89b6616	subversion	4fee0a764150bb4dda27ed4d2c4ed7ce	toolchain-funcs	e886935aae2b45a545665444ab0667cf
+_md5_=66f2ef12dbf6e18e3f6f6b0afc99bc82

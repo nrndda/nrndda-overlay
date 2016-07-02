@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile install postinst postrm preinst prepare setup unpack
+DEPEND=kernel_linux? ( virtual/modutils ) sys-apps/sed kernel_linux? ( virtual/linux-sources ) >=dev-vcs/bzr-2.0.1
+DESCRIPTION=Driver for Genius Wizardpen Tablets
+EAPI=4
+HOMEPAGE=https://launchpad.net/wizardpen
+IUSE=kernel_linux
+KEYWORDS=~amd64
+LICENSE=GPL-2
+RDEPEND=x11-base/xorg-server kernel_linux? ( virtual/modutils )
+SLOT=0
+_eclasses_=bzr	745bed5705ae699c707ba26ca9e8929a	eutils	792f83d5ec9536cb5ccef375469d8bde	linux-info	5aa29ea4d8ff1abfeea0fca2de2b4964	linux-mod	4755518412586c2fd655ff6e55780bcb	multilib	d062ae4ba2fc40a19c11de2ad89b6616	toolchain-funcs	e886935aae2b45a545665444ab0667cf	versionator	99ae9d758cbe7cfed19170e7d48f5a9c
+_md5_=ba0b884d16590912cbd7214172ae9efb

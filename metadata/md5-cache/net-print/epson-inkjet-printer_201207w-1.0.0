@@ -1,0 +1,12 @@
+DEFINED_PHASES=configure install prepare unpack
+DEPEND=net-print/cups >=app-arch/rpm2targz-9.0.0.3g !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
+DESCRIPTION=Epson printer driver (L110, L210, L300, L350, L355, L550, L555)
+EAPI=5
+HOMEPAGE=http://download.ebz.epson.net/dsc/search/01/search/?OSC=LX http://www.openprinting.org/driver/epson-201207w
+KEYWORDS=~amd64 ~x86
+LICENSE=LGPL EPSON
+RDEPEND=net-print/cups
+SLOT=0
+SRC_URI=http://download.ebz.epson.net/dsc/op/stable/SRPMS/epson-inkjet-printer-201207w-1.0.0-1lsb3.2.src.rpm
+_eclasses_=autotools	07e71b3b5690738ef7e8bc097077e00c	eutils	792f83d5ec9536cb5ccef375469d8bde	libtool	4890219c51da247200223277f993e054	multilib	d062ae4ba2fc40a19c11de2ad89b6616	rpm	3e120fdd74b358f9fb42b825a6558f61	toolchain-funcs	e886935aae2b45a545665444ab0667cf
+_md5_=5f2b26ee40dbf6735f3d9a064068ceaf

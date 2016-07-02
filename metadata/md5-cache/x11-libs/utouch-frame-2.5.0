@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile configure install prepare unpack
+DEPEND=x11-misc/utouch-evemu
+DESCRIPTION=Touch Frame Library
+EAPI=5
+HOMEPAGE=https://launchpad.net/frame
+KEYWORDS=~x86 ~amd64
+LICENSE=GPL-3
+RESTRICT=mirror
+SLOT=0
+SRC_URI=https://launchpad.net/frame/trunk/v2.5.0/+download/frame-2.5.0.tar.gz
+_eclasses_=base	3fe4f8980633fd7bc69e9887209ba2fe	eutils	792f83d5ec9536cb5ccef375469d8bde	multilib	d062ae4ba2fc40a19c11de2ad89b6616	toolchain-funcs	e886935aae2b45a545665444ab0667cf
+_md5_=9034346ff5628a60c08f556ccd76f01e

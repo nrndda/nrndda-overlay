@@ -1,0 +1,10 @@
+DEFINED_PHASES=install preinst prepare unpack
+DEPEND=|| ( dev-vcs/subversion[http] dev-vcs/subversion[webdav-neon] dev-vcs/subversion[webdav-serf] ) net-misc/rsync
+DESCRIPTION=CUPS drivers for Canon LBP-810 and LBP-1120
+EAPI=5
+HOMEPAGE=http://www.boichat.ch/nicolas/capt/
+LICENSE=GPL-3
+RDEPEND=net-print/cups
+SLOT=0
+_eclasses_=eutils	792f83d5ec9536cb5ccef375469d8bde	multilib	d062ae4ba2fc40a19c11de2ad89b6616	subversion	4fee0a764150bb4dda27ed4d2c4ed7ce	toolchain-funcs	e886935aae2b45a545665444ab0667cf
+_md5_=cd86cffcdd87cc439055f2238d70281e
