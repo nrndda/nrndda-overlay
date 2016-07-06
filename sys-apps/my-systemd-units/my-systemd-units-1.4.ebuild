@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit eutils
+inherit eutils user
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
@@ -15,11 +15,12 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="cgroup distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	git iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
 DEPEND="sys-apps/systemd
+	cgroup? ( dev-libs/libcgroup )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
 	br0? ( net-misc/bridge-utils )
@@ -96,8 +97,6 @@ src_install() {
 	install_service autosuspend_usb@.service || die "install_service failed"
 	install_service autosuspend_pci@.service || die "install_service failed"
 	install_service autosuspend_pcie@.service || die "install_service failed"
-	install_service cgconfig.service || die "install_service failed"
-	install_service cgrules.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
 	insinto /etc/systemd/system/getty@tty1.service.d/
@@ -116,6 +115,11 @@ src_install() {
 			install_service $i.service || die "install_service failed"
 		fi
 	done
+	if use cgroup; then
+		install_service cgconfig.service || die "install_service failed"
+		install_service cgrules.service || die "install_service failed"
+	fi
+
 	if use br0; then
 		install_service br0@.service || die "install_service failed"
 		install_target br0.target || die "install_target failed"
@@ -225,6 +229,10 @@ src_install() {
 }
 
 pkg_postinst() {
+	if use cgroup; then
+		enewgroup cgroup
+		usermod -a -G cgroup portage
+	fi
 	einfo "Reloading systemd rules."
 	systemctl daemon-reload
 }
