@@ -27,5 +27,5 @@ src_install() {
 	exeinto "/opt/${PN}"
 	doexe Telegram
 	dodir /opt/bin
-	dosym ../telegram/Telegram /opt/bin/Telegram || die
+	dosym ../telegram-bin/Telegram /opt/bin/Telegram || die
 }
