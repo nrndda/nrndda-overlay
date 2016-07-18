@@ -15,12 +15,13 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="cgroup distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="cgroup cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	git iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
 DEPEND="sys-apps/systemd
 	cgroup? ( dev-libs/libcgroup )
+	cpupower? ( sys-power/cpupower )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
 	br0? ( net-misc/bridge-utils )
@@ -118,6 +119,12 @@ src_install() {
 	if use cgroup; then
 		install_service cgconfig.service || die "install_service failed"
 		install_service cgrules.service || die "install_service failed"
+	fi
+
+	if use cpupower; then
+		install_service cpupower.service || die "install_service failed"
+		exeinto /usr/local/sbin/
+		doexe "${FILESDIR}"/cpupower || die "doexe failed"
 	fi
 
 	if use br0; then

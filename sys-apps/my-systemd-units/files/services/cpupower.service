@@ -1,0 +1,11 @@
+[Unit]
+Description=Apply cpupower configuration
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/conf.d/cpupower
+ExecStart=/usr/local/sbin/cpupower
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
