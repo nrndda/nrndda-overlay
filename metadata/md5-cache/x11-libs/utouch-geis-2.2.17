@@ -1,13 +1,13 @@
-DEFINED_PHASES=compile configure install prepare unpack
+DEFINED_PHASES=compile configure install prepare setup unpack
 DEPEND=x11-libs/utouch-grail
 DESCRIPTION=An implementation of the GEIS (Gesture Engine Interface and Support) interface.
 EAPI=5
 HOMEPAGE=https://launchpad.net/geis
-IUSE=python_targets_python2_7 python_targets_python3_3 python_targets_python3_4
+IUSE=python_targets_python2_7 python_targets_python3_3 python_targets_python3_4 python_targets_python3_5 python_single_target_python2_7 python_single_target_python3_3 python_single_target_python3_4 python_single_target_python3_5
 KEYWORDS=~x86 ~amd64
 LICENSE=GPL-2 LGPL-3
 RESTRICT=mirror
 SLOT=0
 SRC_URI=https://launchpad.net/geis/trunk/2.2.17/+download/geis-2.2.17.tar.xz
-_eclasses_=base	3fe4f8980633fd7bc69e9887209ba2fe	eutils	792f83d5ec9536cb5ccef375469d8bde	multibuild	742139c87a9fa3766f0c2b155e5522bf	multilib	d062ae4ba2fc40a19c11de2ad89b6616	python-r1	0f6937650a475d673baa5d0c8c0b37b3	python-utils-r1	c0ed2a2f233d3af6dd556048695dc5cb	toolchain-funcs	e886935aae2b45a545665444ab0667cf
-_md5_=17d5f20bf8de90d17848421fed57080c
+_eclasses_=base	3fe4f8980633fd7bc69e9887209ba2fe	eutils	792f83d5ec9536cb5ccef375469d8bde	multilib	d062ae4ba2fc40a19c11de2ad89b6616	python-single-r1	2ebea8fbab356d63110245129a67a6dd	python-utils-r1	c0ed2a2f233d3af6dd556048695dc5cb	toolchain-funcs	82165206dedb2075f9a0fb8f9b1f9441
+_md5_=8d8b09f8e152668b9e7635804845c0ff
