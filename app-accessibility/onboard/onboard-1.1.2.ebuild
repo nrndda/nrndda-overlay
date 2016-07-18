@@ -1,6 +1,6 @@
 EAPI="5"
 
-PYTHON_COMPAT=( python3_{3,4} )
+PYTHON_COMPAT=( python3_{3,4,5} )
 
 inherit distutils-r1 gnome2-utils versionator
 
@@ -24,7 +24,7 @@ RDEPEND="
 	dev-python/dbus-python
 	dev-python/pycairo
 	dev-python/pygobject:3[${PYTHON_USEDEP}]
-	dev-python/python-distutils-extra
+	dev-python/python-distutils-extra:3[${PYTHON_USEDEP}]
 
 	gnome-base/dconf
 
