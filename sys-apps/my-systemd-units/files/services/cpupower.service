@@ -4,8 +4,8 @@ Description=Apply cpupower configuration
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/conf.d/cpupower
-ExecStart=/usr/bin/cpupower ${START_OPTS}
-ExecStop=/usr/bin/cpupower ${STOP_OPTS}
+ExecStart=/usr/bin/cpupower frequency-set $START_OPTS
+ExecStop=/usr/bin/cpupower frequency-set $STOP_OPTS
 RemainAfterExit=yes
 
 [Install]
