@@ -4,8 +4,8 @@
 
 EAPI="5"
 
-PYTHON_COMPAT=( python{2_7,3_{2,3,4}} )
-inherit eutils base python-r1 bzr autotools
+PYTHON_COMPAT=( python{2_7,3_{3,4,5}} )
+inherit eutils base python-single-r1 bzr autotools
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -18,8 +18,9 @@ HOMEPAGE="https://launchpad.net/geis"
 KEYWORDS=""
 SLOT="0"
 LICENSE="GPL-2 LGPL-3"
-IUSE=""
-
+IUSE="  $(python_gen_useflags python2*)
+        ^^ ( $(python_gen_useflags python3*) )
+"
 RDEPEND=""
 DEPEND="${RDEPEND}
 	x11-libs/utouch-grail"
@@ -28,7 +29,9 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	cd ${S}
-	if use python_targets_python3_4; then
+	if use python_targets_python3_5; then
+		sed -i 's/python3 >= 3.2/python-3.5/g' configure.ac;
+	elif use python_targets_python3_4; then
 		sed -i 's/python3 >= 3.2/python-3.4/g' configure.ac;
 	elif use python_targets_python3_3; then
 		sed -i 's/python3 >= 3.2/python-3.3/g' configure.ac;
