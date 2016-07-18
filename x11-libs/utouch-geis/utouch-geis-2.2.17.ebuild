@@ -19,9 +19,7 @@ HOMEPAGE="https://launchpad.net/geis"
 KEYWORDS="~x86 ~amd64"
 SLOT="0"
 LICENSE="GPL-2 LGPL-3"
-IUSE="  $(python_gen_useflags python2*)
-	^^ ( $(python_gen_useflags python3*) )
-"
+IUSE=""
 DEPEND="${RDEPEND}
 	x11-libs/utouch-grail"
 
