@@ -124,8 +124,6 @@ src_install() {
 	if use br0; then
 		install_service br0@.service || die "install_service failed"
 		install_target br0.target || die "install_target failed"
-	        exeinto /usr/local/sbin/
-	        doexe "${FILESDIR}"/crda_set.sh
 	fi
 	if use distccd ; then
 		install_service distccd.service || die "install_service failed"
@@ -139,6 +137,8 @@ src_install() {
 		install_service hostapd@.service || die "install_service failed"
 		install_target hostapd.target || die "install_target failed"
 		install_tmpfile hostapd.conf || die "install_tmpfile failed"
+	        exeinto /usr/local/sbin/
+	        doexe "${FILESDIR}"/crda_set.sh
 	fi
 	if use inet ; then
 		install_service inet@.service || die "install_service failed"
