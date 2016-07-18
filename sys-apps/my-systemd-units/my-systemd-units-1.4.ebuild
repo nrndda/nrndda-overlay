@@ -111,7 +111,7 @@ src_install() {
 	doins "${FILESDIR}"/KDE-Im-Phone-Ring.wav
 	doins "${FILESDIR}"/stock_dialog_warning_48.png
 
-	for i in mediatomb ushare hwclock microcode_ctl; do
+	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
@@ -119,12 +119,6 @@ src_install() {
 	if use cgroup; then
 		install_service cgconfig.service || die "install_service failed"
 		install_service cgrules.service || die "install_service failed"
-	fi
-
-	if use cpupower; then
-		install_service cpupower.service || die "install_service failed"
-		exeinto /usr/local/sbin/
-		doexe "${FILESDIR}"/cpupower || die "doexe failed"
 	fi
 
 	if use br0; then
