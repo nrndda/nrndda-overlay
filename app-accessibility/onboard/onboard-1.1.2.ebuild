@@ -24,7 +24,7 @@ RDEPEND="
 	dev-python/dbus-python
 	dev-python/pycairo
 	dev-python/pygobject:3[${PYTHON_USEDEP}]
-	dev-python/python-distutils-extra:3[${PYTHON_USEDEP}]
+	dev-python/python-distutils-extra[${PYTHON_USEDEP}]
 
 	gnome-base/dconf
 
