@@ -14,7 +14,7 @@ LICENSE=""
 SLOT="0"
 KEYWORDS="amd64 ~ppc x86"
 CARDS=( fglrx nvidia intel )
-IUSE="llvm ${CARDS[@]/#/video_cards_}"
+IUSE="mesa ${CARDS[@]/#/video_cards_}"
 
 DEPEND=""
 # intel-ocl-sdk is amd64-only
@@ -22,7 +22,7 @@ RDEPEND="app-eselect/eselect-opencl
 	|| (
 		video_cards_intel? (
 			dev-libs/intel-beignet )
-		llvm? (
+		mesa? (
 			>=media-libs/mesa-9.1.6[opencl,${MULTILIB_USEDEP}] )
 		video_cards_fglrx? (
 			>=x11-drivers/ati-drivers-12.1-r1 )
