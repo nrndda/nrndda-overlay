@@ -31,6 +31,7 @@ RDEPEND="app-eselect/eselect-opencl
 	media-libs/mesa
 	sys-devel/clang
 	>=sys-devel/llvm-3.5
+	<sys-devel/llvm-3.7
 	x11-libs/libdrm
 	x11-libs/libXext
 	x11-libs/libXfixes"
