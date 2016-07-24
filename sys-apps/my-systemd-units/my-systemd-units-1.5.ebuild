@@ -111,7 +111,7 @@ src_install() {
 	doins "${FILESDIR}"/KDE-Im-Phone-Ring.wav
 	doins "${FILESDIR}"/stock_dialog_warning_48.png
 
-	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
+	for i in mediatomb ushare hwclock microcode_ctl cpupower disable_wifi_powersave@.service; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi

@@ -1,0 +1,8 @@
+[Unit]
+Description=Disable power control for wifi devices.
+
+[Service]
+ExecStart=/usr/sbin/iw dev %i set power_save off
+
+[Install]
+WantedBy=multi-user.target 
