@@ -98,6 +98,7 @@ src_install() {
 	install_service autosuspend_usb@.service || die "install_service failed"
 	install_service autosuspend_pci@.service || die "install_service failed"
 	install_service autosuspend_pcie@.service || die "install_service failed"
+	install_service disable_wifi_powersave@.service || die "install_service failed"
 
 	mkdir -p "${D}"/etc/systemd/system/getty@tty1.service.d/
 	insinto /etc/systemd/system/getty@tty1.service.d/
@@ -111,7 +112,7 @@ src_install() {
 	doins "${FILESDIR}"/KDE-Im-Phone-Ring.wav
 	doins "${FILESDIR}"/stock_dialog_warning_48.png
 
-	for i in mediatomb ushare hwclock microcode_ctl cpupower disable_wifi_powersave@.service; do
+	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
 		if use $i; then
 			install_service $i.service || die "install_service failed"
 		fi
