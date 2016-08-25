@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS=""
 IUSE="qt4 qt5"
 
-REQUIRED_USE="|| ( qt4 qt5 )"
+REQUIRED_USE="^^ ( qt4 qt5 )"
 
 RDEPEND="
 	net-libs/telegram-qt
