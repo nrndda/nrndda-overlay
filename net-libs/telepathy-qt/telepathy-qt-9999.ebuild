@@ -6,6 +6,7 @@ EAPI=6
 
 PYTHON_COMPAT=( python2_7 )
 EGIT_REPO_URI=( "https://github.com/TelepathyQt/${PN}.git" )
+EGIT_BRANCH="dev"
 inherit python-any-r1 cmake-utils virtualx git-r3 multibuild
 
 DESCRIPTION="Qt bindings for the Telepathy D-Bus protocol"
