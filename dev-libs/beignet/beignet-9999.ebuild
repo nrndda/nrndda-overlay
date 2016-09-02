@@ -21,7 +21,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS=""
 else
 	KEYWORDS="~amd64 ~x86"
-	SRC_URI="https://01.org/sites/default/files/${P/intel-/}-source.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://01.org/sites/default/files/${P}-source.tar.gz -> ${P}.tar.gz"
 	S=${WORKDIR}/Beignet-${PV}-Source
 fi
 
