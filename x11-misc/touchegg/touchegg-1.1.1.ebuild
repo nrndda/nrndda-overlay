@@ -8,7 +8,7 @@ inherit eutils qmake-utils
 
 DESCRIPTION="Multitouch gesture recognizer"
 HOMEPAGE="https://code.google.com/p/touchegg"
-SRC_URI="https://github.com/JoseExposito/touchegg/archive/${PN}.tar.gz"
+SRC_URI="https://github.com/JoseExposito/touchegg/archive/${PV}.tar.gz"
 
 RESTRICT="mirror"
 
