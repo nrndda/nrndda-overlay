@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit eutils qt4-r2 git-2
+inherit eutils qmake-utils git-2
 
 DESCRIPTION="Multitouch gesture recognizer"
 HOMEPAGE="https://code.google.com/p/touchegg"
@@ -20,16 +20,21 @@ DEPEND="
 	x11-libs/libX11
 	x11-libs/libXext
 	x11-libs/libXtst
-	dev-qt/qtcore:4
-	dev-qt/qtgui:4
+	dev-qt/qtcore:5
+	dev-qt/qtgui:5
 	x11-libs/utouch-geis"
 RDEPEND="${DEPEND}"
 
-#S="${S}/${PN}"
+S="${S}/${PN}"
+
+src_prepare() {
+	cd "${WORKDIR}/${P}/${PN}"
+	epatch "${FILESDIR}/qt5.patch"
+}
 
 src_configure() {
 	cd "${WORKDIR}/${P}/${PN}"
-	eqmake4 ${PN}.pro
+	eqmake5 ${PN}.pro
 }
 
 src_compile() {
