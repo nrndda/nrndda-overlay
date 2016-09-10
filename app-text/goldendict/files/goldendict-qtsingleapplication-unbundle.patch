@@ -1,5 +1,5 @@
---- goldendict.pro.orig	2016-02-12 21:25:15.994382213 +0600
-+++ goldendict.pro	2016-02-12 21:31:03.782075358 +0600
+--- goldendict.pro.orig	2016-07-28 23:48:03.233297827 +0700
++++ goldendict.pro	2016-07-28 23:49:51.925801495 +0700
 @@ -36,7 +36,8 @@
  QT += sql
  CONFIG += exceptions \
@@ -10,7 +10,7 @@
  OBJECTS_DIR = build
  UI_DIR = build
  MOC_DIR = build
-@@ -610,5 +611,3 @@
+@@ -632,5 +633,3 @@
  TS_OUT ~= s/.ts/.qm/g
  PRE_TARGETDEPS += $$TS_OUT
  

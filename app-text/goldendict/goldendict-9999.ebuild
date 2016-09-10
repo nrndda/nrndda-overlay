@@ -10,7 +10,6 @@ inherit qmake-utils git-r3 l10n
 DESCRIPTION="Feature-rich dictionary lookup program"
 HOMEPAGE="http://goldendict.org/"
 EGIT_REPO_URI="https://github.com/goldendict/goldendict.git"
-EGIT_BRANCH=qt4x5
 
 LICENSE="GPL-3"
 SLOT="0"
@@ -50,11 +49,7 @@ DEPEND="${RDEPEND}
 "
 
 src_prepare() {
-	if ! use qt5 ; then
-		epatch "${FILESDIR}/${PN}-36a761108-qtsingleapplication-unbundle.patch"
-	else
-		epatch "${FILESDIR}/${PN}-qtsingleapplication-unbundle-qt4x5.patch"
-	fi
+	epatch "${FILESDIR}/${PN}-qtsingleapplication-unbundle.patch"
 
 	# fix installation path
 	sed -i \

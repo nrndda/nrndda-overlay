@@ -13,7 +13,9 @@ EGIT_REPO_URI=( "https://github.com/TelepathyQt/telepathy-morse.git" )
 LICENSE="LGPL-2.1"
 SLOT="0"
 KEYWORDS=""
-IUSE=""
+IUSE="qt4 qt5"
+
+REQUIRED_USE="^^ ( qt4 qt5 )"
 
 RDEPEND="
 	net-libs/telegram-qt
@@ -27,11 +29,13 @@ DOCS=( README.md )
 
 src_configure() {
 	local mycmakeargs=(
-		-DENABLE_TESTS=OFF
-		-DENABLE_TESTAPP=OFF
-		-DENABLE_EXAMPLES=OFF
-		-DDESIRED_QT_VERSION=5
+			-DENABLE_TESTS=OFF
+			-DENABLE_TESTAPP=OFF
+			-DENABLE_EXAMPLES=OFF
 	)
+	if use qt4 ; then
+		mycmakeargs+=( -DUSE_QT4=true )
+	fi
 	cmake-utils_src_configure
 }
 
