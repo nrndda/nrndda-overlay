@@ -11,7 +11,7 @@ MY_PN="${PN:7}"
 
 DESCRIPTION="Gesture Recognition And Instantiation Library"
 SRC_URI=""
-EBZR_REPO_URI="http://bazaar.launchpad.net/~oif-team/lib${MY_PN}/trunk"
+EBZR_REPO_URI="https://code.launchpad.net/~oif-team/lib${MY_PN}/trunk"
 
 HOMEPAGE="https://launchpad.net/libgrip"
 KEYWORDS=""

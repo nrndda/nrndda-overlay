@@ -11,7 +11,7 @@ MY_PN="${PN:7}"
 
 DESCRIPTION="Touch Frame Library "
 SRC_URI=""
-EBZR_REPO_URI="http://bazaar.launchpad.net/${MY_PN}/trunk"
+EBZR_REPO_URI="https://code.launchpad.net/~oif-team/${MY_PN}/trunk"
 
 RESTRICT="mirror"
 
