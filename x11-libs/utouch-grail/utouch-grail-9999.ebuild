@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-inherit base bzr
+inherit eutils autotools bzr
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -17,12 +17,19 @@ HOMEPAGE="https://launchpad.net/grail"
 KEYWORDS=""
 SLOT="0"
 LICENSE="GPV-3"
-IUSE=""
+IUSE="evemu"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
 	sys-libs/mtdev
-	x11-misc/utouch-evemu
+	evemu? ( x11-misc/utouch-evemu )
 	x11-libs/utouch-frame
 	"
 
+src_prepare() {
+        eautoreconf
+}
+src_configure() {
+       econf \
+               $(use_with evemu)
+}
