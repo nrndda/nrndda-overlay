@@ -24,5 +24,3 @@ IUSE=""
 RDEPEND=""
 DEPEND="${RDEPEND}
     x11-misc/utouch-evemu"
-
-S="${WORKDIR}/${MY_P}"
