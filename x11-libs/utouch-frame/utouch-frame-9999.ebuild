@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit base bzr
+inherit eutils autotools bzr
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -19,8 +19,18 @@ HOMEPAGE="https://launchpad.net/frame"
 KEYWORDS=""
 SLOT="0"
 LICENSE="GPL-3"
-IUSE=""
+IUSE="evemu"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
-    x11-misc/utouch-evemu"
+	evemu? ( x11-misc/utouch-evemu )
+"
+
+
+src_prepare() {
+        eautoreconf
+}
+src_configure() {
+       econf \
+               $(use_with evemu)
+}

@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit base
+inherit eutils autotools
 
 MY_P="${P:7}"
 MY_PN="${PN:7}"
@@ -18,10 +18,20 @@ HOMEPAGE="https://launchpad.net/frame"
 KEYWORDS="~x86 ~amd64"
 SLOT="0"
 LICENSE="GPL-3"
-IUSE=""
+IUSE="evemu"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
-    x11-misc/utouch-evemu"
+    evemu? ( x11-misc/utouch-evemu )
+"
 
 S="${WORKDIR}/${MY_P}"
+
+src_prepare() {
+        eautoreconf
+}
+
+src_configure() {
+	econf \
+		$(use_with evemu)
+}
