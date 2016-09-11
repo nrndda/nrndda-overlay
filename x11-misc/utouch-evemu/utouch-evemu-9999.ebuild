@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit eutils base bzr autotools
+inherit eutils autotools bzr
 
 MY_P=${P:7}
 MY_PN=${PN:7}

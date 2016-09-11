@@ -24,7 +24,7 @@ IUSE="evemu"
 RDEPEND=""
 DEPEND="${RDEPEND}
 	sys-libs/mtdev
-	?evemu ( x11-misc/utouch-evemu )
+	evemu? ( x11-misc/utouch-evemu )
 	x11-libs/utouch-frame
 	"
 S="${WORKDIR}/${MY_P}"
