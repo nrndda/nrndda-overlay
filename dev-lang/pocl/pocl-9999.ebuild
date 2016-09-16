@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit cmake-multilibs git-r3
+inherit cmake-utils cmake-multilib git-r3
 
 DESCRIPTION="PortableCL: opensource implementation of the OpenCL standard"
 HOMEPAGE="http://portablecl.org/"
@@ -33,4 +33,9 @@ pkg_pretend() {
 		eerror "eselect opencl set ocl-icd"
 		die "OpenCL ICD not set to a supported value"
 	fi
+}
+src_prepare() {
+	sed '/LLVM_SRC_ROOT/d' ${WORKDIR}/cmake/LLVM.cmake
+
+	cmake-utils_src_prepare
 }
