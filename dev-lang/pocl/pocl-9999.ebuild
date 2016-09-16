@@ -35,7 +35,7 @@ pkg_pretend() {
 	fi
 }
 src_prepare() {
-	sed '/LLVM_SRC_ROOT/d' ${WORKDIR}/cmake/LLVM.cmake
+	sed -i '/LLVM_SRC_ROOT/d' ${S}/cmake/LLVM.cmake
 
 	cmake-utils_src_prepare
 }
