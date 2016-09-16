@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit autotools git-r3
+inherit cmake-multilibs git-r3
 
 DESCRIPTION="PortableCL: opensource implementation of the OpenCL standard"
 HOMEPAGE="http://portablecl.org/"
@@ -33,8 +33,4 @@ pkg_pretend() {
 		eerror "eselect opencl set ocl-icd"
 		die "OpenCL ICD not set to a supported value"
 	fi
-}
-
-src_prepare() {
-	eautoreconf
 }
