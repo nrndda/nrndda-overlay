@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit cmake-utils cmake-multilib games git-r3
+inherit cmake-utils cmake-multilib git-r3
 
 EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
 
