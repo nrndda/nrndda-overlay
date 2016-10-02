@@ -15,12 +15,12 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="cgroup cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="cgroups cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	git iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
 
 DEPEND="sys-apps/systemd
-	cgroup? ( dev-libs/libcgroup )
+	cgroups? ( dev-libs/libcgroup )
 	cpupower? ( sys-power/cpupower )
 	distccd? ( sys-devel/distcc )
 	git? ( dev-vcs/git )
@@ -117,7 +117,7 @@ src_install() {
 			install_service $i.service || die "install_service failed"
 		fi
 	done
-	if use cgroup; then
+	if use cgroups; then
 		install_service cgconfig.service || die "install_service failed"
 		install_service cgrules.service || die "install_service failed"
 	fi
@@ -231,7 +231,7 @@ src_install() {
 }
 
 pkg_postinst() {
-	if use cgroup; then
+	if use cgroups; then
 		enewgroup cgroup
 		usermod -a -G cgroup portage
 	fi
