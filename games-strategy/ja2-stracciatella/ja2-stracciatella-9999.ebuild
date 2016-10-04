@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit eutils multilib games git-r3
+inherit cmake-utils cmake-multilib git-r3
 
 EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
 
@@ -16,20 +16,10 @@ SLOT="0"
 KEYWORDS=""
 IUSE=""
 
-RDEPEND="sys-libs/zlib
+RDEPEND="dev-util/boost-build
+	sys-libs/zlib
 	media-libs/libsdl"
 DEPEND="${RDEPEND}"
-
-src_configure() {
-	econf
-	sed -i 's/\/usr\//${D}\/usr\//' ${S}/Makefile.config
-}
-
-src_compile() {
-	use amd64 && multilib_toolchain_setup x86
-
-	emake LNG=${LNG} WITH_ZLIB=1 || die "emake"
-}
 
 pkg_postinst() {
 	elog "Edit configuration file and set parameter data_dir to point on the directory where the original game files was installed."
