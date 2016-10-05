@@ -31,13 +31,13 @@ DEPEND="${RDEPEND}
 #		dev-util/valgrind
 #		sys-libs/libunwind )
 
-#src_prepare() {
-#	eautoreconf
+src_prepare() {
+	eautoreconf
 #	# Doc handling in kinda strange but everything
 #	# is available in the tarball already.
 #	sed -e 's/^\(SUBDIRS =.*\)doc\(.*\)$/\1\2/' \
 #		-i Makefile.am Makefile.in || die
-#}
+}
 
 src_configure() {
 	# gui can be built but will not be installed
