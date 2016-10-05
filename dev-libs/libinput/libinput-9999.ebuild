@@ -3,7 +3,7 @@
 # $Id$
 
 EAPI=5
-inherit eutils udev git-r3
+inherit autotools eutils udev git-r3
 
 DESCRIPTION="Library to handle input devices in Wayland"
 HOMEPAGE="https://www.freedesktop.org/wiki/Software/libinput/"
@@ -32,6 +32,7 @@ DEPEND="${RDEPEND}
 #		sys-libs/libunwind )
 
 src_prepare() {
+	eautoreconf
 	# Doc handling in kinda strange but everything
 	# is available in the tarball already.
 	sed -e 's/^\(SUBDIRS =.*\)doc\(.*\)$/\1\2/' \
