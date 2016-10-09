@@ -1,0 +1,14 @@
+DEFINED_PHASES=compile configure install postinst postrm prepare setup unpack
+DEPEND=dev-vcs/git virtual/pkgconfig
+DESCRIPTION=Power-Management made easy, designed for Thinkpads.
+EAPI=5
+HOMEPAGE=http://linrunner.de/en/tlp/tlp.html
+IUSE=tlp_suggests rdw laptop-mode-tools +tpacpi-bundled +pm-utils
+KEYWORDS=~x86 ~amd64
+LICENSE=GPL-2+ tpacpi-bundled? ( GPL-3 )
+RDEPEND=sys-apps/hdparm pm-utils? ( sys-power/pm-utils ) !pm-utils? ( sys-apps/systemd ) sys-power/acpid virtual/udev dev-lang/perl sys-apps/usbutils sys-apps/pciutils || ( net-wireless/iw net-wireless/wireless-tools ) net-wireless/rfkill rdw? ( net-misc/networkmanager ) tlp_suggests? ( sys-apps/smartmontools sys-apps/ethtool sys-apps/lsb-release ) !laptop-mode-tools? ( !app-laptop/laptop-mode-tools )
+RESTRICT=mirror
+SLOT=0
+SRC_URI=http://git.erdmann.es/trac/dywi_tlp-gentoo-additions/downloads/tlp-gentoo-additions-0.4.tar.bz2
+_eclasses_=base	3fe4f8980633fd7bc69e9887209ba2fe	bash-completion-r1	acf715fa09463f043fbfdc1640f3fb85	eutils	b83a2420b796f7c6eff682679d08fe25	git-2	7af5d170bfc02983b4bcd3167dc5edd4	linux-info	5aa29ea4d8ff1abfeea0fca2de2b4964	multilib	165fc17c38d1b11dac2008280dab6e80	systemd	3165c885f3c71ffae7a867d931fb0e07	toolchain-funcs	6198c04daba0e1307bd844df7d37f423	versionator	99ae9d758cbe7cfed19170e7d48f5a9c
+_md5_=f92f78aae620ea68695d5531c6365784
