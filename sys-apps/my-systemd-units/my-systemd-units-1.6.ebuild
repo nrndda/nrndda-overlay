@@ -54,7 +54,6 @@ src_unpack() {
 src_install() {
 	systemd_dounit ${SOURCE_SERVICES_DIR}/configure-printer@.service
 	systemd_dounit ${SOURCE_SERVICES_DIR}/cpufreq_governor@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/wpa_supplicant.service
 	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_usb@.service
 	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pci@.service
 	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pcie@.service
