@@ -52,15 +52,15 @@ src_unpack() {
 }
 
 src_install() {
-	systemd_doinit configure-printer@.service
-	systemd_doinit cpufreq_governor@.service
-	systemd_doinit wpa_supplicant.service
-	systemd_doinit autosuspend_usb@.service
-	systemd_doinit autosuspend_pci@.service
-	systemd_doinit autosuspend_pcie@.service
-	systemd_doinit disable_wifi_powersave@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/configure-printer@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/cpufreq_governor@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/wpa_supplicant.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_usb@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pci@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pcie@.service
+	systemd_dounit ${SOURCE_SERVICES_DIR}/disable_wifi_powersave@.service
 
-	systemd_install_serviced "${FILESDIR}"/noclear.conf getty@tty1.service.d
+	systemd_install_serviced "${FILESDIR}"/noclear.conf getty@tty1.service
 
 	exeinto /usr/local/sbin/
 	doexe "${FILESDIR}"/ssh_login.sh
@@ -72,40 +72,40 @@ src_install() {
 
 	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
 		if use $i; then
-			systemd_doinit $i.service
+			systemd_dounit ${SOURCE_SERVICES_DIR}/$i.service
 		fi
 	done
 	if use cgroups; then
-		systemd_doinit cgconfig.service
-		systemd_doinit cgrules.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/cgconfig.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/cgrules.service
 	fi
 
 	if use br0; then
-		systemd_doinit br0@.service
-		systemd_doinit br0.target
+		systemd_dounit ${SOURCE_SERVICES_DIR}/br0@.service
+		systemd_dounit ${SOURCE_TARGETS_DIR}/br0.target
 	fi
 	if use distccd ; then
-		systemd_doinit distccd.service
-		systemd_doinit distccd@.service
-		systemd_doinit distccd.socket
-		systemd_dotmpfilesd distccd.conf
-		systemd_dotmpfilesd distccd@.conf
+		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd@.service
+		systemd_dounit ${SOURCE_SOCKETS_DIR}/distccd.socket
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/distccd.conf
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/distccd@.conf
 	fi
 	if use hostapd ; then
-		systemd_doinit hostapd.service
-		systemd_doinit hostapd@.service
-		systemd_doinit hostapd.target
-		systemd_dotmpfilesd hostapd.conf
+		systemd_dounit ${SOURCE_SERVICES_DIR}/hostapd.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/hostapd@.service
+		systemd_dounit ${SOURCE_TARGETS_DIR}/hostapd.target
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/hostapd.conf
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/crda_set.sh
 	fi
 	if use inet ; then
-		systemd_doinit inet@.service
-		systemd_doinit inet.target
-		systemd_doinit ext_lan@.service
-		systemd_doinit ext_lan.target
-		systemd_doinit firewall.service
-		systemd_doinit firewall_inet.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/inet@.service
+		systemd_dounit ${SOURCE_TARGETS_DIR}/inet.target
+		systemd_dounit ${SOURCE_SERVICES_DIR}/ext_lan@.service
+		systemd_dounit ${SOURCE_TARGETS_DIR}/ext_lan.target
+		systemd_dounit ${SOURCE_SERVICES_DIR}/firewall.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/firewall_inet.service
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
 	        doexe "${FILESDIR}"/fw_full.sh
@@ -117,41 +117,41 @@ src_install() {
 		doins "${FILESDIR}"/99-dhcpcd_fw_hook.sh
 	fi
 	if use hdparm ; then
-		systemd_doinit hdparm_disableAPM@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/hdparm_disableAPM@.service
 	fi
 	if use git ; then
-		systemd_doinit git-daemon@.service
-		systemd_doinit git-daemon.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/git-daemon@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/git-daemon.service
 	fi
 	if use iptables ; then
-		systemd_doinit iptables.service
-		systemd_doinit ip6tables.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/iptables.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/ip6tables.service
 		dosbin "${FILESDIR}"/iptables-stop
 	fi
 	if use miniupnpd ; then
-		systemd_doinit miniupnpd.service
-		systemd_dotmpfilesd miniupnpd.conf
+		systemd_dounit ${SOURCE_SERVICES_DIR}/miniupnpd.service
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/miniupnpd.conf
 	fi
 	if use minissdpd ; then
-		systemd_doinit minissdpd.service
-		systemd_dotmpfilesd minissdpd.conf
+		systemd_dounit ${SOURCE_SERVICES_DIR}/minissdpd.service
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/minissdpd.conf
 	fi
 	if use mpd ; then
-		systemd_doinit mpd@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/mpd@.service
 	fi
 	if use flexlm ; then
-		systemd_doinit flexlm.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/flexlm.service
 		dosbin "${FILESDIR}"/flexlm
 	fi
 	if use rtorrent ; then
-		systemd_doinit rtorrent.service
-		systemd_doinit rtorrent.path
+		systemd_dounit ${SOURCE_SERVICES_DIR}/rtorrent.service
+		systemd_dounit ${SOURCE_PATH_DIR}/rtorrent.path
 	fi
 	if use screen ; then
-		systemd_doinit screen@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/screen@.service
 	fi
 	if use zram ; then
-		systemd_doinit zram.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/zram.service
 		dosbin "${FILESDIR}"/zram
 		dosbin "${FILESDIR}"/zram_statistic
 		newconfd "${FILESDIR}"/zram.conf zram
@@ -163,12 +163,12 @@ src_install() {
 	fi
 
 	if use vfio ; then
-		systemd_doinit vfio-bind.service
+		systemd_dounit vfio-bind.service
 		dosbin "${FILESDIR}"/vfio-bind
 		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci
 	fi
 	if use touchegg ; then
-		systemd_doinit touchegg.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/touchegg.service
 	fi
 }
 
