@@ -16,10 +16,10 @@ SLOT="0"
 IUSE="systemd sysv"
 
 src_install() {
-	insinto /usr/local/bin/
-	doins "${S}"/earlyoom
+	dosbin "${S}"/earlyoom
 
         if use systemd; then
+		sed -i -e 's/\/usr\/local\/sbin/\/usr\/sbin/g' "${S}"/earlyoom.service
                 systemd_dounit "${S}"/earlyoom.service
         fi
 
