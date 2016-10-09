@@ -19,7 +19,7 @@ src_install() {
 	dosbin "${S}"/earlyoom
 
         if use systemd; then
-		sed -i -e 's/\/usr\/local\/sbin/\/usr\/sbin/g' "${S}"/earlyoom.service
+		sed -i -e 's/\/usr\/local\/bin/\/usr\/sbin/g' "${S}"/earlyoom.service
                 systemd_dounit "${S}"/earlyoom.service
         fi
 

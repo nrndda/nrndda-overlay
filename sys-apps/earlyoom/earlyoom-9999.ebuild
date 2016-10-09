@@ -21,7 +21,7 @@ src_install() {
 
         if use systemd; then
                 systemd_dounit "${S}"/earlyoom.service
-		sed -i -e 's/\/usr\/local\/sbin/\/usr\/sbin/g' "${S}"/earlyoom.service
+		sed -i -e 's/\/usr\/local\/bin/\/usr\/sbin/g' "${S}"/earlyoom.service
         fi
 
         if use sysv; then
