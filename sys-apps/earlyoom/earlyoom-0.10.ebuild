@@ -3,14 +3,13 @@
 
 EAPI=5
 
-inherit eutils systemd git-r3
+inherit eutils systemd
 
 DESCRIPTION="Userspace OOM killer daemon"
 HOMEPAGE="https://github.com/rfjakob/earlyoom"
 
-EGIT_REPO_URI="https://github.com/rfjakob/${PN}"
-SRC_URI=""
-KEYWORDS=""
+SRC_URI="https://github.com/rfjakob/${PN}/archive/v${PV}.tar.gz"
+KEYWORDS="~x86 ~amd64"
 
 LICENSE="MIT"
 SLOT="0"
