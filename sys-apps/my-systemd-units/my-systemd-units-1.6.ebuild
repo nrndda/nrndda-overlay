@@ -162,7 +162,7 @@ src_install() {
 	fi
 
 	if use vfio ; then
-		systemd_dounit vfio-bind.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/vfio-bind.service
 		dosbin "${FILESDIR}"/vfio-bind
 		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci
 	fi
