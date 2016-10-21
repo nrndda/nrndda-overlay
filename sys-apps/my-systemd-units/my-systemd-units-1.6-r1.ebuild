@@ -13,9 +13,9 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="cgroups cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="cgroups +power cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	git iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg"
+	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
@@ -52,13 +52,6 @@ src_unpack() {
 }
 
 src_install() {
-	systemd_dounit ${SOURCE_SERVICES_DIR}/configure-printer@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/cpufreq_governor@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_usb@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pci@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pcie@.service
-	systemd_dounit ${SOURCE_SERVICES_DIR}/disable_wifi_powersave@.service
-
 	systemd_install_serviced "${FILESDIR}"/noclear.conf getty@tty1.service
 
 	exeinto /usr/local/sbin/
@@ -74,6 +67,16 @@ src_install() {
 			systemd_dounit ${SOURCE_SERVICES_DIR}/$i.service
 		fi
 	done
+	if use printer; then
+		systemd_dounit ${SOURCE_SERVICES_DIR}/configure-printer@.service
+	fi
+	if use power; then
+		systemd_dounit ${SOURCE_SERVICES_DIR}/cpufreq_governor@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_usb@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pci@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pcie@.service
+		systemd_dounit ${SOURCE_SERVICES_DIR}/disable_wifi_powersave@.service
+	fi
 	if use cgroups; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/cgconfig.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/cgrules.service
