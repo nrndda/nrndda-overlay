@@ -6,6 +6,7 @@ EAPI=6
 
 CMAKE_MIN_VERSION="3.0.2"
 KDE_HANDBOOK="forceoptional"
+EGIT_REPO_URI="https://github.com/KDE/kile"
 MY_P=${P/_beta/b}
 inherit kde5
 

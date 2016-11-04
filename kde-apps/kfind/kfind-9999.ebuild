@@ -13,6 +13,7 @@ DESCRIPTION="File finder utility based on KDE Frameworks"
 HOMEPAGE="https://www.kde.org/applications/utilities/kfind/"
 KEYWORDS=""
 IUSE=""
+EGIT_REPO_URI="https://github.com/KDE/kfind"
 
 DEPEND="
 	$(add_frameworks_dep karchive)

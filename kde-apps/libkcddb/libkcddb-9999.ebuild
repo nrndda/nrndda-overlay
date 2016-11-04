@@ -7,6 +7,7 @@ EAPI=6
 KDE_BLOCK_SLOT4="false"
 KDE_HANDBOOK="forceoptional"
 KDE_TEST="true"
+EGIT_REPO_URI="https://github.com/KDE/libkcddb"
 inherit kde5
 
 DESCRIPTION="KDE library for CDDB"

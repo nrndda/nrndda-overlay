@@ -11,6 +11,7 @@ DESCRIPTION="kioslave for accessing audio CDs"
 LICENSE="GPL-2+ handbook? ( FDL-1.2 )"
 KEYWORDS=""
 IUSE="flac vorbis"
+EGIT_REPO_URI="https://github.com/KDE/audiocd-kio"
 
 DEPEND="
 	$(add_frameworks_dep kcompletion)

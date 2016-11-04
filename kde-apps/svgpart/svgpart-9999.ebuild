@@ -5,6 +5,7 @@
 EAPI=6
 
 inherit kde5
+EGIT_REPO_URI="https://github.com/KDE/svgpart"
 
 DESCRIPTION="Kpart for viewing SVGs"
 LICENSE="GPL-2+"

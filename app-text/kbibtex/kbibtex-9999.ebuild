@@ -6,6 +6,7 @@ EAPI=6
 
 KDE_GCC_MINIMAL="4.9"
 KDE_HANDBOOK="optional"
+EGIT_REPO_URI="https://github.com/KDE/kbibtex"
 inherit kde5
 
 DESCRIPTION="BibTeX editor to edit bibliographies used with LaTeX"
