@@ -7,13 +7,13 @@ EAPI=6
 KDE_DOC_DIR="docs"
 KDE_HANDBOOK="forceoptional"
 KMNAME="kde-baseapps"
+EGIT_REPO_URI="https://github.com/KDE/kfind"
 inherit kde5
 
 DESCRIPTION="File finder utility based on KDE Frameworks"
 HOMEPAGE="https://www.kde.org/applications/utilities/kfind/"
 KEYWORDS=""
 IUSE=""
-EGIT_REPO_URI="https://github.com/KDE/kfind"
 
 DEPEND="
 	$(add_frameworks_dep karchive)
