@@ -5,7 +5,8 @@
 EAPI=6
 
 KDE_HANDBOOK="true"
-EGIT_BRANCH="kf5_port"
+EGIT_REPO_URI="https://github.com/KDE/kget"
+EGIT_BRANCH="frameworks"
 inherit kde5
 
 DESCRIPTION="An advanced download manager by KDE"

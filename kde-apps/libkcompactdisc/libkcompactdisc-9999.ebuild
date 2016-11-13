@@ -5,6 +5,7 @@
 EAPI=6
 
 KDE_BLOCK_SLOT4="false"
+EGIT_REPO_URI="https://github.com/KDE/libkcompactdisc"
 inherit kde5
 
 DESCRIPTION="Library for playing & ripping CDs"

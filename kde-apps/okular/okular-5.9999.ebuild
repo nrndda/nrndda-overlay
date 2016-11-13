@@ -6,7 +6,8 @@ EAPI=6
 
 KDE_HANDBOOK="forceoptional"
 KDE_TEST="forceoptional"
-EGIT_BRANCH="frameworks"
+EGIT_REPO_URI="https://github.com/KDE/okular"
+#EGIT_BRANCH="frameworks"
 inherit kde5
 
 DESCRIPTION="Universal document viewer based on KDE Frameworks"

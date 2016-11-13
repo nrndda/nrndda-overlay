@@ -4,7 +4,8 @@
 
 EAPI=6
 
-EGIT_BRANCH="frameworks"
+EGIT_REPO_URI="https://github.com/KDE/kdegraphics-mobipocket"
+#EGIT_BRANCH="frameworks"
 inherit kde5
 
 DESCRIPTION="Library to support mobipocket ebooks"
