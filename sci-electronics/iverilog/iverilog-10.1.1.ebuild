@@ -7,7 +7,7 @@ EAPI=4
 inherit eutils multilib
 
 DESCRIPTION="A Verilog simulation and synthesis tool"
-SRC_URI="ftp://icarus.com/pub/eda/verilog/v10/verilog-${PV}.tar.gz"
+SRC_URI="ftp://icarus.com/pub/eda/verilog/v10/verilog-${PV}.tar.gz -> verilog-${PV}.tar"
 HOMEPAGE="http://iverilog.icarus.com/"
 
 LICENSE="GPL-2"
