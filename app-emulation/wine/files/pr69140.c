@@ -35,4 +35,3 @@ main(void)
 
 	MD4Update(&ctx_test, (const unsigned char *) &buf);
 }
-

@@ -11,7 +11,6 @@ inherit autotools eutils fdo-mime flag-o-matic gnome2-utils l10n multilib multil
 
 MY_PV="${PV}"
 MY_P="${P}"
-STAGING_SUFFIX=""
 if [[ ${PV} == "9999" ]]; then
 	EGIT_REPO_URI="git://source.winehq.org/git/wine.git http://source.winehq.org/git/wine.git"
 	inherit git-r3
@@ -33,16 +32,14 @@ else
 		SRC_URI="https://dl.winehq.org/wine/source/${MAJOR_VERSION}/${PN}-${MY_PV}.tar.bz2 -> ${P}.tar.bz2"
 		MY_P="${PN}-${MY_PV}"
 	fi
-	[[ "${MAJOR_VERSION}" == "1.8" ]] && STAGING_SUFFIX="-unofficial"
 fi
 
 VANILLA_GV="2.47"
 VANILLA_MV="4.6.4"
 STAGING_P="wine-staging-${MY_PV}"
-STAGING_DIR="${WORKDIR}/${STAGING_P}${STAGING_SUFFIX}"
+STAGING_DIR="${WORKDIR}/${STAGING_P}"
 STAGING_HELPER="wine-staging-git-helper-0.1.3"
 WINE_GENTOO="wine-gentoo-2015.03.07"
-GST_P="wine-1.8-gstreamer-1.0"
 DESCRIPTION="Free implementation of Windows(tm) on Unix"
 HOMEPAGE="http://www.winehq.org/"
 SRC_URI="${SRC_URI}
@@ -60,7 +57,6 @@ SRC_URI="${SRC_URI}
 		)
 		mono? ( https://dl.winehq.org/wine/wine-mono/${STAGING_MV:-${VANILLA_MV}}/wine-mono-${STAGING_MV:-${VANILLA_MV}}.msi )
 	)
-	gstreamer? ( https://dev.gentoo.org/~np-hardass/distfiles/${PN}/${GST_P}.patch.bz2 )
 	https://dev.gentoo.org/~tetromino/distfiles/${PN}/${WINE_GENTOO}.tar.bz2"
 
 if [[ ${PV} == "9999" ]]; then
@@ -69,7 +65,7 @@ if [[ ${PV} == "9999" ]]; then
 	staging? ( https://github.com/bobwya/${STAGING_HELPER%-*}/archive/${STAGING_HELPER##*-}.tar.gz -> ${STAGING_HELPER}.tar.gz )"
 else
 	SRC_URI="${SRC_URI}
-	staging? ( https://github.com/wine-compholio/wine-staging/archive/v${MY_PV}${STAGING_SUFFIX}.tar.gz -> ${STAGING_P}.tar.gz )"
+	staging? ( https://github.com/wine-compholio/wine-staging/archive/v${MY_PV}.tar.gz -> ${STAGING_P}.tar.gz )"
 fi
 
 LICENSE="LGPL-2.1"
@@ -387,13 +383,6 @@ src_prepare() {
 		"${FILESDIR}/${PN}-1.7.12-osmesa-check.patch" #429386
 		"${FILESDIR}/${PN}-1.6-memset-O3.patch" #480508
 	)
-	if [[ ${PV} != "9999" ]]; then
-		use gstreamer && PATCHES+=( "${WORKDIR}/${GST_P}.patch" )
-	else
-		# only apply gstreamer:1.0 patch to older versions of wine, using gstreamer:0.1 API/ABI
-		grep -q "gstreamer-0.10" "${S}/configure" &>/dev/null || unset GST_P
-		[[ ! -z "${GST_P}" ]] && use gstreamer && PATCHES+=( "${WORKDIR}/${GST_P}.patch" )
-	fi
 	#395615 - run bash/sed script, combining both versions of the multilib-portage.patch
 	ebegin "(subshell) script: \"${FILESDIR}/${PN}-9999-multilib-portage-sed.sh\" ..."
 	(
@@ -417,10 +406,6 @@ src_prepare() {
 		eend $? || die "(subshell) script: failed to apply Wine-Staging patches."
 		sed -r -i -e '/^AC_INIT\(.*\)$/{s/\[Wine\]/\[Wine \(Staging\)\]/}' "${S}/configure.ac" || die "sed failed"
 		sed -r -i -e 's/Wine (\(Staging\) |)/Wine \(Staging\) /' "${S}/VERSION" || die "sed failed"
-
-		if [[ ! -z "${STAGING_SUFFIX}" ]]; then
-			sed -i -e 's/(Staging)/(Staging'"${STAGING_SUFFIX}"')/' libs/wine/Makefile.in || die "sed"
-		fi
 	fi
 
 	default
@@ -600,11 +585,6 @@ pkg_postinst() {
 		ewarn "implementation of .NET.  Many windows applications rely upon"
 		ewarn "the existence of a .NET implementation, so you will likely need"
 		ewarn "to install an external one, via winetricks."
-	fi
-	if [[ ! -z "${GST_P}" ]] && use gstreamer; then
-		ewarn "This package uses a Gentoo specific patchset to provide "
-		ewarn "gstreamer:1.0 API / ABI support.  Any bugs related to GStreamer"
-		ewarn "should be filed at Gentoo's bugzilla, not upstream's."
 	fi
 }
 
