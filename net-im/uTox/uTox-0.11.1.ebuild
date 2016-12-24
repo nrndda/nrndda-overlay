@@ -12,7 +12,7 @@ SRC_URI="https://github.com/uTox/uTox/archive/v${PV}.tar.gz -> uTox-${PV}.tar.gz
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="+dbus +filter_audio"
+IUSE="+dbus filter_audio"
 KEYWORDS="~amd64"
 
 RDEPEND="net-libs/tox:0/0.1[av]
@@ -28,6 +28,10 @@ DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 
 src_prepare() {
+	#Prevent
+	#CMake Error at cmake_install.cmake:36 (file):
+	#  file INSTALL cannot find
+	#  "/var/tmp/portage/net-im/uTox-0.11.1/work/uTox-0.11.1/utox".
 	sed -i "s/^\s*utox$/\$\{CMAKE_CURRENT_BINARY_DIR\}\/utox/g" ${S}/CMakeLists.txt
 
 	epatch_user
