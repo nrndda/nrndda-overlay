@@ -8,7 +8,7 @@ inherit eutils autotools
 
 DESCRIPTION="tox-prpl - Tox Pidgin Protocol Plugin"
 HOMEPAGE="https://tox.dhs.org/"
-SRC_URI="https://github.com/jin-eld/${PN}/archive/v${PV}.tar.gz"
+SRC_URI="https://github.com/jin-eld/${PN}/archive/v${PV}.tar.gz -> tox-prpl-${PV}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
