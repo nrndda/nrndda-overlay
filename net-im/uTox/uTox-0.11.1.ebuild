@@ -12,7 +12,7 @@ SRC_URI="https://github.com/uTox/uTox/archive/v${PV}.tar.gz -> uTox-${PV}.tar.gz
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="+dbus filter_audio"
+IUSE="+dbus +filter_audio"
 KEYWORDS="~amd64"
 
 RDEPEND="net-libs/tox:0/0.1[av]
