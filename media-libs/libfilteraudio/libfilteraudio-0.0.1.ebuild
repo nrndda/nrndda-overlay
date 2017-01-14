@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/media-libs/libkface/libkface-4.7.0.ebuild,v 1.1 2014/12/20 22:08:42 dilfridge Exp $
 
-EAPI=5
+EAPI=6
 
 inherit eutils
 
