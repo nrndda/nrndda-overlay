@@ -159,7 +159,7 @@ DEPEND="${RDEPEND}
 	>=x11-proto/xf86driproto-2.1.1-r1:=[${MULTILIB_USEDEP}]
 	>=x11-proto/xf86vidmodeproto-2.3.1-r1:=[${MULTILIB_USEDEP}]
 "
-[[ ${PV} == 9999 ]] && DEPEND+="
+DEPEND+="
 	sys-devel/bison
 	sys-devel/flex
 	${PYTHON_DEPS}
@@ -192,7 +192,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch_user
-	[[ ${PV} == 9999 ]] && eautoreconf
+	eautoreconf
 }
 
 multilib_src_configure() {
