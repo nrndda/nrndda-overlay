@@ -1,13 +1,15 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI=5
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
-EGIT_BRANCH="13.0"
-GIT_ECLASS="git-r3"
-EXPERIMENTAL="true"
+
+if [[ ${PV} = 9999 ]]; then
+	GIT_ECLASS="git-r3"
+	EXPERIMENTAL="true"
+fi
 
 PYTHON_COMPAT=( python2_7 )
 
@@ -21,8 +23,13 @@ FOLDER="${PV/_rc*/}"
 DESCRIPTION="OpenGL-like graphic library for Linux"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
 
-SRC_URI=""
-KEYWORDS=""
+if [[ $PV == 9999 ]]; then
+	SRC_URI=""
+	KEYWORDS=""
+else
+	SRC_URI="ftp://ftp.freedesktop.org/pub/mesa/${FOLDER}/${MY_P}.tar.xz ftp://ftp.freedesktop.org/pub/mesa/${MY_P}.tar.xz"
+	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
+fi
 
 LICENSE="MIT"
 SLOT="0"
@@ -160,7 +167,7 @@ DEPEND="${RDEPEND}
 	>=x11-proto/xf86driproto-2.1.1-r1:=[${MULTILIB_USEDEP}]
 	>=x11-proto/xf86vidmodeproto-2.3.1-r1:=[${MULTILIB_USEDEP}]
 "
-DEPEND+="
+[[ ${PV} == 9999 ]] && DEPEND+="
 	sys-devel/bison
 	sys-devel/flex
 	${PYTHON_DEPS}
@@ -192,8 +199,11 @@ pkg_setup() {
 }
 
 src_prepare() {
+	cd ${S}
+	patch -s -p1 < "${FILESDIR}/ivb_opengl40.mbox"
+	#epatch "${FILESDIR}/ivb_opengl40.mbox"
 	epatch_user
-	eautoreconf
+	[[ ${PV} == 9999 ]] && eautoreconf
 }
 
 multilib_src_configure() {

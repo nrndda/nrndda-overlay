@@ -1,0 +1,1488 @@
+From patchwork Tue Jan 17 09:49:15 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 01/20] i965/disasm: also print nibctrl in IVB for execsize=8
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133651
+Message-Id: <20170117094934.14434-1-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:15 +0100
+
+From: Iago Toral Quiroga <itoral@igalia.com>
+
+4-wide DF operations where NibCtrl applies require and execsize of 8
+in IvyBridge/BayTrail.
+
+v2:
+- Refactor NibCtrl printing (Matt)
+
+Reviewed-by: Matt Turner <mattst88@gmail.com>
+Reviewed-by: Francisco Jerez <currojerez@riseup.net>
+---
+ src/mesa/drivers/dri/i965/brw_disasm.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_disasm.c b/src/mesa/drivers/dri/i965/brw_disasm.c
+index 167067a4b7d..b04325564a6 100644
+--- a/src/mesa/drivers/dri/i965/brw_disasm.c
++++ b/src/mesa/drivers/dri/i965/brw_disasm.c
+@@ -1189,10 +1189,10 @@ qtr_ctrl(FILE *file, const struct gen_device_info *devinfo, brw_inst *inst)
+ {
+    int qtr_ctl = brw_inst_qtr_control(devinfo, inst);
+    int exec_size = 1 << brw_inst_exec_size(devinfo, inst);
++   const unsigned nib_ctl = devinfo->gen < 7 ? 0 :
++                            brw_inst_nib_control(devinfo, inst);
+ 
+-   if (exec_size < 8) {
+-      const unsigned nib_ctl = devinfo->gen < 7 ? 0 :
+-                               brw_inst_nib_control(devinfo, inst);
++   if (exec_size < 8 || nib_ctl) {
+       format(file, " %dN", qtr_ctl * 2 + nib_ctl + 1);
+    } else if (exec_size == 8) {
+       switch (qtr_ctl) {
+
+From patchwork Tue Jan 17 09:49:16 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 02/20] i965/fs: add helper to retrieve instruction data size
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133652
+Message-Id: <20170117094934.14434-2-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:16 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+The execution data size is the biggest type size of any instruction
+operand.
+
+We will use it to know if the instruction deals with DF, because in Ivy
+we need to double the execution size and regioning parameters.
+
+v2:
+- Fix typo in commit log (Matt)
+- Use static inline function instead of fs_inst's method (Curro).
+- Define the result as a constant (Curro).
+- Fix indentation (Matt).
+- Add braces to nested control flow (Matt).
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+Reviewed-by: Francisco Jerez <currojerez@riseup.net>
+---
+ src/mesa/drivers/dri/i965/brw_fs.cpp |  6 +-----
+ src/mesa/drivers/dri/i965/brw_fs.h   | 14 ++++++++++++++
+ 2 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.cpp b/src/mesa/drivers/dri/i965/brw_fs.cpp
+index 13949c9d9f7..95714c16f15 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs.cpp
+@@ -4564,11 +4564,7 @@ get_fpu_lowered_simd_width(const struct gen_device_info *devinfo,
+        !inst->force_writemask_all) {
+       const unsigned channels_per_grf = inst->exec_size /
+          DIV_ROUND_UP(inst->size_written, REG_SIZE);
+-      unsigned exec_type_size = 0;
+-      for (int i = 0; i < inst->sources; i++) {
+-         if (inst->src[i].file != BAD_FILE)
+-            exec_type_size = MAX2(exec_type_size, type_sz(inst->src[i].type));
+-      }
++      const unsigned exec_type_size = get_exec_type_size(inst);
+       assert(exec_type_size);
+ 
+       /* The hardware shifts exactly 8 channels per compressed half of the
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.h b/src/mesa/drivers/dri/i965/brw_fs.h
+index d0e272bb9ee..95b2b8eaa81 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.h
++++ b/src/mesa/drivers/dri/i965/brw_fs.h
+@@ -501,3 +501,17 @@ fs_reg setup_imm_df(const brw::fs_builder &bld,
+ 
+ enum brw_barycentric_mode brw_barycentric_mode(enum glsl_interp_mode mode,
+                                                nir_intrinsic_op op);
++
++static inline unsigned
++get_exec_type_size(const fs_inst *inst)
++{
++   unsigned exec_type_size = 0;
++
++   for (int i = 0; i < inst->sources; i++) {
++      if (inst->src[i].type != BAD_FILE) {
++         exec_type_size = MAX2(exec_type_size, type_sz(inst->src[i].type));
++      }
++   }
++
++   return exec_type_size;
++}
+
+From patchwork Tue Jan 17 09:49:17 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 03/20] i965/fs: double regioning parameters and execsize for DF in
+ IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133653
+Message-Id: <20170117094934.14434-3-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:17 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+In IVB and BYT, both regioning parameters and execution sizes are measured as
+floats.
+
+So when we have something like:
+
+mov(8) g2<1>DF g3<4,4,1>DF
+
+We are not actually moving 8 doubles (our intention), but 4 doubles.
+
+We need to double the parameters to cope with this issue.
+
+v2:
+- Use devinfo directly (Matt).
+- Use Baytrail instead of Valleview (Matt).
+- Use IvyBridge instead of Ivy (Matt)
+- Double the exec_size in code emission (Curro)
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/brw_fs_generator.cpp | 52 ++++++++++++++++++++++----
+ 1 file changed, 45 insertions(+), 7 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+index 0710be932a5..45881e3ec95 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+@@ -54,13 +54,14 @@ brw_file_from_reg(fs_reg *reg)
+ }
+ 
+ static struct brw_reg
+-brw_reg_from_fs_reg(fs_inst *inst, fs_reg *reg, unsigned gen, bool compressed)
++brw_reg_from_fs_reg(const struct gen_device_info *devinfo, fs_inst *inst,
++                    fs_reg *reg, bool compressed)
+ {
+    struct brw_reg brw_reg;
+ 
+    switch (reg->file) {
+    case MRF:
+-      assert((reg->nr & ~BRW_MRF_COMPR4) < BRW_MAX_MRF(gen));
++      assert((reg->nr & ~BRW_MRF_COMPR4) < BRW_MAX_MRF(devinfo->gen));
+       /* Fallthrough */
+    case VGRF:
+       if (reg->stride == 0) {
+@@ -93,6 +94,36 @@ brw_reg_from_fs_reg(fs_inst *inst, fs_reg *reg, unsigned gen, bool compressed)
+          const unsigned width = MIN2(reg_width, phys_width);
+          brw_reg = brw_vecn_reg(width, brw_file_from_reg(reg), reg->nr, 0);
+          brw_reg = stride(brw_reg, width * reg->stride, width, reg->stride);
++         /* From the IvyBridge PRM (EU Changes by Processor Generation, page 13):
++          *  "Each DF (Double Float) operand uses an element size of 4 rather
++          *   than 8 and all regioning parameters are twice what the values
++          *   would be based on the true element size: ExecSize, Width,
++          *   HorzStride, and VertStride. Each DF operand uses a pair of
++          *   channels and all masking and swizzing should be adjusted
++          *   appropriately."
++          *
++          * From the IvyBridge PRM (Special Requirements for Handling Double
++          * Precision Data Types, page 71):
++          *  "In Align1 mode, all regioning parameters like stride, execution
++          *   size, and width must use the syntax of a pair of packed
++          *   floats. The offsets for these data types must be 64-bit
++          *   aligned. The execution size and regioning parameters are in terms
++          *   of floats."
++          *
++          * Summarized: when handling DF-typed arguments, ExecSize,
++          * VertStride, and Width must be doubled, and HorzStride must be
++          * doubled when the region is not scalar.
++          *
++          * It applies to BayTrail too.
++          */
++         if (devinfo->gen == 7 && !devinfo->is_haswell &&
++             type_sz(reg->type) == 8) {
++            brw_reg.width++;
++            if (brw_reg.vstride > 0)
++               brw_reg.vstride++;
++            if (brw_reg.hstride > 1)
++               brw_reg.hstride++;
++         }
+       }
+ 
+       brw_reg = retype(brw_reg, reg->type);
+@@ -1586,9 +1617,8 @@ fs_generator::generate_code(const cfg_t *cfg, int dispatch_width)
+       brw_set_default_group(p, inst->group);
+ 
+       for (unsigned int i = 0; i < inst->sources; i++) {
+-         src[i] = brw_reg_from_fs_reg(inst, &inst->src[i], devinfo->gen,
+-                                      compressed);
+-
++         src[i] = brw_reg_from_fs_reg(compiler->devinfo, inst,
++                                      &inst->src[i], compressed);
+ 	 /* The accumulator result appears to get used for the
+ 	  * conditional modifier generation.  When negating a UD
+ 	  * value, there is a 33rd bit generated for the sign in the
+@@ -1599,7 +1629,8 @@ fs_generator::generate_code(const cfg_t *cfg, int dispatch_width)
+ 		inst->src[i].type != BRW_REGISTER_TYPE_UD ||
+ 		!inst->src[i].negate);
+       }
+-      dst = brw_reg_from_fs_reg(inst, &inst->dst, devinfo->gen, compressed);
++      dst = brw_reg_from_fs_reg(compiler->devinfo, inst,
++                                &inst->dst, compressed);
+ 
+       brw_set_default_access_mode(p, BRW_ALIGN_1);
+       brw_set_default_predicate_control(p, inst->predicate);
+@@ -1608,7 +1639,14 @@ fs_generator::generate_code(const cfg_t *cfg, int dispatch_width)
+       brw_set_default_saturate(p, inst->saturate);
+       brw_set_default_mask_control(p, inst->force_writemask_all);
+       brw_set_default_acc_write_control(p, inst->writes_accumulator);
+-      brw_set_default_exec_size(p, cvt(inst->exec_size) - 1);
++
++      unsigned exec_size = inst->exec_size;
++      if (devinfo->gen == 7 && !devinfo->is_haswell &&
++          (get_exec_type_size(inst) == 8 || type_sz(inst->dst.type) == 8)) {
++         exec_size *= 2;
++      }
++
++      brw_set_default_exec_size(p, cvt(exec_size) - 1);
+ 
+       assert(inst->force_writemask_all || inst->exec_size >= 4);
+       assert(inst->force_writemask_all || inst->group % inst->exec_size == 0);
+
+From patchwork Tue Jan 17 09:49:18 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 04/20] i965/fs: clamp exec_size to 4 when an instruction has an
+ scalar DF source
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133654
+Message-Id: <20170117094934.14434-4-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:18 +0100
+
+Then the SIMD lowering pass will get rid of any compressed instructions with scalar
+source (whether force_writemask_all or not) and we avoid hitting the Gen7 region
+decompression bug.
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+Suggested-by: Francisco Jerez <currojerez@riseup.net>
+Reviewed-by: Francisco Jerez <currojerez@riseup.net>
+---
+ src/mesa/drivers/dri/i965/brw_fs.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.cpp b/src/mesa/drivers/dri/i965/brw_fs.cpp
+index 95714c16f15..a2ba0fde9fd 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs.cpp
+@@ -4516,6 +4516,11 @@ get_fpu_lowered_simd_width(const struct gen_device_info *devinfo,
+             const unsigned reg_count = DIV_ROUND_UP(inst->size_written, REG_SIZE);
+             max_width = MIN2(max_width, inst->exec_size / reg_count);
+          }
++
++         if (type_sz(inst->src[i].type) == 8 &&
++             ((inst->size_read(i) != 0 && inst->size_read(i) <= REG_SIZE) ||
++              is_uniform(inst->src[i])))
++            max_width = MIN2(max_width, 4);
+       }
+    }
+ 
+
+From patchwork Tue Jan 17 09:49:19 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2, 05/20] i965: Use <0, 2,
+ 1> region for scalar DF sources on IVB/BYT.
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133655
+Message-Id: <20170117094934.14434-5-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:19 +0100
+
+From: Matt Turner <mattst88@gmail.com>
+
+On HSW+, scalar DF sources can be accessed using the normal <0,1,0>
+region, but on IVB and BYT DF regions must be programmed in terms of
+floats. A <0,2,1> region accomplishes this.
+---
+ src/mesa/drivers/dri/i965/brw_eu_emit.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_eu_emit.c b/src/mesa/drivers/dri/i965/brw_eu_emit.c
+index 05c097f66ef..3201c885cb9 100644
+--- a/src/mesa/drivers/dri/i965/brw_eu_emit.c
++++ b/src/mesa/drivers/dri/i965/brw_eu_emit.c
+@@ -444,9 +444,16 @@ brw_set_src0(struct brw_codegen *p, brw_inst *inst, struct brw_reg reg)
+             brw_inst_set_src0_width(devinfo, inst, BRW_WIDTH_1);
+             brw_inst_set_src0_vstride(devinfo, inst, BRW_VERTICAL_STRIDE_0);
+ 	 } else {
+-            brw_inst_set_src0_hstride(devinfo, inst, reg.hstride);
+-            brw_inst_set_src0_width(devinfo, inst, reg.width);
+-            brw_inst_set_src0_vstride(devinfo, inst, reg.vstride);
++            if (devinfo->gen == 7 && !devinfo->is_haswell &&
++                reg.type == BRW_REGISTER_TYPE_DF && has_scalar_region(reg)) {
++               brw_inst_set_src0_vstride(devinfo, inst, BRW_VERTICAL_STRIDE_0);
++               brw_inst_set_src0_width(devinfo, inst, BRW_WIDTH_2);
++               brw_inst_set_src0_hstride(devinfo, inst, BRW_HORIZONTAL_STRIDE_1);
++            } else {
++               brw_inst_set_src0_vstride(devinfo, inst, reg.vstride);
++               brw_inst_set_src0_width(devinfo, inst, reg.width);
++               brw_inst_set_src0_hstride(devinfo, inst, reg.hstride);
++            }
+ 	 }
+       } else {
+          brw_inst_set_src0_da16_swiz_x(devinfo, inst,
+@@ -526,9 +533,16 @@ brw_set_src1(struct brw_codegen *p, brw_inst *inst, struct brw_reg reg)
+             brw_inst_set_src1_width(devinfo, inst, BRW_WIDTH_1);
+             brw_inst_set_src1_vstride(devinfo, inst, BRW_VERTICAL_STRIDE_0);
+ 	 } else {
+-            brw_inst_set_src1_hstride(devinfo, inst, reg.hstride);
+-            brw_inst_set_src1_width(devinfo, inst, reg.width);
+-            brw_inst_set_src1_vstride(devinfo, inst, reg.vstride);
++            if (devinfo->gen == 7 && !devinfo->is_haswell &&
++                reg.type == BRW_REGISTER_TYPE_DF && has_scalar_region(reg)) {
++               brw_inst_set_src1_vstride(devinfo, inst, BRW_VERTICAL_STRIDE_0);
++               brw_inst_set_src1_width(devinfo, inst, BRW_WIDTH_2);
++               brw_inst_set_src1_hstride(devinfo, inst, BRW_HORIZONTAL_STRIDE_1);
++            } else {
++               brw_inst_set_src1_vstride(devinfo, inst, reg.vstride);
++               brw_inst_set_src1_width(devinfo, inst, reg.width);
++               brw_inst_set_src1_hstride(devinfo, inst, reg.hstride);
++            }
+ 	 }
+       } else {
+          brw_inst_set_src1_da16_swiz_x(devinfo, inst,
+
+From patchwork Tue Jan 17 09:49:20 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 06/20] i965/fs: fix dst stride in IVB/BYT type conversions
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133656
+Message-Id: <20170117094934.14434-6-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:20 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+When converting a DF to F, we set dst stride to 2, to fulfil alignment
+restrictions.
+
+But in IVB/BYT, this is not necessary, as each DF conversion already
+writes 2 F, the first one the real value, and the second one a 0. That
+is, IVB/BYT already set stride = 2 implicitly, so we must set it to 1
+explicitly to avoid ending up with stride = 4.
+
+v2:
+- Fix typo (Matt)
+---
+ src/mesa/drivers/dri/i965/brw_fs_generator.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+index 45881e3ec95..487f2e90224 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+@@ -1629,6 +1629,16 @@ fs_generator::generate_code(const cfg_t *cfg, int dispatch_width)
+ 		inst->src[i].type != BRW_REGISTER_TYPE_UD ||
+ 		!inst->src[i].negate);
+       }
++      /* When converting from DF->F, we set destination's stride as 2 as an
++       * alignment requirement. But in IVB/BYT, each DF implicitly writes 2 F,
++       * being the first one the converted value. So we don't need to
++       * explicitly set stride 2, but 1.
++       */
++      if (devinfo->gen == 7 && !devinfo->is_haswell &&
++          type_sz(inst->src[0].type) > type_sz(inst->dst.type)) {
++         assert(inst->dst.stride == 2 || inst->dst.stride == 1);
++         inst->dst.stride = 1;
++      }
+       dst = brw_reg_from_fs_reg(compiler->devinfo, inst,
+                                 &inst->dst, compressed);
+ 
+
+From patchwork Tue Jan 17 09:49:21 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 07/20] i965/fs: fix lower SIMD width for IVB/BYT's MOV_INDIRECT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133657
+Message-Id: <20170117094934.14434-7-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:21 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+Previous to Broadwell, we have 8 registers for MOV_INDIRECT.
+
+According to the IVB and HSW PRMs:
+
+"2.When the destination requires two registers and the sources are
+ indirect, the sources must use 1x1 regioning mode. In addition, the
+ sources must be assembled from GRF registers each accessed by adjacent
+ index registers in 1x1 regioning modes."
+
+So for DF instructions the execution size is not limited by the number
+of address registers that are available, but by the EU decompression
+logic not handling VxH indirect addressing correctly.
+
+This patch limits the SIMD width to 4 in this case.
+
+v2:
+- Fix typo (Matt).
+- Fix condition (Curro)
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+Signed-off-by: Juan A. Suarez Romero <jasuarez@igalia.com>
+---
+ src/mesa/drivers/dri/i965/brw_fs.cpp | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.cpp b/src/mesa/drivers/dri/i965/brw_fs.cpp
+index a2ba0fde9fd..c9b6c995dc9 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs.cpp
+@@ -4870,11 +4870,16 @@ get_lowered_simd_width(const struct gen_device_info *devinfo,
+    case SHADER_OPCODE_URB_WRITE_SIMD8_MASKED_PER_SLOT:
+       return MIN2(8, inst->exec_size);
+ 
+-   case SHADER_OPCODE_MOV_INDIRECT:
+-      /* Prior to Broadwell, we only have 8 address subregisters */
++   case SHADER_OPCODE_MOV_INDIRECT: {
++      const unsigned max_size = (devinfo->gen >= 8 ? 2 : 1) * REG_SIZE;
++      /* Prior to Broadwell, we only have 8 address subregisters. In case of
++       * DF instructions in HSW/IVB, the exec_size is limited by the EU
++       * decompression logic not handling VxH indirect addressing correctly.
++       */
+       return MIN3(devinfo->gen >= 8 ? 16 : 8,
+-                  2 * REG_SIZE / (inst->dst.stride * type_sz(inst->dst.type)),
++                  max_size / (inst->dst.stride * type_sz(inst->dst.type)),
+                   inst->exec_size);
++   }
+ 
+    case SHADER_OPCODE_LOAD_PAYLOAD: {
+       const unsigned reg_count =
+
+From patchwork Tue Jan 17 09:49:22 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2, 08/20] i965: Use source region <1, 2,
+ 0> when converting to DF.
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133658
+Message-Id: <20170117094934.14434-8-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:22 +0100
+
+From: Matt Turner <mattst88@gmail.com>
+
+Doing so allows us to use a single MOV in VEC4_OPCODE_TO_DOUBLE instead
+of two.
+---
+ src/mesa/drivers/dri/i965/brw_eu_emit.c          | 28 +++++++++++++++++++++++-
+ src/mesa/drivers/dri/i965/brw_vec4_generator.cpp | 13 +----------
+ 2 files changed, 28 insertions(+), 13 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_eu_emit.c b/src/mesa/drivers/dri/i965/brw_eu_emit.c
+index 3201c885cb9..b3e8026c646 100644
+--- a/src/mesa/drivers/dri/i965/brw_eu_emit.c
++++ b/src/mesa/drivers/dri/i965/brw_eu_emit.c
+@@ -1050,7 +1050,6 @@ void brw_##OP(struct brw_codegen *p,					      \
+ }
+ 
+ 
+-ALU1(MOV)
+ ALU2(SEL)
+ ALU1(NOT)
+ ALU2(AND)
+@@ -1084,6 +1083,33 @@ ALU2(SUBB)
+ ROUND(RNDZ)
+ ROUND(RNDE)
+ 
++brw_inst *
++brw_MOV(struct brw_codegen *p, struct brw_reg dest, struct brw_reg src0)
++{
++   const struct gen_device_info *devinfo = p->devinfo;
++
++   /* When converting F->DF on IVB/BYT, every odd source channel is ignored.
++    * To avoid the problems that causes, we use a <1,2,0> source region to read
++    * each element twice.
++    */
++   if (devinfo->gen == 7 && !devinfo->is_haswell &&
++       brw_inst_access_mode(devinfo, p->current) == BRW_ALIGN_1 &&
++       dest.type == BRW_REGISTER_TYPE_DF &&
++       (src0.type == BRW_REGISTER_TYPE_F ||
++        src0.type == BRW_REGISTER_TYPE_D ||
++        src0.type == BRW_REGISTER_TYPE_UD) &&
++       !has_scalar_region(src0)) {
++      assert(src0.vstride == BRW_VERTICAL_STRIDE_4 &&
++             src0.width == BRW_WIDTH_4 &&
++             src0.hstride == BRW_HORIZONTAL_STRIDE_1);
++
++      src0.vstride = BRW_VERTICAL_STRIDE_1;
++      src0.width = BRW_WIDTH_2;
++      src0.hstride = BRW_HORIZONTAL_STRIDE_0;
++   }
++
++   return brw_alu1(p, BRW_OPCODE_MOV, dest, src0);
++}
+ 
+ brw_inst *
+ brw_ADD(struct brw_codegen *p, struct brw_reg dest,
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+index f095cc2d0f2..45f1611989c 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+@@ -1956,18 +1956,7 @@ generate_code(struct brw_codegen *p,
+ 
+          brw_set_default_access_mode(p, BRW_ALIGN_1);
+ 
+-         struct brw_reg tmp = retype(dst, src[0].type);
+-         tmp.hstride = BRW_HORIZONTAL_STRIDE_2;
+-         tmp.width = BRW_WIDTH_4;
+-         src[0].vstride = BRW_VERTICAL_STRIDE_4;
+-         src[0].hstride = BRW_HORIZONTAL_STRIDE_1;
+-         src[0].width = BRW_WIDTH_4;
+-         brw_MOV(p, tmp, src[0]);
+-
+-         tmp.vstride = BRW_VERTICAL_STRIDE_8;
+-         tmp.hstride = BRW_HORIZONTAL_STRIDE_2;
+-         tmp.width = BRW_WIDTH_4;
+-         brw_MOV(p, dst, tmp);
++         brw_MOV(p, dst, src[0]);
+ 
+          brw_set_default_access_mode(p, BRW_ALIGN_16);
+          break;
+
+From patchwork Tue Jan 17 09:49:23 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 09/20] i965/fs: indirect addressing with doubles is not supported in
+ IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133659
+Message-Id: <20170117094934.14434-9-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:23 +0100
+
+It is tested empirically that IVB/BYT don't support indirect addressing
+with doubles but it is not documented in the PRM.
+
+This patch applies the same solution than for Cherryview/Broxton and
+takes into account that we cannot double the stride, since the
+hardware will do it internally.
+
+v2:
+- Fix assert to take into account Indirect DF MOVs in IVB and HSW.
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/brw_fs_generator.cpp | 27 ++++++++++++++++++--------
+ src/mesa/drivers/dri/i965/brw_fs_nir.cpp       | 11 ++++++-----
+ 2 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+index 487f2e90224..dd6cbab773c 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs_generator.cpp
+@@ -418,18 +418,29 @@ fs_generator::generate_mov_indirect(fs_inst *inst,
+       brw_MOV(p, dst, reg);
+    } else {
+       /* Prior to Broadwell, there are only 8 address registers. */
+-      assert(inst->exec_size == 8 || devinfo->gen >= 8);
++      assert(inst->exec_size == 8 || devinfo->gen >= 8 ||
++             (devinfo->gen == 7 && inst->exec_size < 8 &&
++              (type_sz(reg.type) == 8 || type_sz(dst.type) == 8)));
+ 
+       /* We use VxH indirect addressing, clobbering a0.0 through a0.7. */
+       struct brw_reg addr = vec8(brw_address_reg(0));
+ 
+-      /* The destination stride of an instruction (in bytes) must be greater
+-       * than or equal to the size of the rest of the instruction.  Since the
+-       * address register is of type UW, we can't use a D-type instruction.
+-       * In order to get around this, re retype to UW and use a stride.
+-       */
+-      indirect_byte_offset =
+-         retype(spread(indirect_byte_offset, 2), BRW_REGISTER_TYPE_UW);
++      if (devinfo->gen != 7 || devinfo->is_haswell || type_sz(reg.type) != 8) {
++         /* The destination stride of an instruction (in bytes) must be greater
++          * than or equal to the size of the rest of the instruction.  Since the
++          * address register is of type UW, we can't use a D-type instruction.
++          * In order to get around this, re retype to UW and use a stride.
++          */
++         indirect_byte_offset =
++            retype(spread(indirect_byte_offset, 2), BRW_REGISTER_TYPE_UW);
++      } else {
++         /* In Ivybridge/Baytrail, when it operates with DF operands, we
++          * cannot double the stride, since the hardware will do it
++          * internally. Tested empirically.
++          */
++         indirect_byte_offset =
++            retype(indirect_byte_offset, BRW_REGISTER_TYPE_UW);
++      }
+ 
+       /* There are a number of reasons why we don't use the base offset here.
+        * One reason is that the field is only 9 bits which means we can only
+diff --git a/src/mesa/drivers/dri/i965/brw_fs_nir.cpp b/src/mesa/drivers/dri/i965/brw_fs_nir.cpp
+index 8f745dff440..85f43b7b144 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs_nir.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs_nir.cpp
+@@ -3822,17 +3822,18 @@ fs_visitor::nir_emit_intrinsic(const fs_builder &bld, nir_intrinsic_instr *instr
+             (instr->num_components - 1) * type_sz(dest.type);
+ 
+          fs_reg indirect_chv_high_32bit;
+-         bool is_chv_bxt_64bit =
+-            (devinfo->is_cherryview || devinfo->is_broxton) &&
+-            type_sz(dest.type) == 8;
+-         if (is_chv_bxt_64bit) {
++         bool is_ivb_byt_chv_bxt_64bit =
++            (devinfo->is_cherryview || devinfo->is_broxton ||
++             devinfo->is_ivybridge || devinfo->is_baytrail) &&
++           type_sz(dest.type) == 8;
++         if (is_ivb_byt_chv_bxt_64bit) {
+             indirect_chv_high_32bit = vgrf(glsl_type::uint_type);
+             /* Calculate indirect address to read high 32 bits */
+             bld.ADD(indirect_chv_high_32bit, indirect, brw_imm_ud(4));
+          }
+ 
+          for (unsigned j = 0; j < instr->num_components; j++) {
+-            if (!is_chv_bxt_64bit) {
++            if (!is_ivb_byt_chv_bxt_64bit) {
+                bld.emit(SHADER_OPCODE_MOV_INDIRECT,
+                         offset(dest, bld, j), offset(src, bld, j),
+                         indirect, brw_imm_ud(read_size));
+
+From patchwork Tue Jan 17 09:49:24 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 10/20] i965/fs: lower all non-force_writemask_all DF instructions to
+ SIMD4 on IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133660
+Message-Id: <20170117094934.14434-10-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:24 +0100
+
+The hardware applies the same channel enable signals to both halves of
+the compressed instruction which will be just wrong under non-uniform
+control flow. Fix this by splitting those instructions to SIMD4.
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+Reviewed-by: Francisco Jerez <currojerez@riseup.net>
+---
+ src/mesa/drivers/dri/i965/brw_fs.cpp | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.cpp b/src/mesa/drivers/dri/i965/brw_fs.cpp
+index c9b6c995dc9..a622b7a640b 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs.cpp
+@@ -4577,6 +4577,15 @@ get_fpu_lowered_simd_width(const struct gen_device_info *devinfo,
+        */
+       if (channels_per_grf != (exec_type_size == 8 ? 4 : 8))
+          max_width = MIN2(max_width, channels_per_grf);
++
++      /* Lower all non-force_writemask_all DF instructions to SIMD4 on IVB/BYT
++       * because HW applies the same channel enable signals to both halves of
++       * the compressed instruction which will be just wrong under
++       * non-uniform control flow.
++       */
++      if (devinfo->gen == 7 && !devinfo->is_haswell &&
++          (exec_type_size == 8 || type_sz(inst->dst.type) == 8))
++         max_width = MIN2(max_width, 4);
+    }
+ 
+    /* Only power-of-two execution sizes are representable in the instruction
+
+From patchwork Tue Jan 17 09:49:25 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 11/20] i965/vec4: split DF instructions and later double its execsize
+ in IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133661
+Message-Id: <20170117094934.14434-11-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:25 +0100
+
+We need to split DF instructions in two on IVB/BYT as it needs an
+execsize 8 to process 4 DF values (one GRF in total).
+
+v2:
+- Rename helper and make it static inline function (Matt).
+- Fix indention and add braces (Matt).
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/brw_ir_vec4.h          | 14 ++++++++++++++
+ src/mesa/drivers/dri/i965/brw_vec4.cpp           |  7 ++++++-
+ src/mesa/drivers/dri/i965/brw_vec4_generator.cpp | 15 +++++++++++++--
+ 3 files changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_ir_vec4.h b/src/mesa/drivers/dri/i965/brw_ir_vec4.h
+index 57fc6be8f89..9d29c3fb944 100644
+--- a/src/mesa/drivers/dri/i965/brw_ir_vec4.h
++++ b/src/mesa/drivers/dri/i965/brw_ir_vec4.h
+@@ -405,6 +405,20 @@ regs_read(const vec4_instruction *inst, unsigned i)
+                        reg_size);
+ }
+ 
++static inline unsigned
++get_exec_type_size(const vec4_instruction *inst)
++{
++   unsigned exec_type_size = 0;
++
++   for (int i = 0; i < 3; i++) {
++      if (inst->src[i].type != BAD_FILE) {
++         exec_type_size = MAX2(exec_type_size, type_sz(inst->src[i].type));
++      }
++   }
++
++   return exec_type_size;
++}
++
+ } /* namespace brw */
+ 
+ #endif
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4.cpp b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+index 5e60eb657a7..7080c93e550 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+@@ -2092,6 +2092,10 @@ get_lowered_simd_width(const struct gen_device_info *devinfo,
+       if (inst->opcode == BRW_OPCODE_SEL && type_sz(inst->dst.type) == 8)
+          lowered_width = MIN2(lowered_width, 4);
+ 
++      if (devinfo->gen == 7 && !devinfo->is_haswell &&
++          (get_exec_type_size(inst) == 8 || type_sz(inst->dst.type) == 8))
++         lowered_width = MIN2(lowered_width, 4);
++
+       /* HSW PRM, 3D Media GPGPU Engine, Region Alignment Rules for Direct
+        * Register Addressing:
+        *
+@@ -2199,7 +2203,8 @@ vec4_visitor::lower_simd_width()
+                inst->insert_before(block, copy);
+             }
+          } else {
+-            dst = horiz_offset(inst->dst, channel_offset);
++            if (inst->dst.file != ARF)
++               dst = horiz_offset(inst->dst, channel_offset);
+          }
+          linst->dst = dst;
+ 
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+index 45f1611989c..ded33ba7cee 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+@@ -1520,14 +1520,25 @@ generate_code(struct brw_codegen *p,
+       brw_set_default_saturate(p, inst->saturate);
+       brw_set_default_mask_control(p, inst->force_writemask_all);
+       brw_set_default_acc_write_control(p, inst->writes_accumulator);
+-      brw_set_default_exec_size(p, cvt(inst->exec_size) - 1);
+ 
+-      assert(inst->group % inst->exec_size == 0);
++      bool is_ivb_df = devinfo->gen == 7 &&
++         !devinfo->is_haswell &&
++         (get_exec_type_size(inst) == 8 ||
++          inst->dst.type == BRW_REGISTER_TYPE_DF);
++
++      assert(inst->group % inst->exec_size == 0 ||
++             is_ivb_df);
++
+       assert(inst->group % 8 == 0 ||
+              inst->dst.type == BRW_REGISTER_TYPE_DF ||
+              inst->src[0].type == BRW_REGISTER_TYPE_DF ||
+              inst->src[1].type == BRW_REGISTER_TYPE_DF ||
+              inst->src[2].type == BRW_REGISTER_TYPE_DF);
++
++      if (is_ivb_df && inst->exec_size < 8)
++         inst->exec_size *= 2;
++      brw_set_default_exec_size(p, cvt(inst->exec_size) - 1);
++
+       if (!inst->force_writemask_all)
+          brw_set_default_group(p, inst->group);
+ 
+
+From patchwork Tue Jan 17 09:49:26 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 12/20] i965/vec4: keep original type when dealing with null registers
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133662
+Message-Id: <20170117094934.14434-12-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:26 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+Keep the original type when dealing with null registers. Specially
+because we do no want to introduce an implicit conversion between
+types that could affect the conditional flags.
+
+This affects specially when the original type is DF, and we are working
+on Ivybridge/Baytrail.
+---
+ src/mesa/drivers/dri/i965/brw_vec4.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4.cpp b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+index 7080c93e550..64b435f3ec4 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+@@ -1983,6 +1983,7 @@ vec4_visitor::convert_to_hw_regs()
+          case BAD_FILE:
+             /* Probably unused. */
+             reg = brw_null_reg();
++            reg.type = src.type;
+             break;
+ 
+          case MRF:
+@@ -2033,6 +2034,7 @@ vec4_visitor::convert_to_hw_regs()
+ 
+       case BAD_FILE:
+          reg = brw_null_reg();
++         reg.type = dst.type;
+          break;
+ 
+       case IMM:
+@@ -2205,6 +2207,8 @@ vec4_visitor::lower_simd_width()
+          } else {
+             if (inst->dst.file != ARF)
+                dst = horiz_offset(inst->dst, channel_offset);
++            else
++               dst.type = inst->dst.type;
+          }
+          linst->dst = dst;
+ 
+
+From patchwork Tue Jan 17 09:49:27 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 13/20] i965/vec4: fix VEC4_OPCODE_FROM_DOUBLE for IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133663
+Message-Id: <20170117094934.14434-13-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:27 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+In the generator we must generate slightly different code for
+Ivybridge/Baytrail, because of the way the stride works in
+this hardware.
+---
+ src/mesa/drivers/dri/i965/brw_vec4_generator.cpp | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+index ded33ba7cee..62ae1a6cebe 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+@@ -1946,13 +1946,28 @@ generate_code(struct brw_codegen *p,
+ 
+          brw_set_default_access_mode(p, BRW_ALIGN_1);
+ 
+-         dst.hstride = BRW_HORIZONTAL_STRIDE_2;
++         /* When converting from DF->F, we set destination's stride as 2 as an
++          * aligment requirement. But in IVB/BYT, each DF implicitly writes
++          * two floats, being the first one the converted value. So we don't
++          * need to explicitly set stride 2, but 1.
++          */
++         if (devinfo->gen == 7 && !devinfo->is_haswell)
++            dst.hstride = BRW_HORIZONTAL_STRIDE_1;
++         else
++            dst.hstride = BRW_HORIZONTAL_STRIDE_2;
++
+          dst.width = BRW_WIDTH_4;
+          src[0].vstride = BRW_VERTICAL_STRIDE_4;
+          src[0].width = BRW_WIDTH_4;
+          brw_MOV(p, dst, src[0]);
+ 
+          struct brw_reg dst_as_src = dst;
++         /* As we have set horizontal stride 1 instead of 2 in IVB/BYT, we
++          * need to fix it here to have the expected value.
++          */
++         if (devinfo->gen == 7 && !devinfo->is_haswell)
++            dst_as_src.hstride = BRW_HORIZONTAL_STRIDE_2;
++
+          dst.hstride = BRW_HORIZONTAL_STRIDE_1;
+          dst.width = BRW_WIDTH_8;
+          brw_MOV(p, dst, dst_as_src);
+
+From patchwork Tue Jan 17 09:49:28 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 14/20] i965/vec4: fix SIMD-width lowering for VEC4_OPCODE_FROM_DOUBLE
+ in IVB/BYT
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133664
+Message-Id: <20170117094934.14434-14-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:28 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+When splitting VEC4_OPCODE_FROM_DOUBLE in Ivybridge/Baytrail, the second
+part should use a temporal register, and then move the values to the
+second half of the original destination, so we get all the results in the
+same register.
+
+v2:
+- Fix typos (Matt).
+---
+ src/mesa/drivers/dri/i965/brw_vec4.cpp           | 17 +++++++++++++----
+ src/mesa/drivers/dri/i965/brw_vec4_generator.cpp |  1 +
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4.cpp b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+index 64b435f3ec4..adcde085305 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+@@ -2191,9 +2191,15 @@ vec4_visitor::lower_simd_width()
+          linst->group = channel_offset;
+          linst->size_written = size_written;
+ 
++         /* When splitting VEC4_OPCODE_FROM_DOUBLE on Ivybridge, the second part
++          * should use in a temporal register. Later we will move the values
++          * to the second half of the original destination, so we get all the
++          * results in the same register. We use d2f_pass to detect this case.
++          */
++         bool d2f_pass = (inst->opcode == VEC4_OPCODE_FROM_DOUBLE && n > 0);
+          /* Compute split dst region */
+          dst_reg dst;
+-         if (needs_temp) {
++         if (needs_temp || d2f_pass) {
+             unsigned num_regs = DIV_ROUND_UP(size_written, REG_SIZE);
+             dst = retype(dst_reg(VGRF, alloc.allocate(num_regs)),
+                          inst->dst.type);
+@@ -2226,9 +2232,12 @@ vec4_visitor::lower_simd_width()
+          /* If we used a temporary to store the result of the split
+           * instruction, copy the result to the original destination
+           */
+-         if (needs_temp) {
+-            vec4_instruction *mov =
+-               MOV(offset(inst->dst, lowered_width, n), src_reg(dst));
++         if (needs_temp || d2f_pass) {
++            vec4_instruction *mov;
++            if (d2f_pass)
++               mov = MOV(horiz_offset(inst->dst, n * type_sz(inst->dst.type)), src_reg(dst));
++            else
++               mov = MOV(offset(inst->dst, lowered_width, n), src_reg(dst));
+             mov->exec_size = lowered_width;
+             mov->group = channel_offset;
+             mov->size_written = size_written;
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+index 62ae1a6cebe..7bd822cc5dd 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_generator.cpp
+@@ -1530,6 +1530,7 @@ generate_code(struct brw_codegen *p,
+              is_ivb_df);
+ 
+       assert(inst->group % 8 == 0 ||
++             (inst->exec_size == 4 && inst->group % 4 == 0) ||
+              inst->dst.type == BRW_REGISTER_TYPE_DF ||
+              inst->src[0].type == BRW_REGISTER_TYPE_DF ||
+              inst->src[1].type == BRW_REGISTER_TYPE_DF ||
+
+From patchwork Tue Jan 17 09:49:29 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [Mesa-dev, v2,
+ 15/20] i965/vec4: consider subregister offset in live variables
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133665
+Message-Id: <20170117094934.14434-15-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:29 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+Take in account the offset value when getting the var from register.
+
+This is required when dealing with an operation that writes half of the
+register (like one d2x in IVB/BYT, which uses exec_size == 4).
+
+Note that for live analysis variables we need to stick to per-GRF
+analysis. In this case, we use var_from_reg() with GRF precision.
+---
+ src/mesa/drivers/dri/i965/brw_vec4_live_variables.cpp | 12 ++++++++----
+ src/mesa/drivers/dri/i965/brw_vec4_live_variables.h   | 10 ++++++----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_live_variables.cpp b/src/mesa/drivers/dri/i965/brw_vec4_live_variables.cpp
+index 73f658cd8fa..54ebd0994ee 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_live_variables.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_live_variables.cpp
+@@ -78,7 +78,8 @@ vec4_live_variables::setup_def_use()
+ 	    if (inst->src[i].file == VGRF) {
+                for (unsigned j = 0; j < DIV_ROUND_UP(inst->size_read(i), 16); j++) {
+                   for (int c = 0; c < 4; c++) {
+-                     const unsigned v = var_from_reg(alloc, inst->src[i], c, j);
++                     const unsigned v =
++                        var_from_reg(alloc, inst->src[i], c, j, false);
+                      if (!BITSET_TEST(bd->def, v))
+                         BITSET_SET(bd->use, v);
+                   }
+@@ -101,7 +102,8 @@ vec4_live_variables::setup_def_use()
+             for (unsigned i = 0; i < DIV_ROUND_UP(inst->size_written, 16); i++) {
+                for (int c = 0; c < 4; c++) {
+                   if (inst->dst.writemask & (1 << c)) {
+-                     const unsigned v = var_from_reg(alloc, inst->dst, c, i);
++                     const unsigned v =
++                        var_from_reg(alloc, inst->dst, c, i, false);
+                      if (!BITSET_TEST(bd->use, v))
+                         BITSET_SET(bd->def, v);
+                   }
+@@ -257,7 +259,8 @@ vec4_visitor::calculate_live_intervals()
+ 	 if (inst->src[i].file == VGRF) {
+             for (unsigned j = 0; j < DIV_ROUND_UP(inst->size_read(i), 16); j++) {
+                for (int c = 0; c < 4; c++) {
+-                  const unsigned v = var_from_reg(alloc, inst->src[i], c, j);
++                  const unsigned v =
++                     var_from_reg(alloc, inst->src[i], c, j, false);
+                   start[v] = MIN2(start[v], ip);
+                   end[v] = ip;
+                }
+@@ -269,7 +272,8 @@ vec4_visitor::calculate_live_intervals()
+          for (unsigned i = 0; i < DIV_ROUND_UP(inst->size_written, 16); i++) {
+             for (int c = 0; c < 4; c++) {
+                if (inst->dst.writemask & (1 << c)) {
+-                  const unsigned v = var_from_reg(alloc, inst->dst, c, i);
++                  const unsigned v =
++                     var_from_reg(alloc, inst->dst, c, i, false);
+                   start[v] = MIN2(start[v], ip);
+                   end[v] = ip;
+                }
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_live_variables.h b/src/mesa/drivers/dri/i965/brw_vec4_live_variables.h
+index 8807c453743..9c505d15f1f 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_live_variables.h
++++ b/src/mesa/drivers/dri/i965/brw_vec4_live_variables.h
+@@ -83,13 +83,14 @@ protected:
+  */
+ inline unsigned
+ var_from_reg(const simple_allocator &alloc, const src_reg &reg,
+-             unsigned c = 0, unsigned k = 0)
++             unsigned c = 0, unsigned k = 0, bool subreg_precision = true)
+ {
+    assert(reg.file == VGRF && reg.nr < alloc.count && c < 4);
+    const unsigned csize = DIV_ROUND_UP(type_sz(reg.type), 4);
+    unsigned result =
+       8 * (alloc.offsets[reg.nr] + reg.offset / REG_SIZE) +
+-      (BRW_GET_SWZ(reg.swizzle, c) + k / csize * 4) * csize + k % csize;
++      (BRW_GET_SWZ(reg.swizzle, c) + k / csize * 4) * csize + k % csize +
++      (subreg_precision ? (reg.offset % REG_SIZE) / type_sz(reg.type) : 0);
+    /* Do not exceed the limit for this register */
+    assert(result < 8 * (alloc.offsets[reg.nr] + alloc.sizes[reg.nr]));
+    return result;
+@@ -97,13 +98,14 @@ var_from_reg(const simple_allocator &alloc, const src_reg &reg,
+ 
+ inline unsigned
+ var_from_reg(const simple_allocator &alloc, const dst_reg &reg,
+-             unsigned c = 0, unsigned k = 0)
++             unsigned c = 0, unsigned k = 0, bool subreg_precision = true)
+ {
+    assert(reg.file == VGRF && reg.nr < alloc.count && c < 4);
+    const unsigned csize = DIV_ROUND_UP(type_sz(reg.type), 4);
+    unsigned result =
+       8 * (alloc.offsets[reg.nr] + reg.offset / REG_SIZE) +
+-      (c + k / csize * 4) * csize + k % csize;
++      (c + k / csize * 4) * csize + k % csize +
++      (subreg_precision ? (reg.offset % REG_SIZE) / type_sz(reg.type) : 0);
+    /* Do not exceed the limit for this register */
+    assert(result < 8 * (alloc.offsets[reg.nr] + alloc.sizes[reg.nr]));
+    return result;
+
+From patchwork Tue Jan 17 09:49:30 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 16/20] i965/vec4: adapt setup_imm_df() to allow inserting
+ instructions before another one
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133666
+Message-Id: <20170117094934.14434-16-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:30 +0100
+
+Add a new setup_imm_df() that allows the insertion of the instructions
+before another one. This will be used in the lowering passes for DF
+instructions.
+
+v2:
+- Adapt emission of DIM instruction too.
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/brw_vec4.h       |  2 ++
+ src/mesa/drivers/dri/i965/brw_vec4_nir.cpp | 26 +++++++++++++++++++++-----
+ 2 files changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4.h b/src/mesa/drivers/dri/i965/brw_vec4.h
+index 29b203af89e..01b928ef4a7 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4.h
++++ b/src/mesa/drivers/dri/i965/brw_vec4.h
+@@ -328,6 +328,8 @@ public:
+                                   brw_reg_type single_type);
+ 
+    src_reg setup_imm_df(double v);
++   src_reg setup_imm_df(double v, struct bblock_t *block,
++                        vec4_instruction *inst);
+ 
+    vec4_instruction *shuffle_64bit_data(dst_reg dst, src_reg src,
+                                         bool for_write,
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4_nir.cpp b/src/mesa/drivers/dri/i965/brw_vec4_nir.cpp
+index 71156ec5b3b..487042607e3 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4_nir.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4_nir.cpp
+@@ -1212,6 +1212,12 @@ vec4_visitor::emit_conversion_to_double(dst_reg dst, src_reg src,
+ src_reg
+ vec4_visitor::setup_imm_df(double v)
+ {
++   return setup_imm_df(v, NULL, NULL);
++}
++
++src_reg
++vec4_visitor::setup_imm_df(double v, struct bblock_t *block, brw::vec4_instruction *inst)
++{
+    assert(devinfo->gen >= 7);
+ 
+    if (devinfo->gen >= 8)
+@@ -1222,7 +1228,10 @@ vec4_visitor::setup_imm_df(double v)
+     */
+    if (devinfo->is_haswell) {
+       dst_reg dst = retype(dst_reg(VGRF, alloc.allocate(2)), BRW_REGISTER_TYPE_DF);
+-      emit(DIM(dst, brw_imm_df(v)))->force_writemask_all = true;
++      if (block)
++         emit_before(block, inst, DIM(dst, brw_imm_df(v)))->force_writemask_all = true;
++      else
++         emit(DIM(dst, brw_imm_df(v)))->force_writemask_all = true;
+       return swizzle(src_reg(retype(dst, BRW_REGISTER_TYPE_DF)), BRW_SWIZZLE_XXXX);
+    }
+ 
+@@ -1247,10 +1256,17 @@ vec4_visitor::setup_imm_df(double v)
+    const dst_reg tmp =
+       retype(dst_reg(VGRF, alloc.allocate(2)), BRW_REGISTER_TYPE_UD);
+    for (int n = 0; n < 2; n++) {
+-      emit(MOV(writemask(offset(tmp, 8, n), WRITEMASK_X), brw_imm_ud(di.i1)))
+-         ->force_writemask_all = true;
+-      emit(MOV(writemask(offset(tmp, 8, n), WRITEMASK_Y), brw_imm_ud(di.i2)))
+-         ->force_writemask_all = true;
++      if (block) {
++         emit_before(block, inst, MOV(writemask(offset(tmp, 8, n), WRITEMASK_X), brw_imm_ud(di.i1)))
++            ->force_writemask_all = true;
++         emit_before(block, inst, MOV(writemask(offset(tmp, 8, n), WRITEMASK_Y), brw_imm_ud(di.i2)))
++            ->force_writemask_all = true;
++      } else {
++         emit(MOV(writemask(offset(tmp, 8, n), WRITEMASK_X), brw_imm_ud(di.i1)))
++            ->force_writemask_all = true;
++         emit(MOV(writemask(offset(tmp, 8, n), WRITEMASK_Y), brw_imm_ud(di.i2)))
++            ->force_writemask_all = true;
++      }
+    }
+ 
+    return swizzle(src_reg(retype(tmp, BRW_REGISTER_TYPE_DF)), BRW_SWIZZLE_XXXX);
+
+From patchwork Tue Jan 17 09:49:31 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 17/20] i965/vec4: fix SIMD-with lowering for CMP/MOV instructions
+ with conditional modifiers
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133667
+Message-Id: <20170117094934.14434-17-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:31 +0100
+
+From: "Juan A. Suarez Romero" <jasuarez@igalia.com>
+
+When splitting a CMP/MOV instruction with NULL dest, DF sources, and
+conditional modifier; we can't use directly the flag registers, as they will
+have the wrong results in IVB/BYT after the scalarization.
+
+Rather, we need to store the result in a temporary register, and then use
+that register to set proper the flags values.
+
+If a MOV has a null destination register and a conditional modifier, it
+can be replaced with a CMP against zero with the same conditional
+modifier. By doing this replacement, we can do the SIMD lowering
+without any problem.
+
+v2:
+- Fix typo (Matt)
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+Signed-off-by: Juan A. Suarez Romero <jasuarez@igalia.com
+---
+ src/mesa/drivers/dri/i965/brw_vec4.cpp | 80 +++++++++++++++++++++++++++++++---
+ 1 file changed, 74 insertions(+), 6 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_vec4.cpp b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+index adcde085305..819674e8cb9 100644
+--- a/src/mesa/drivers/dri/i965/brw_vec4.cpp
++++ b/src/mesa/drivers/dri/i965/brw_vec4.cpp
+@@ -2177,6 +2177,46 @@ vec4_visitor::lower_simd_width()
+        * value of the instruction's dst.
+        */
+       bool needs_temp = dst_src_regions_overlap(inst);
++
++      /* When splitting instructions with conditional modifiers and NULL
++       * dest we can't rely directly on the flags to store the result. Rather,
++       * we need first to enqueue the result in a temporary register, and then
++       * move those values into flags.
++       */
++      bool inst_df_dst_null =
++         inst->dst.is_null() && get_exec_type_size(inst) == 8 &&
++         inst->conditional_mod != BRW_CONDITIONAL_NONE;
++
++      if (inst_df_dst_null) {
++         /* If there are other DF instructions with NULL destination,
++          * we need to verify if we can use the temporary register or
++          * if we need an extra lowering step.
++          */
++         assert(inst->opcode == BRW_OPCODE_MOV ||
++                inst->opcode == BRW_OPCODE_CMP);
++
++         /* Replace MOV.XX with null destination with the equivalent CMP.XX
++          * with null destination, so we can lower it as explained before.
++          */
++         if (inst->opcode == BRW_OPCODE_MOV) {
++            vec4_instruction *cmp =
++               new(mem_ctx) vec4_instruction(BRW_OPCODE_CMP, dst_null_df(),
++                                             inst->src[0],
++                                             setup_imm_df(0.0, block, inst));
++            cmp->conditional_mod = inst->conditional_mod;
++            cmp->exec_size = inst->exec_size;
++            cmp->group = inst->group;
++            cmp->size_written = inst->size_written;
++            inst->insert_before(block, cmp);
++            inst->remove(block);
++            inst = cmp;
++         }
++      }
++      dst_reg inst_dst;
++      if (inst_df_dst_null)
++         inst_dst =
++            retype(dst_reg(VGRF, alloc.allocate(1)), BRW_REGISTER_TYPE_F);
++
+       for (unsigned n = 0; n < inst->exec_size / lowered_width; n++)  {
+          unsigned channel_offset = lowered_width * n;
+ 
+@@ -2199,7 +2239,7 @@ vec4_visitor::lower_simd_width()
+          bool d2f_pass = (inst->opcode == VEC4_OPCODE_FROM_DOUBLE && n > 0);
+          /* Compute split dst region */
+          dst_reg dst;
+-         if (needs_temp || d2f_pass) {
++         if (needs_temp || d2f_pass || inst_df_dst_null) {
+             unsigned num_regs = DIV_ROUND_UP(size_written, REG_SIZE);
+             dst = retype(dst_reg(VGRF, alloc.allocate(num_regs)),
+                          inst->dst.type);
+@@ -2229,24 +2269,52 @@ vec4_visitor::lower_simd_width()
+ 
+          inst->insert_before(block, linst);
+ 
++         dst_reg d2f_dst;
++         if (inst_df_dst_null) {
++            unsigned num_regs = DIV_ROUND_UP(lowered_width, type_sz(BRW_REGISTER_TYPE_F));
++            d2f_dst = retype(dst_reg(VGRF, alloc.allocate(num_regs)), BRW_REGISTER_TYPE_F);
++            vec4_instruction *d2f = new(mem_ctx) vec4_instruction(VEC4_OPCODE_FROM_DOUBLE, d2f_dst, src_reg(dst));
++            d2f->group = channel_offset;
++            d2f->exec_size = lowered_width;
++            d2f->size_written = lowered_width * type_sz(d2f_dst.type);
++            d2f->predicate = inst->predicate;
++            inst->insert_before(block, d2f);
++         }
++
+          /* If we used a temporary to store the result of the split
+           * instruction, copy the result to the original destination
+           */
+-         if (needs_temp || d2f_pass) {
++         if (needs_temp || d2f_pass || inst_df_dst_null) {
+             vec4_instruction *mov;
+-            if (d2f_pass)
++            if (d2f_pass) {
+                mov = MOV(horiz_offset(inst->dst, n * type_sz(inst->dst.type)), src_reg(dst));
+-            else
++               mov->size_written = size_written;
++            } else if (inst_df_dst_null) {
++               mov = MOV(horiz_offset(inst_dst, n * 4), src_reg(d2f_dst));
++               mov->size_written = lowered_width * type_sz(inst_dst.type);
++            } else {
+                mov = MOV(offset(inst->dst, lowered_width, n), src_reg(dst));
++               mov->size_written = size_written;
++            }
+             mov->exec_size = lowered_width;
+             mov->group = channel_offset;
+-            mov->size_written = size_written;
+             mov->predicate = inst->predicate;
+             inst->insert_before(block, mov);
+          }
+       }
+ 
+-      inst->remove(block);
++      /* For CMP.XX instruction, we need to set the flags correctly. We do
++       * this by comparing the register that has the results against 0.0,
++       * getting the values in the flags.
++       */
++      if (inst_df_dst_null) {
++         inst->dst.type = BRW_REGISTER_TYPE_F;
++         inst->src[0] = src_reg(inst_dst);
++         inst->src[1] = brw_imm_f(0.0f);
++         inst->conditional_mod = BRW_CONDITIONAL_NZ;
++      } else {
++         inst->remove(block);
++      }
+       progress = true;
+    }
+ 
+
+From patchwork Tue Jan 17 09:49:32 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 18/20] i965: enable ARB_gpu_shader_fp64 for Ivybridge/Baytrail
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133668
+Message-Id: <20170117094934.14434-18-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:32 +0100
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/intel_extensions.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/mesa/drivers/dri/i965/intel_extensions.c b/src/mesa/drivers/dri/i965/intel_extensions.c
+index b674b2f494c..69fb09813ee 100644
+--- a/src/mesa/drivers/dri/i965/intel_extensions.c
++++ b/src/mesa/drivers/dri/i965/intel_extensions.c
+@@ -204,6 +204,7 @@ intelInitExtensions(struct gl_context *ctx)
+       ctx->Extensions.ARB_derivative_control = true;
+       ctx->Extensions.ARB_framebuffer_no_attachments = true;
+       ctx->Extensions.ARB_gpu_shader5 = true;
++      ctx->Extensions.ARB_gpu_shader_fp64 = true;
+       ctx->Extensions.ARB_shader_atomic_counters = true;
+       ctx->Extensions.ARB_shader_atomic_counter_ops = true;
+       ctx->Extensions.ARB_shader_clock = true;
+@@ -237,7 +238,6 @@ intelInitExtensions(struct gl_context *ctx)
+    }
+ 
+    if (brw->gen >= 8 || brw->is_haswell) {
+-      ctx->Extensions.ARB_gpu_shader_fp64 = true;
+       ctx->Extensions.ARB_shader_precision = true;
+       ctx->Extensions.ARB_stencil_texturing = true;
+       ctx->Extensions.ARB_texture_stencil8 = true;
+
+From patchwork Tue Jan 17 09:49:33 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev,v2,19/20] i965: enable OpenGL 4.0 to Ivybridge/Baytrail
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133669
+Message-Id: <20170117094934.14434-19-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:33 +0100
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ src/mesa/drivers/dri/i965/intel_extensions.c | 2 ++
+ src/mesa/drivers/dri/i965/intel_screen.c     | 6 ++++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/intel_extensions.c b/src/mesa/drivers/dri/i965/intel_extensions.c
+index 69fb09813ee..00141a11035 100644
+--- a/src/mesa/drivers/dri/i965/intel_extensions.c
++++ b/src/mesa/drivers/dri/i965/intel_extensions.c
+@@ -138,6 +138,8 @@ intelInitExtensions(struct gl_context *ctx)
+       ctx->Const.GLSLVersion = 450;
+    else if (brw->is_haswell && can_do_pipelined_register_writes(brw->screen))
+       ctx->Const.GLSLVersion = 450;
++   else if (brw->gen >= 7 && can_do_pipelined_register_writes(brw->screen))
++      ctx->Const.GLSLVersion = 400;
+    else if (brw->gen >= 6)
+       ctx->Const.GLSLVersion = 330;
+    else
+diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
+index 6ae211da3a1..0f0e77749e1 100644
+--- a/src/mesa/drivers/dri/i965/intel_screen.c
++++ b/src/mesa/drivers/dri/i965/intel_screen.c
+@@ -1538,8 +1538,10 @@ set_max_gl_versions(struct intel_screen *screen)
+       dri_screen->max_gl_es2_version = has_astc ? 32 : 31;
+       break;
+    case 7:
+-      dri_screen->max_gl_core_version = screen->devinfo.is_haswell &&
+-         can_do_pipelined_register_writes(screen) ? 45 : 33;
++      if (can_do_pipelined_register_writes(screen))
++         dri_screen->max_gl_core_version = screen->devinfo.is_haswell ? 45 : 40;
++      else
++         dri_screen->max_gl_core_version = 33;
+       dri_screen->max_gl_compat_version = 30;
+       dri_screen->max_gl_es1_version = 11;
+       dri_screen->max_gl_es2_version = screen->devinfo.is_haswell ? 31 : 30;
+
+From patchwork Tue Jan 17 09:49:34 2017
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [Mesa-dev, v2,
+ 20/20] docs: mark GL_ARB_gpu_shader_fp64 and OpenGL 4.0 as supported
+ by i965/gen7+
+From: =?utf-8?q?Samuel_Iglesias_Gons=C3=A1lvez?= <siglesias@igalia.com>
+X-Patchwork-Id: 133670
+Message-Id: <20170117094934.14434-20-siglesias@igalia.com>
+To: mesa-dev@lists.freedesktop.org
+Date: Tue, 17 Jan 2017 10:49:34 +0100
+
+Signed-off-by: Samuel Iglesias Gonsálvez <siglesias@igalia.com>
+---
+ docs/features.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/docs/features.txt b/docs/features.txt
+index aff00167dc9..c746277678c 100644
+--- a/docs/features.txt
++++ b/docs/features.txt
+@@ -107,7 +107,7 @@ GL 3.3, GLSL 3.30 --- all DONE: i965, nv50, nvc0, r600, radeonsi, llvmpipe, soft
+   GL_ARB_vertex_type_2_10_10_10_rev                     DONE (freedreno, swr)
+ 
+ 
+-GL 4.0, GLSL 4.00 --- all DONE: i965/hsw+, nvc0, r600, radeonsi
++GL 4.0, GLSL 4.00 --- all DONE: i965/gen7+, nvc0, r600, radeonsi
+ 
+   GL_ARB_draw_buffers_blend                             DONE (freedreno, i965/gen6+, nv50, llvmpipe, softpipe, swr)
+   GL_ARB_draw_indirect                                  DONE (i965/gen7+, llvmpipe, softpipe, swr)
+@@ -124,7 +124,7 @@ GL 4.0, GLSL 4.00 --- all DONE: i965/hsw+, nvc0, r600, radeonsi
+   - Enhanced per-sample shading                         DONE ()
+   - Interpolation functions                             DONE ()
+   - New overload resolution rules                       DONE
+-  GL_ARB_gpu_shader_fp64                                DONE (i965/hsw+, llvmpipe, softpipe)
++  GL_ARB_gpu_shader_fp64                                DONE (i965/gen7+, llvmpipe, softpipe)
+   GL_ARB_sample_shading                                 DONE (i965/gen6+, nv50)
+   GL_ARB_shader_subroutine                              DONE (i965/gen6+, nv50, llvmpipe, softpipe, swr)
+   GL_ARB_tessellation_shader                            DONE (i965/gen7+)
