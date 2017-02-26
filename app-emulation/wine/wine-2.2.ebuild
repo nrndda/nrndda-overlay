@@ -16,13 +16,13 @@ if [[ ${PV} == "9999" ]] ; then
 	SRC_URI=""
 	#KEYWORDS=""
 else
-	MAJOR_V=$(get_version_component_range 1-2)
-	SRC_URI="https://dl.winehq.org/wine/source/${MAJOR_V}/${P}.tar.bz2"
+	MAJOR_V=$(get_version_component_range 1)
+	SRC_URI="https://dl.winehq.org/wine/source/${MAJOR_V}.x/${P}.tar.xz"
 	KEYWORDS="-* ~amd64 ~x86 ~x86-fbsd"
 fi
 
 VANILLA_GV="2.47"
-VANILLA_MV="4.6.3"
+VANILLA_MV="4.6.4"
 STAGING_GV="2.47"
 STAGING_MV="4.6.3"
 [[ ${MAJOR_V} == "1.8" ]] && SUFFIX="-unofficial"
