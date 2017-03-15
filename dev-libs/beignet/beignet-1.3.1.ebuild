@@ -27,8 +27,8 @@ fi
 
 COMMON="${PYTHON_DEPS}
 	media-libs/mesa
-	|| ( sys-devel/clang:4 sys-devel/clang:0 )
-	ocl20? ( || ( >=sys-devel/llvm-3.9:0 sys-devel/llvm:4 ) )
+	sys-devel/clang:0
+	ocl20? ( >=sys-devel/llvm-3.9:0 )
 	>=x11-libs/libdrm-2.4.70[video_cards_intel]
 	x11-libs/libXext
 	x11-libs/libXfixes"
@@ -40,9 +40,9 @@ DEPEND="${COMMON}
 	virtual/pkgconfig"
 
 PATCHES=(
-	"${FILESDIR}"/no-debian-multiarch.patch
-	"${FILESDIR}"/${P}-ocl20_no_platform_check.patch
-	"${FILESDIR}"/${P}-oclicd_optional_gentoo.patch
+	#"${FILESDIR}"/no-debian-multiarch.patch
+	#"${FILESDIR}"/${P}-ocl20_no_platform_check.patch
+	#"${FILESDIR}"/${P}-oclicd_optional_gentoo.patch
 	"${FILESDIR}"/${PN}-1.2.0_no-hardcoded-cflags.patch
 	"${FILESDIR}"/llvm-terminfo.patch
 )
