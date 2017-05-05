@@ -23,6 +23,10 @@ DEPEND="net-im/pidgin
 		"
 RDEPEND="${DEPEND}"
 
+src_prepare() {
+	sed -i -e "s/-D_FORTIFY_SOURCE=2//g" "${S}/{,tgl/}Makefile{,.in}"
+}
+
 src_compile(){
 	econf $(use_enable libwebp) || die "econf failed"
 	emake || die "emake failed"
