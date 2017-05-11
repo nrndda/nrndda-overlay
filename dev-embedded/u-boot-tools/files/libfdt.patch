@@ -1,0 +1,12 @@
+diff -Naur u-boot-2017.05/tools/Makefile u-boot-2017.05.new/tools/Makefile
+--- u-boot-2017.05/tools/Makefile	2017-05-08 16:11:08.000000000 +0200
++++ u-boot-2017.05.new/tools/Makefile	2017-05-09 13:15:01.741142464 +0200
+@@ -114,7 +114,7 @@
+ 
+ # Build a libfdt Python module if swig is available
+ # Use 'sudo apt-get install swig libpython-dev' to enable this
+-hostprogs-y += \
++hostprogs-$(CONFIG_SPL_OF_PLATDATA) += \
+ 	$(if $(shell which swig 2> /dev/null),_libfdt.so)
+ _libfdt.so-sharedobjs += $(LIBFDT_OBJS)
+ libfdt:
