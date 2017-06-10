@@ -4,10 +4,11 @@
 
 EAPI=4
 
-inherit eutils multilib
+inherit autotools eutils multilib versionator
 
 DESCRIPTION="A Verilog simulation and synthesis tool"
-SRC_URI="ftp://icarus.com/pub/eda/verilog/v10/verilog-${PV}.tar.gz -> verilog-${PV}.tar"
+MY_PV="$(get_version_component_range 1)_$(get_version_component_range 2)"
+SRC_URI="https://github.com/steveicarus/iverilog/archive/v${MY_PV}.tar.gz -> ${P}.tar"
 HOMEPAGE="http://iverilog.icarus.com/"
 
 LICENSE="GPL-2"
@@ -20,7 +21,7 @@ RDEPEND="app-arch/bzip2
 	sys-libs/zlib"
 DEPEND="${RDEPEND}"
 
-S="${WORKDIR}/verilog-${PV}"
+S="${WORKDIR}/iverilog-${MY_PV}"
 
 src_prepare() {
 	# Fix tests
@@ -30,6 +31,8 @@ src_prepare() {
 
 	# Fix LDFLAGS
 	sed -i -e 's/@shared@/@shared@ $(LDFLAGS)/' {cadpli,tgt-vhdl,tgt-null,tgt-stub,tgt-vvp}/Makefile.in || die
+
+	eautoreconf
 }
 
 src_install() {
