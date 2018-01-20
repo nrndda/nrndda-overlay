@@ -95,7 +95,6 @@ video_enable() {
 }
 
 src_prepare() {
-        eapply "${PATCHES[@]}"
         eapply_user
 
 	default
