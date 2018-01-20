@@ -1,7 +1,7 @@
 # Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=6
 
 inherit eutils autotools systemd flag-o-matic
 
@@ -14,7 +14,7 @@ KEYWORDS="~amd64 ~x86"
 LICENSE="MIT LGPL-2.1 BSD-2"
 SLOT="0"
 IUSE="dbus debug doc +drm +fbdev +gles2 multiseat +optimizations +pango pixman
-static-libs systemd udev +unicode wayland"
+static-libs systemd truetype udev +unicode wayland"
 
 COMMON_DEPEND="
 	dev-libs/glib:2
@@ -25,21 +25,37 @@ COMMON_DEPEND="
 	dbus? ( sys-apps/dbus )
 	drm? ( x11-libs/libdrm
 		>=media-libs/mesa-8.0.3[egl,gbm] )
+	truetype? ( media-libs/freetype:2 )
 	gles2? ( >=media-libs/mesa-8.0.3[gles2] )
 	pango? ( x11-libs/pango )
 	systemd? ( sys-apps/systemd )
 	udev? ( virtual/udev )
 	pixman? ( x11-libs/pixman )
-	wayland? ( dev-libs/wayland )"
-RDEPEND="${COMMON_DEPEND}
-	x11-misc/xkeyboard-config"
-DEPEND="${COMMON_DEPEND}
+	wayland? ( dev-libs/wayland )
+"
+RDEPEND="
+	${COMMON_DEPEND}
+	x11-misc/xkeyboard-config
+"
+DEPEND="
+	${COMMON_DEPEND}
 	virtual/pkgconfig
 	x11-proto/xproto
-	doc? ( dev-util/gtk-doc )"
+	doc? ( dev-util/gtk-doc )
+"
 
-REQUIRED_USE="gles2? ( drm )
-	multiseat? ( systemd )"
+REQUIRED_USE="
+	gles2? ( drm )
+	multiseat? ( systemd )
+"
+
+PATCHES=(
+        # With glibc 2.6, the obsolete signal constant SIGUNUSED is no longer defined by signal.h.
+        "${FILESDIR}/SIGUNUSED_obs.patch"
+
+	#minor moved to <sys/sysmacros.h>
+        "${FILESDIR}/sysmacros.patch"
+)
 
 # args - names of renderers to enable
 renderers_enable() {
@@ -78,6 +94,9 @@ video_enable() {
 }
 
 src_prepare() {
+        eapply_user
+
+	default
 	eautoreconf
 }
 
@@ -96,10 +115,14 @@ src_configure() {
 		video_enable drm3d
 	fi
 
-	# Font rendering backends 
+	# Font rendering backends
 
 	if use unicode; then
 		fonts_enable unifont
+	fi
+
+	if use truetype; then
+		fonts_enable freetype2
 	fi
 
 	if use pango; then
