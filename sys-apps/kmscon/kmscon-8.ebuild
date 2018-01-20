@@ -14,7 +14,7 @@ KEYWORDS="~amd64 ~x86"
 LICENSE="MIT LGPL-2.1 BSD-2"
 SLOT="0"
 IUSE="dbus debug doc +drm +fbdev +gles2 multiseat +optimizations +pango pixman
-static-libs systemd truetype udev +unicode wayland"
+static-libs systemd udev +unicode wayland"
 
 COMMON_DEPEND="
 	dev-libs/glib:2
@@ -25,7 +25,6 @@ COMMON_DEPEND="
 	dbus? ( sys-apps/dbus )
 	drm? ( x11-libs/libdrm
 		>=media-libs/mesa-8.0.3[egl,gbm] )
-	truetype? ( media-libs/freetype:2 )
 	gles2? ( >=media-libs/mesa-8.0.3[gles2] )
 	pango? ( x11-libs/pango )
 	systemd? ( sys-apps/systemd )
@@ -119,10 +118,6 @@ src_configure() {
 
 	if use unicode; then
 		fonts_enable unifont
-	fi
-
-	if use truetype; then
-		fonts_enable freetype2
 	fi
 
 	if use pango; then
