@@ -14,14 +14,13 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="cgroups +power cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
-	git iptables miniupnpd minissdpd rtorrent screen hdparm \
+	iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
 	cpupower? ( sys-power/cpupower )
 	distccd? ( sys-devel/distcc )
-	git? ( dev-vcs/git )
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
@@ -120,10 +119,6 @@ src_install() {
 	fi
 	if use hdparm ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/hdparm_disableAPM@.service
-	fi
-	if use git ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/git-daemon@.service
-		systemd_dounit ${SOURCE_SERVICES_DIR}/git-daemon.service
 	fi
 	if use iptables ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/iptables.service
