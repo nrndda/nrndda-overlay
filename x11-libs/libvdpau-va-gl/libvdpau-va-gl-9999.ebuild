@@ -14,8 +14,6 @@ LICENSE="LGPL-3"
 SLOT="0"
 
 RDEPEND="
-	dev-libs/glib:2
-	media-libs/glu
 	virtual/ffmpeg
 	virtual/opengl
 	x11-libs/libva[X]
