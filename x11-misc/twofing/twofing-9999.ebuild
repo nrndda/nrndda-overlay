@@ -15,6 +15,5 @@ RDEPEND="
     x11-libs/libXi
     x11-libs/libXrandr
     x11-libs/libXtst
-    x11-proto/randrproto
 "
 DEPEND="${RDEPEND}"
