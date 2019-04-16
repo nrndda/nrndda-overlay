@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=5
+EAPI=6
 
-inherit cmake-utils cmake-multilib git-r3
+inherit cmake-utils git-r3
 
 EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
 
@@ -14,12 +14,27 @@ SRC_URI=""
 LICENSE="SFI"
 SLOT="0"
 KEYWORDS=""
-IUSE=""
+IUSE="launcher system-fltk +system-boost system-rapidjson system-gtest"
 
 RDEPEND="dev-util/boost-build
+	virtual/rust
 	sys-libs/zlib
-	media-libs/libsdl"
+	media-libs/libsdl2"
 DEPEND="${RDEPEND}"
+
+src_configure() {
+	local mycmakeargs=(
+                -DWITH_UNITTESTS=OFF
+	        -DWITH_FIXMES=OFF
+		-DBUILD_LAUNCHER="$(usex launcher)"
+		-DLOCAL_FLTK_LIB="$(usex system-fltk NO YES)"
+		-DLOCAL_BOOST_LIB="$(usex system-boost NO YES)"
+		-DLOCAL_RAPIDJSON_LIB="$(usex system-rapidjson NO YES)"
+		-DLOCAL_GTEST_LIB="$(usex system-gtest NO YES)"
+	)
+
+	cmake-utils_src_configure
+}
 
 pkg_postinst() {
 	elog "Edit configuration file and set parameter data_dir to point on the directory where the original game files was installed."
