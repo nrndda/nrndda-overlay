@@ -14,7 +14,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="launcher +system-fltk +system-boost system-rapidjson system-gtest"
 
-RDEPEND="virtual/rust
+RDEPEND="
 	media-libs/libsdl2
 	system-boost? ( dev-util/boost )
 	launcher? (
@@ -22,11 +22,16 @@ RDEPEND="virtual/rust
 	)
 	system-rapidjson? ( dev-libs/rapidjson )
 	system-gtest? ( dev-cpp/gtest )"
-DEPEND="${RDEPEND}"
+
+DEPEND="
+	>=virtual/cargo-1.32.0
+        >=virtual/rust-1.32.0
+	${RDEPEND}"
 
 src_configure() {
 	local mycmakeargs=(
 		-DINSTALL_LIB_DIR="${EPREFIX}/usr/$(get_libdir)"
+		-DEXTRA_DATA_DIR="${EPREFIX}/usr/share/ja2/"
                 -DWITH_UNITTESTS=OFF
 	        -DWITH_FIXMES=OFF
 		-DBUILD_LAUNCHER="$(usex launcher)"
