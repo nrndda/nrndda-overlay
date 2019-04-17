@@ -2,8 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=6
+EAPI=7
 
+CMAKE_MAKEFILE_GENERATOR="emake"
 inherit cmake-utils git-r3
 
 EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
@@ -11,6 +12,7 @@ EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL2"
 HOMEPAGE="http://ja2-stracciatella.github.io/"
 SRC_URI=""
+RESTRICT="network-sandbox"
 LICENSE="SFI"
 SLOT="0"
 KEYWORDS=""
@@ -18,16 +20,18 @@ IUSE="launcher +system-fltk +system-boost system-rapidjson system-gtest"
 
 RDEPEND="
 	media-libs/libsdl2
-	system-boost? ( dev-util/boost )
+	system-boost? ( dev-libs/boost )
 	launcher? (
 		system-fltk? ( x11-libs/fltk )
 	)
 	system-rapidjson? ( dev-libs/rapidjson )
-	system-gtest? ( dev-cpp/gtest )"
-DEPEND="
+	system-gtest? ( dev-cpp/gtest )
+"
+
+BDEPEND="
 	>=virtual/cargo-1.32.0
 	>=virtual/rust-1.32.0
-	${RDEPEND}"
+"
 
 src_configure() {
 	local mycmakeargs=(
@@ -46,7 +50,7 @@ src_configure() {
 }
 
 pkg_postinst() {
-       elog "After first start edit configuration file and set parameter data_dir to point on the directory where the original game Data dir is located."
-       elog "The configuration file is: ~/.ja2/ja2.ini"
+	elog "After first start edit configuration file and set parameter data_dir to point on the directory where the original game Data dir is located."
+	elog "The configuration file is: ~/.ja2/ja2.ini"
 }
 

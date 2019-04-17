@@ -2,13 +2,15 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=6
+EAPI=7
 
+CMAKE_MAKEFILE_GENERATOR="emake"
 inherit cmake-utils
 
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL2"
 HOMEPAGE="http://ja2-stracciatella.github.io/"
 SRC_URI="https://github.com/ja2-stracciatella/${PN}/archive/v${PV}.tar.gz -> ja2-stracciatella-v${PV}.tar.gz"
+RESTRICT="network-sandbox"
 LICENSE="SFI"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
@@ -16,17 +18,18 @@ IUSE="launcher +system-fltk +system-boost system-rapidjson system-gtest"
 
 RDEPEND="
 	media-libs/libsdl2
-	system-boost? ( dev-util/boost )
+	system-boost? ( dev-libs/boost )
 	launcher? (
 		system-fltk? ( x11-libs/fltk )
 	)
 	system-rapidjson? ( dev-libs/rapidjson )
-	system-gtest? ( dev-cpp/gtest )"
+	system-gtest? ( dev-cpp/gtest )
+"
 
-DEPEND="
+BDEPEND="
 	>=virtual/cargo-1.32.0
-        >=virtual/rust-1.32.0
-	${RDEPEND}"
+	>=virtual/rust-1.32.0
+"
 
 src_configure() {
 	local mycmakeargs=(
