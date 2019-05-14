@@ -47,6 +47,13 @@ src_configure() {
 	cmake-utils_src_configure
 }
 
+src_install() {
+	cmake-utils_src_install
+
+	dolib.so ${BUILD_DIR}/src/slog/libslog.so
+	dolib.so ${BUILD_DIR}/dependencies/lib-smacker/libsmacker.so
+}
+
 pkg_postinst() {
 	elog "After first start edit configuration file and set parameter data_dir to point on the directory where the original game Data dir is located."
 	elog "The configuration file is: ~/.ja2/ja2.ini"
