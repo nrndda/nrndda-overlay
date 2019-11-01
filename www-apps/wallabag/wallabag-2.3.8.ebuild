@@ -2,14 +2,14 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=5
+EAPI=6
 
-inherit webapp depend.php
+inherit webapp
 
 DESCRIPTION="self hostable application for saving web pages"
 HOMEPAGE="https://www.wallabag.org"
-SRC_URI="https://github.com/${PN}/${PN}/archive/${PV}.tar.gz \
-http://static.wallabag.org/files/vendor.zip"
+SRC_URI="https://github.com/${PN}/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz \
+http://static.wallabag.org/files/vendor.zip -> ${PN}-vendor-${PV}.tar.gz"
 
 LICENSE=""
 KEYWORDS="~amd64 ~x86"
