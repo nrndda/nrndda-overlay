@@ -1,18 +1,15 @@
 # Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
-
-inherit git-r3 autotools
+EAPI=6
 
 DESCRIPTION="A Verilog simulation and synthesis tool"
-SRC_URI=""
-EGIT_REPO_URI="https://github.com/steveicarus/iverilog.git"
+SRC_URI="ftp://icarus.com/pub/eda/verilog/v${PV:0:2}/verilog-${PV}.tar.gz"
 HOMEPAGE="http://iverilog.icarus.com/"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~ppc ~sparc ~x86"
 IUSE="examples"
 
 RDEPEND="
@@ -21,12 +18,7 @@ RDEPEND="
 	sys-libs/zlib:="
 DEPEND="${RDEPEND}"
 
-S="${WORKDIR}/${P}"
-
-src_prepare() {
-	default
-	eautoreconf
-}
+S="${WORKDIR}/${P#i}"
 
 src_install() {
 	emake -j1 DESTDIR="${D}" install
