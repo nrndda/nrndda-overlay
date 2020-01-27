@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-wireless/wireless-regdb/wireless-regdb-20130213.ebuild,v 1.7 2013/03/31 10:25:34 ago Exp $
 
-EAPI=5
+EAPI=6
 
 MY_P="wireless-regdb-${PV:0:4}.${PV:4:2}.${PV:6:2}"
 DESCRIPTION="Binary regulatory database for CRDA"

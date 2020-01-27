@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/sys-apps/linux-misc-apps/linux-misc-apps-3.18.ebuild,v 1.1 2014/12/29 00:12:01 robbat2 Exp $
 
-EAPI=5
+EAPI=6
 
 inherit versionator eutils toolchain-funcs linux-info autotools flag-o-matic
 

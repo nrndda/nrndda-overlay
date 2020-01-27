@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/sys-power/upower/upower-0.9.21.ebuild,v 1.1 2013/07/27 09:51:43 ssuominen Exp $
 
-EAPI=5
+EAPI=6
 
 
 GIT_ECLASS="git-2"
