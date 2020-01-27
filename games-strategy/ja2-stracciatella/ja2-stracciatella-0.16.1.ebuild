@@ -27,7 +27,6 @@ RDEPEND="
 "
 
 BDEPEND="
-	>=virtual/cargo-1.32.0
 	>=virtual/rust-1.32.0
 "
 
