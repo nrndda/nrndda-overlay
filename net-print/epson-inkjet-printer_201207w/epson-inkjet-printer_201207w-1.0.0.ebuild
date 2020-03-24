@@ -26,6 +26,7 @@ S="${WORKDIR}/epson-inkjet-printer-filter-${PV}"
 src_prepare() {
 	eautoreconf
 	chmod +x configure
+	default
 }
 
 src_configure() {
