@@ -13,7 +13,7 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="cgroups +power cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="+power +noclear cgroups cpupower distccd br0 ssh hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	iptables miniupnpd minissdpd rtorrent screen hdparm \
 	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm mpd vfio touchegg printer"
 
@@ -34,6 +34,7 @@ DEPEND="sys-apps/systemd
 	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	screen? ( app-misc/screen )
+	ssh? ( virtual/ssh )
 	hdparm? ( sys-apps/hdparm )
 	mpd? ( media-sound/mpd )
 	touchegg? ( x11-misc/touchegg )"
@@ -51,15 +52,19 @@ src_unpack() {
 }
 
 src_install() {
-	systemd_install_serviced "${FILESDIR}"/noclear.conf getty@tty1.service
+	if use noclear; then
+		systemd_install_serviced "${FILESDIR}"/noclear.conf getty@tty1.service
+	fi
 
-	exeinto /usr/local/sbin/
-	doexe "${FILESDIR}"/ssh_login.sh
-	exeinto /etc/ssh/
-	doexe "${FILESDIR}"/sshrc
-	insinto /usr/local/sbin/
-	doins "${FILESDIR}"/KDE-Im-Phone-Ring.wav
-	doins "${FILESDIR}"/stock_dialog_warning_48.png
+	if use ssh; then
+		exeinto /usr/local/sbin/
+		doexe "${FILESDIR}"/ssh_login.sh
+		exeinto /etc/ssh/
+		doexe "${FILESDIR}"/sshrc
+		insinto /usr/local/sbin/
+		doins "${FILESDIR}"/KDE-Im-Phone-Ring.wav
+		doins "${FILESDIR}"/stock_dialog_warning_48.png
+	fi
 
 	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
 		if use $i; then
