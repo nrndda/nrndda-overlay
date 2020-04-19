@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="cgroups +power cpupower distccd br0 hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram mediatomb ushare flexlm mpd vfio touchegg printer"
+	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm mpd vfio touchegg printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
@@ -154,6 +154,9 @@ src_install() {
 		newconfd "${FILESDIR}"/zram.conf zram
 	fi
 
+	if use zswap ; then
+		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/zswap.conf
+	fi
 
 	if use no_tmp_as_tmpfs ; then
 		systemctl mask tmp.mount
