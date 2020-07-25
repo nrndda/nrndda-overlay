@@ -1,12 +1,12 @@
 DEFINED_PHASES=configure install prepare unpack
-DEPEND=net-print/cups >=app-arch/rpm2targz-9.0.0.3g !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
+DEPEND=net-print/cups >=app-arch/rpm2targz-9.0.0.3g >=app-portage/elt-patches-20170815 || ( >=sys-devel/automake-1.16.1:1.16 >=sys-devel/automake-1.15.1:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
 DESCRIPTION=Epson printer driver (L110, L210, L300, L350, L355, L550, L555)
-EAPI=5
+EAPI=6
 HOMEPAGE=http://download.ebz.epson.net/dsc/search/01/search/?OSC=LX http://www.openprinting.org/driver/epson-201207w
 KEYWORDS=~amd64 ~x86
 LICENSE=LGPL EPSON
 RDEPEND=net-print/cups
 SLOT=0
 SRC_URI=http://download.ebz.epson.net/dsc/op/stable/SRPMS/epson-inkjet-printer-201207w-1.0.0-1lsb3.2.src.rpm
-_eclasses_=autotools	07e71b3b5690738ef7e8bc097077e00c	eutils	b83a2420b796f7c6eff682679d08fe25	libtool	4890219c51da247200223277f993e054	multilib	165fc17c38d1b11dac2008280dab6e80	rpm	3e120fdd74b358f9fb42b825a6558f61	toolchain-funcs	6198c04daba0e1307bd844df7d37f423
-_md5_=5f2b26ee40dbf6735f3d9a064068ceaf
+_eclasses_=autotools	7d999b62b8749fad43fff00620cedf47	desktop	7fd20552ce4cc97e8acb132a499a7dd8	epatch	ed88001f77c6dd0d5f09e45c1a5b480e	estack	686eaab303305a908fd57b2fd7617800	eutils	fcb2aa98e1948b835b5ae66ca52868c5	libtool	f143db5a74ccd9ca28c1234deffede96	ltprune	2729691420b6deeda2a90b1f1183fb55	multilib	2477ebe553d3e4d2c606191fe6c33602	preserve-libs	ef207dc62baddfddfd39a164d9797648	rpm	760ff223c2c4299b68ea901e24c4cabd	toolchain-funcs	605c126bed8d87e4378d5ff1645330cb	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
+_md5_=6f0b85f356dc56ea1a67cd79fd5925b9
