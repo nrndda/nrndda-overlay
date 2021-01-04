@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="+power +noclear cgroups cpupower distccd br0 ssh hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
 	iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm mpd vfio touchegg printer"
+	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm vfio touchegg printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
@@ -36,7 +36,6 @@ DEPEND="sys-apps/systemd
 	screen? ( app-misc/screen )
 	ssh? ( virtual/ssh )
 	hdparm? ( sys-apps/hdparm )
-	mpd? ( media-sound/mpd )
 	touchegg? ( x11-misc/touchegg )"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
@@ -138,19 +137,16 @@ src_install() {
 		systemd_dounit ${SOURCE_SERVICES_DIR}/minissdpd.service
 		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/minissdpd.conf
 	fi
-	if use mpd ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/mpd@.service
-	fi
 	if use flexlm ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/flexlm.service
 		dosbin "${FILESDIR}"/flexlm
 	fi
 	if use rtorrent ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/rtorrent.service
-		systemd_dounit ${SOURCE_PATH_DIR}/rtorrent.path
+		systemd_douserunit ${SOURCE_SERVICES_DIR}/rtorrent.service
+		systemd_douserunit ${SOURCE_PATH_DIR}/rtorrent.path
 	fi
 	if use screen ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/screen@.service
+		systemd_douserunit ${SOURCE_SERVICES_DIR}/screen@.service
 	fi
 	if use zram ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/zram.service
@@ -173,7 +169,7 @@ src_install() {
 		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci
 	fi
 	if use touchegg ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/touchegg.service
+		systemd_douserunit ${SOURCE_SERVICES_DIR}/touchegg.service
 	fi
 }
 
