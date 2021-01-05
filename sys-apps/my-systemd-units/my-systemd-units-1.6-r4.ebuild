@@ -146,7 +146,7 @@ src_install() {
 		systemd_douserunit ${SOURCE_PATH_DIR}/rtorrent.path
 	fi
 	if use screen ; then
-		systemd_douserunit ${SOURCE_SERVICES_DIR}/screen@.service
+		systemd_douserunit ${SOURCE_SERVICES_DIR}/screen.service
 	fi
 	if use zram ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/zram.service
