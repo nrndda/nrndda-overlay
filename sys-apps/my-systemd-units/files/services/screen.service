@@ -7,4 +7,4 @@ ExecStart=/usr/bin/screen -dmS autoscreen
 ExecStop=/usr/bin/screen -S autoscreen -X quit
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
