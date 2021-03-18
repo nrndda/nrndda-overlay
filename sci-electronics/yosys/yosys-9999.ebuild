@@ -10,6 +10,7 @@ DESCRIPTION="Yosys - Yosys Open SYnthesis Suite"
 HOMEPAGE="http://www.clifford.at/icestorm/"
 LICENSE="ISC"
 EGIT_REPO_URI="https://github.com/cliffordwolf/yosys.git"
+RESTRICT="network-sandbox"
 
 SLOT="0"
 KEYWORDS=""
