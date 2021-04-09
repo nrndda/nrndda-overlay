@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=6
+EAPI=7
 
 inherit webapp
 
@@ -13,10 +13,10 @@ SRC_URI="https://github.com/${PN}/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE=""
 KEYWORDS="~amd64 ~x86"
 IUSE=""
+RESTRICT="network-sandbox"
 
 DEPEND="dev-lang/php:*[tidy,xmlreader,filter,iconv,curl,sockets]
 	dev-php/composer
-	dev-php/package-versions-deprecated
 "
 RDEPEND="${DEPEND}"
 
