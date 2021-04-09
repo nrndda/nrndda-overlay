@@ -5,4 +5,4 @@ if (!class_exists('Fedora\\Autoloader\\Autoload', false)) {
     require_once '/usr/share/php/Fedora/Autoloader/autoload.php';
 }
 
-\Fedora\Autoloader\Autoload::addPsr4('Composer\\package-versions-deprecated\\', __DIR__);
+\Fedora\Autoloader\Autoload::addPsr4('Composer\\PackageVersions\\', __DIR__);

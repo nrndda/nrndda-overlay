@@ -16,7 +16,7 @@ RDEPEND="
 	dev-php/fedora-autoloader"
 
 src_install() {
-	insinto /usr/share/php/Composer/package-versions-deprecated
-	doins src/*.php "${FILESDIR}/autoload.php"
+	insinto /usr/share/php/Composer/PackageVersions
+	doins src/PackageVersions/*.php "${FILESDIR}/autoload.php"
 	dodoc README.md
 }
