@@ -14,7 +14,9 @@ LICENSE=""
 KEYWORDS="~amd64 ~x86"
 IUSE=""
 
-DEPEND="dev-lang/php:*[tidy,xmlreader,filter,iconv,curl]"
+DEPEND="dev-lang/php:*[tidy,xmlreader,filter,iconv,curl]
+	dev-php/composer
+"
 RDEPEND="${DEPEND}"
 
 src_install() {
