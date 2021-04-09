@@ -8,8 +8,7 @@ inherit webapp
 
 DESCRIPTION="self hostable application for saving web pages"
 HOMEPAGE="https://www.wallabag.org"
-SRC_URI="https://github.com/${PN}/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz \
-http://static.wallabag.org/files/vendor.zip -> ${PN}-vendor-${PV}.tar.gz"
+SRC_URI="https://github.com/${PN}/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE=""
 KEYWORDS="~amd64 ~x86"
