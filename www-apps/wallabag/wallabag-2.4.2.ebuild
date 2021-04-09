@@ -16,6 +16,7 @@ IUSE=""
 
 DEPEND="dev-lang/php:*[tidy,xmlreader,filter,iconv,curl,sockets]
 	dev-php/composer
+	dev-php/package-versions-deprecated
 "
 RDEPEND="${DEPEND}"
 
