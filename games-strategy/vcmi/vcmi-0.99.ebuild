@@ -53,9 +53,9 @@ PDEPEND="
 
 src_configure() {
   if [[ ${PV} == "9999" ]]; then
-    local gitversion="-ENABLE_GITVERSION=ON"
+    local gitversion="-DENABLE_GITVERSION=ON"
   else
-    local gitversion="-ENABLE_GITVERSION=OFF"
+    local gitversion="-DENABLE_GITVERSION=OFF"
   fi
 
   local mycmakeargs=(
