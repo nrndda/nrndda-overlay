@@ -3,7 +3,7 @@
 
 EAPI="6"
 
-PYTHON_COMPAT=( python3_{6,7,8} )
+PYTHON_COMPAT=( python3_{6,7,8,9} )
 inherit eutils python-any-r1
 
 ABC_COMMIT="ed90ce20df9c7c4d6e1db5d3f786f9b52e06bab1"
