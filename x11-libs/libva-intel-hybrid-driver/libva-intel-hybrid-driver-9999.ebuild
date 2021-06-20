@@ -42,6 +42,7 @@ PATCHES=(
 )
 
 src_prepare() {
+	default
 	eapply_user
 	sed -e 's/intel-gen4asm/\0diSaBlEd/g' -i configure.ac || die
 	eautoreconf
