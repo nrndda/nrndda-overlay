@@ -6,15 +6,15 @@ EAPI=7
 MY_PN="intel-hybrid-driver"
 if [[ ${PV} = *9999* ]] ; then # Live ebuild
 	inherit git-r3
-	EGIT_REPO_URI="https://github.com/intel/${MY_PN}"
+	EGIT_REPO_URI="https://github.com/nrndda/${MY_PN}"
 fi
 
 inherit autotools multilib-minimal
 
 DESCRIPTION="HW video decode support for Intel G45 & HD Graphics family"
-HOMEPAGE="https://github.com/intel/${MY_PN}"
+HOMEPAGE="https://github.com/nrndda/${MY_PN}"
 if [[ ${PV} != *9999* ]] ; then
-	SRC_URI="https://github.com/intel/${MY_PN}/releases/download/${PV}/${MY_PN}-${PV}.tar.bz2"
+	SRC_URI="https://github.com/nrndda/${MY_PN}/releases/download/${PV}/${MY_PN}-${PV}.tar.bz2"
 	S="${WORKDIR}/${MY_PN}-${PV}"
 	KEYWORDS="~amd64 ~x86 ~amd64-linux ~x86-linux"
 fi
