@@ -480,7 +480,7 @@ multilib_src_configure() {
 		gallium_enable video_cards_iris iris
 		gallium_enable video_cards_crocus crocus
 
-		if use video_cards_crocus; then
+		if ! use classic && use video_cards_crocus; then
 			emesonargs+=(-Dprefer-crocus=true)
 		fi
 
