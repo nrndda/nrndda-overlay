@@ -35,7 +35,7 @@ RESTRICT="
 "
 
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
-VIDEO_CARDS="${RADEON_CARDS} freedreno i915 i965 intel iris lima nouveau panfrost v3d vc4 virgl vivante vmware"
+VIDEO_CARDS="${RADEON_CARDS} freedreno i915 i965 intel iris crocus lima nouveau panfrost v3d vc4 virgl vivante vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
@@ -46,7 +46,7 @@ IUSE="${IUSE_VIDEO_CARDS}
 	vulkan-overlay wayland +X xa xvmc zink +zstd"
 
 REQUIRED_USE="
-	d3d9?   ( dri3 || ( video_cards_iris video_cards_r300 video_cards_r600 video_cards_radeonsi video_cards_nouveau video_cards_vmware ) )
+	d3d9?   ( dri3 || ( video_cards_iris video_cards_crocus video_cards_r300 video_cards_r600 video_cards_radeonsi video_cards_nouveau video_cards_vmware ) )
 	gles1?  ( egl )
 	gles2?  ( egl )
 	osmesa? ( gallium )
@@ -59,6 +59,7 @@ REQUIRED_USE="
 	video_cards_i915?   ( || ( classic gallium ) )
 	video_cards_i965?   ( classic )
 	video_cards_iris?   ( gallium )
+	video_cards_crocus? ( gallium )
 	video_cards_lima?   ( gallium )
 	video_cards_nouveau? ( || ( classic gallium ) )
 	video_cards_panfrost? ( gallium )
@@ -265,9 +266,10 @@ pkg_pretend() {
 	if use vulkan; then
 		if ! use video_cards_i965 &&
 		   ! use video_cards_iris &&
+		   ! use video_cards_crocus &&
 		   ! use video_cards_radeonsi &&
 		   ! use video_cards_v3d; then
-			ewarn "Ignoring USE=vulkan     since VIDEO_CARDS does not contain i965, iris, radeonsi, or v3d"
+			ewarn "Ignoring USE=vulkan     since VIDEO_CARDS does not contain i965, iris, crocus, radeonsi, or v3d"
 		fi
 	fi
 
@@ -343,6 +345,7 @@ pkg_setup() {
 
 	if use video_cards_i965 ||
 	   use video_cards_iris ||
+	   use video_cards_crocus ||
 	   use video_cards_radeonsi; then
 		if kernel_is -ge 5 11 3; then
 			CONFIG_CHECK="~KCMP"
@@ -405,6 +408,7 @@ multilib_src_configure() {
 		)
 
 		if use video_cards_iris ||
+		   use video_cards_crocus ||
 		   use video_cards_r300 ||
 		   use video_cards_r600 ||
 		   use video_cards_radeonsi ||
@@ -477,6 +481,7 @@ multilib_src_configure() {
 		fi
 
 		gallium_enable video_cards_iris iris
+		gallium_enable video_cards_crocus crocus
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
@@ -498,6 +503,7 @@ multilib_src_configure() {
 	if use vulkan; then
 		vulkan_enable video_cards_i965 intel
 		vulkan_enable video_cards_iris intel
+		vulkan_enable video_cards_crocus intel
 		vulkan_enable video_cards_radeonsi amd
 		vulkan_enable video_cards_v3d broadcom
 	fi
