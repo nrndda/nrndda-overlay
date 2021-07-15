@@ -480,6 +480,10 @@ multilib_src_configure() {
 		gallium_enable video_cards_iris iris
 		gallium_enable video_cards_crocus crocus
 
+		if use video_cards_crocus; then
+			emesonargs+=(-Dprefer-crocus=true)
+		fi
+
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
 		gallium_enable video_cards_radeonsi radeonsi
