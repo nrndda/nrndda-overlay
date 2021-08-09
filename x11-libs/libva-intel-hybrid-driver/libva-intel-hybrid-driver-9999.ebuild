@@ -40,6 +40,7 @@ PATCHES=(
 	"${FILESDIR}/fcommon.patch"
 	"${FILESDIR}/libva-2.0.patch"
 	"${FILESDIR}/libva-1.0_func_name.patch"
+	"${FILESDIR}/vp9hdec_nullfix.patch"
 )
 
 src_prepare() {
