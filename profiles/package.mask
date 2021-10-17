@@ -1,1 +1,1 @@
-=x11-misc/sddm-0.19.0::nrndda
+=x11-misc/sddm-0.19.0
