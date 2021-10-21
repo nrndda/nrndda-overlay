@@ -1,0 +1,1600 @@
+From f7dd58e91013785f29c9d190d333440a8d924c45 Mon Sep 17 00:00:00 2001
+From: Jan Arne Petersen <janarne@gmail.com>
+Date: Fri, 27 Nov 2015 23:28:21 +0100
+Subject: [PATCH] Use cmake instead of qmake as build system
+
+Fixes: maliit/plugins#9
+---
+ CMakeLists.txt                                | 293 ++++++++++++++++++
+ VERSION                                       |   1 -
+ cmake/FindHunspell.cmake                      |  15 +
+ cmake/FindPresage.cmake                       |  11 +
+ config.pri                                    |  52 ----
+ doc/doc.pro                                   |  24 --
+ doc/doxyfile.conf.in                          |   6 +-
+ maliit-keyboard/benchmark/benchmark.pro       |  16 -
+ maliit-keyboard/config-plugin.pri             |   2 -
+ maliit-keyboard/config.pri                    |  44 ---
+ maliit-keyboard/data/data.pro                 |  20 --
+ maliit-keyboard/lib/lib.pro                   |  16 -
+ maliit-keyboard/lib/logic/logic.pri           |  37 ---
+ .../logic/state-machines/state-machines.pri   |  15 -
+ maliit-keyboard/lib/models/models.pri         |  29 --
+ maliit-keyboard/lib/parser/parser.pri         |  34 --
+ maliit-keyboard/maliit-keyboard.pro           |  18 --
+ maliit-keyboard/plugin/inputmethod.cpp        |   6 +-
+ maliit-keyboard/plugin/plugin.pro             |  39 ---
+ maliit-keyboard/qml/qml.pro                   |  14 -
+ maliit-keyboard/tests/common-check.pri        |  25 --
+ maliit-keyboard/tests/common/common.pro       |  25 --
+ maliit-keyboard/tests/common/utils-gui.cpp    |   3 -
+ maliit-keyboard/tests/editor/editor.pro       |  19 --
+ .../{main.cpp => language-layout-loading.cpp} |   2 +-
+ .../language-layout-loading.pro               |  27 --
+ ...main.cpp => language-layout-switching.cpp} |   7 +-
+ .../language-layout-switching.pro             |  23 --
+ .../{main.cpp => preedit-string.cpp}          |  11 +-
+ .../tests/preedit-string/preedit-string.pro   |  25 --
+ .../{main.cpp => repeat-backspace.cpp}        |   6 +-
+ .../repeat-backspace/repeat-backspace.pro     |  19 --
+ maliit-keyboard/tests/tests.pro               |  14 -
+ .../tests/{editor => ut_editor}/.gitignore    |   0
+ .../main.cpp => ut_editor/ut_editor.cpp}      |   5 +-
+ .../{editor => ut_editor}/wordengineprobe.cpp |   0
+ .../{editor => ut_editor}/wordengineprobe.h   |   0
+ .../{main.cpp => word-candidates.cpp}         |   3 +-
+ .../tests/word-candidates/word-candidates.pro |  22 --
+ maliit-keyboard/view/view.pri                 |   7 -
+ maliit-keyboard/view/view.pro                 |  39 ---
+ maliit-keyboard/word-prediction.pri           |  15 -
+ maliit-plugins.pro                            |  86 -----
+ maliit-plugins.pro.coverage                   |  19 --
+ nemo-keyboard/nemo-keyboard.pro               |  20 --
+ 45 files changed, 340 insertions(+), 774 deletions(-)
+ create mode 100644 CMakeLists.txt
+ delete mode 100644 VERSION
+ create mode 100644 cmake/FindHunspell.cmake
+ create mode 100644 cmake/FindPresage.cmake
+ delete mode 100644 config.pri
+ delete mode 100644 doc/doc.pro
+ delete mode 100644 maliit-keyboard/benchmark/benchmark.pro
+ delete mode 100644 maliit-keyboard/config-plugin.pri
+ delete mode 100644 maliit-keyboard/config.pri
+ delete mode 100644 maliit-keyboard/data/data.pro
+ delete mode 100644 maliit-keyboard/lib/lib.pro
+ delete mode 100644 maliit-keyboard/lib/logic/logic.pri
+ delete mode 100644 maliit-keyboard/lib/logic/state-machines/state-machines.pri
+ delete mode 100644 maliit-keyboard/lib/models/models.pri
+ delete mode 100644 maliit-keyboard/lib/parser/parser.pri
+ delete mode 100644 maliit-keyboard/maliit-keyboard.pro
+ delete mode 100644 maliit-keyboard/plugin/plugin.pro
+ delete mode 100644 maliit-keyboard/qml/qml.pro
+ delete mode 100644 maliit-keyboard/tests/common-check.pri
+ delete mode 100644 maliit-keyboard/tests/common/common.pro
+ delete mode 100644 maliit-keyboard/tests/editor/editor.pro
+ rename maliit-keyboard/tests/language-layout-loading/{main.cpp => language-layout-loading.cpp} (99%)
+ delete mode 100644 maliit-keyboard/tests/language-layout-loading/language-layout-loading.pro
+ rename maliit-keyboard/tests/language-layout-switching/{main.cpp => language-layout-switching.cpp} (95%)
+ delete mode 100644 maliit-keyboard/tests/language-layout-switching/language-layout-switching.pro
+ rename maliit-keyboard/tests/preedit-string/{main.cpp => preedit-string.cpp} (98%)
+ delete mode 100644 maliit-keyboard/tests/preedit-string/preedit-string.pro
+ rename maliit-keyboard/tests/repeat-backspace/{main.cpp => repeat-backspace.cpp} (98%)
+ delete mode 100644 maliit-keyboard/tests/repeat-backspace/repeat-backspace.pro
+ delete mode 100644 maliit-keyboard/tests/tests.pro
+ rename maliit-keyboard/tests/{editor => ut_editor}/.gitignore (100%)
+ rename maliit-keyboard/tests/{editor/main.cpp => ut_editor/ut_editor.cpp} (98%)
+ rename maliit-keyboard/tests/{editor => ut_editor}/wordengineprobe.cpp (100%)
+ rename maliit-keyboard/tests/{editor => ut_editor}/wordengineprobe.h (100%)
+ rename maliit-keyboard/tests/word-candidates/{main.cpp => word-candidates.cpp} (99%)
+ delete mode 100644 maliit-keyboard/tests/word-candidates/word-candidates.pro
+ delete mode 100644 maliit-keyboard/view/view.pri
+ delete mode 100644 maliit-keyboard/view/view.pro
+ delete mode 100644 maliit-keyboard/word-prediction.pri
+ delete mode 100644 maliit-plugins.pro
+ delete mode 100644 maliit-plugins.pro.coverage
+ delete mode 100644 nemo-keyboard/nemo-keyboard.pro
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 00000000..ff5a09ae
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,293 @@
++cmake_minimum_required(VERSION 3.1)
++
++project(maliit-plugins VERSION 0.99.1)
++
++option(enable-maliit-keyboard "Build the C++ reference keyboard (Maliit Keyboard)" ON)
++option(enable-nemo-keyboard "Build the QML reference keyboard (Nemo Keyboard)" ON)
++option(enable-presage "Use presage to calculate word candidates (maliit-keyboard-plugin only)" ON)
++option(enable-hunspell "Use hunspell for error correction (maliit-keyboard-plugin only)" ON)
++option(enable-preedit "Always commit characters and never use preedit (maliit-keyboard-plugin only)" ON)
++option(enable-tests "Build tests" ON)
++option(enable-docs "Build documentation" ON)
++
++set(MALIIT_DEFAULT_PROFILE "nokia-n9" CACHE STRING "Default keyboard style")
++
++if(NOT DEFINED INCLUDE_INSTALL_DIR)
++    set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH
++            "Installation directory for C/C++ header files [CMAKE_INSTALL_PREFIX/include]")
++endif()
++
++if(NOT DEFINED LIB_INSTALL_DIR)
++    set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH
++            "Installation directory for object code libraries [CMAKE_INSTALL_PREFIX/lib]")
++endif()
++
++if(NOT DEFINED SHARE_INSTALL_PREFIX)
++    set(SHARE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/share" CACHE PATH
++            "Installation directory for read-only architecture-independent data [CMAKE_INSTALL_PREFIX/share]")
++endif()
++
++set(HUNSPELL_DICT_PATH "/usr/share/myspell" CACHE PATH "Directory containing hunspell dictionary files")
++set(MALIIT_PLUGINS_DATA_DIR "${SHARE_INSTALL_PREFIX}/maliit/plugins" CACHE PATH "Directory containing maliit-plugins data")
++set(MALIIT_KEYBOARD_DATA_DIR "${MALIIT_PLUGINS_DATA_DIR}/org/maliit" CACHE PATH "Directory containing maliit-keyboard data")
++
++list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
++
++set(CMAKE_INCLUDE_CURRENT_DIR ON)
++set(CMAKE_AUTOMOC ON)
++
++find_package(MaliitPlugins 0.99.1 REQUIRED)
++
++if(enable-maliit-keyboard)
++    set(MALIIT_KEYBOARD_SOURCES
++            maliit-keyboard/lib/logic/state-machines/abstractstatemachine.cpp
++            maliit-keyboard/lib/logic/state-machines/abstractstatemachine.h
++            maliit-keyboard/lib/logic/state-machines/deadkeymachine.cpp
++            maliit-keyboard/lib/logic/state-machines/deadkeymachine.h
++            maliit-keyboard/lib/logic/state-machines/shiftmachine.cpp
++            maliit-keyboard/lib/logic/state-machines/shiftmachine.h
++            maliit-keyboard/lib/logic/state-machines/viewmachine.cpp
++            maliit-keyboard/lib/logic/state-machines/viewmachine.h
++            maliit-keyboard/lib/logic/abstractlanguagefeatures.cpp
++            maliit-keyboard/lib/logic/abstractlanguagefeatures.h
++            maliit-keyboard/lib/logic/abstracttexteditor.cpp
++            maliit-keyboard/lib/logic/abstracttexteditor.h
++            maliit-keyboard/lib/logic/abstractwordengine.cpp
++            maliit-keyboard/lib/logic/abstractwordengine.h
++            maliit-keyboard/lib/logic/eventhandler.cpp
++            maliit-keyboard/lib/logic/eventhandler.h
++            maliit-keyboard/lib/logic/hitlogic.cpp
++            maliit-keyboard/lib/logic/hitlogic.h
++            maliit-keyboard/lib/logic/keyareaconverter.cpp
++            maliit-keyboard/lib/logic/keyareaconverter.h
++            maliit-keyboard/lib/logic/keyboardloader.cpp
++            maliit-keyboard/lib/logic/keyboardloader.h
++            maliit-keyboard/lib/logic/languagefeatures.cpp
++            maliit-keyboard/lib/logic/languagefeatures.h
++            maliit-keyboard/lib/logic/layouthelper.cpp
++            maliit-keyboard/lib/logic/layouthelper.h
++            maliit-keyboard/lib/logic/layoutupdater.cpp
++            maliit-keyboard/lib/logic/layoutupdater.h
++            maliit-keyboard/lib/logic/spellchecker.cpp
++            maliit-keyboard/lib/logic/spellchecker.h
++            maliit-keyboard/lib/logic/style.cpp
++            maliit-keyboard/lib/logic/style.h
++            maliit-keyboard/lib/logic/wordengine.cpp
++            maliit-keyboard/lib/logic/wordengine.h
++            maliit-keyboard/lib/models/area.cpp
++            maliit-keyboard/lib/models/area.h
++            maliit-keyboard/lib/models/font.cpp
++            maliit-keyboard/lib/models/font.h
++            maliit-keyboard/lib/models/key.cpp
++            maliit-keyboard/lib/models/key.h
++            maliit-keyboard/lib/models/keyarea.cpp
++            maliit-keyboard/lib/models/keyarea.h
++            maliit-keyboard/lib/models/keyboard.h
++            maliit-keyboard/lib/models/keydescription.h
++            maliit-keyboard/lib/models/label.cpp
++            maliit-keyboard/lib/models/label.h
++            maliit-keyboard/lib/models/layout.cpp
++            maliit-keyboard/lib/models/layout.h
++            maliit-keyboard/lib/models/styleattributes.cpp
++            maliit-keyboard/lib/models/styleattributes.h
++            maliit-keyboard/lib/models/text.cpp
++            maliit-keyboard/lib/models/text.h
++            maliit-keyboard/lib/models/wordcandidate.cpp
++            maliit-keyboard/lib/models/wordcandidate.h
++            maliit-keyboard/lib/models/wordribbon.cpp
++            maliit-keyboard/lib/models/wordribbon.h
++            maliit-keyboard/lib/parser/alltagtypes.h
++            maliit-keyboard/lib/parser/layoutparser.cpp
++            maliit-keyboard/lib/parser/layoutparser.h
++            maliit-keyboard/lib/parser/tagbinding.cpp
++            maliit-keyboard/lib/parser/tagbinding.h
++            maliit-keyboard/lib/parser/tagbindingcontainer.cpp
++            maliit-keyboard/lib/parser/tagbindingcontainer.h
++            maliit-keyboard/lib/parser/tagextended.cpp
++            maliit-keyboard/lib/parser/tagextended.h
++            maliit-keyboard/lib/parser/tagkey.cpp
++            maliit-keyboard/lib/parser/tagkey.h
++            maliit-keyboard/lib/parser/tagkeyboard.cpp
++            maliit-keyboard/lib/parser/tagkeyboard.h
++            maliit-keyboard/lib/parser/taglayout.cpp
++            maliit-keyboard/lib/parser/taglayout.h
++            maliit-keyboard/lib/parser/tagmodifiers.cpp
++            maliit-keyboard/lib/parser/tagmodifiers.h
++            maliit-keyboard/lib/parser/tagrow.cpp
++            maliit-keyboard/lib/parser/tagrow.h
++            maliit-keyboard/lib/parser/tagrowcontainer.cpp
++            maliit-keyboard/lib/parser/tagrowcontainer.h
++            maliit-keyboard/lib/parser/tagrowelement.cpp
++            maliit-keyboard/lib/parser/tagrowelement.h
++            maliit-keyboard/lib/parser/tagsection.cpp
++            maliit-keyboard/lib/parser/tagsection.h
++            maliit-keyboard/lib/parser/tagspacer.cpp
++            maliit-keyboard/lib/parser/tagspacer.h
++            maliit-keyboard/lib/coreutils.cpp
++            maliit-keyboard/lib/coreutils.h)
++
++    set(maliit-keyboard-libraries Qt5::Core)
++    set(maliit-keyboard-definitions HUNSPELL_DICT_PATH="${HUNSPELL_DICT_PATH}"
++            MALIIT_PLUGINS_DATA_DIR="${MALIIT_PLUGINS_DATA_DIR}"
++            MALIIT_KEYBOARD_DATA_DIR="${MALIIT_KEYBOARD_DATA_DIR}")
++    set(maliit-keyboard-include-dirs)
++
++    if(enable-presage)
++        find_package(Presage REQUIRED)
++        if(PRESAGE_FOUND)
++            list(APPEND maliit-keyboard-definitions HAVE_PRESAGE)
++            list(APPEND maliit-keyboard-libraries ${PRESAGE_LIBRARIES})
++            list(APPEND maliit-keyboard-include-dirs ${PRESAGE_INCLUDE_DIRS})
++        endif()
++    endif()
++
++    if(enable-hunspell)
++        find_package(Hunspell REQUIRED)
++        list(APPEND maliit-keyboard-definitions HAVE_HUNSPELL)
++        list(APPEND maliit-keyboard-libraries ${HUNSPELL_LIBRARIES})
++        list(APPEND maliit-keyboard-include-dirs ${HUNSPELL_INCLUDE_DIRS})
++    endif()
++
++    if(NOT enable-preedit)
++        list(APPEND maliit-keyboard-definitions DISABLE_PREEDIT)
++    endif()
++
++    add_library(maliit-keyboard STATIC ${MALIIT_KEYBOARD_SOURCES})
++    target_link_libraries(maliit-keyboard ${maliit-keyboard-libraries})
++    target_include_directories(maliit-keyboard PUBLIC maliit-keyboard/lib)
++    target_include_directories(maliit-keyboard PRIVATE ${maliit-keyboard-include-dirs})
++    target_compile_definitions(maliit-keyboard PRIVATE ${maliit-keyboard-definitions})
++
++    set(MALIIT_KEYBOARD_VIEW_SOURCES
++            maliit-keyboard/view/abstractfeedback.cpp
++            maliit-keyboard/view/abstractfeedback.h
++            maliit-keyboard/view/nullfeedback.cpp
++            maliit-keyboard/view/nullfeedback.h
++            maliit-keyboard/view/soundfeedback.cpp
++            maliit-keyboard/view/soundfeedback.h)
++
++    add_library(maliit-keyboard-view STATIC ${MALIIT_KEYBOARD_VIEW_SOURCES})
++    target_link_libraries(maliit-keyboard-view Maliit::Plugins maliit-keyboard)
++
++    set(MALIIT_KEYBOARD_EDITOR_SOURCES
++            maliit-keyboard/plugin/editor.cpp
++            maliit-keyboard/plugin/editor.h
++            maliit-keyboard/plugin/updatenotifier.cpp
++            maliit-keyboard/plugin/updatenotifier.h)
++
++    add_library(maliit-keyboard-editor STATIC ${MALIIT_KEYBOARD_EDITOR_SOURCES})
++    target_link_libraries(maliit-keyboard-editor Maliit::Plugins maliit-keyboard)
++
++    set(MALIIT_KEYBOARD_PLUGIN_SOURCES
++            maliit-keyboard/plugin/inputmethod.cpp
++            maliit-keyboard/plugin/inputmethod.h
++            maliit-keyboard/plugin/maliitcontext.cpp
++            maliit-keyboard/plugin/maliitcontext.h
++            maliit-keyboard/plugin/plugin.cpp
++            maliit-keyboard/plugin/plugin.h)
++
++    add_library(maliit-keyboard-plugin MODULE ${MALIIT_KEYBOARD_PLUGIN_SOURCES})
++    target_link_libraries(maliit-keyboard-plugin Maliit::Plugins maliit-keyboard maliit-keyboard-view maliit-keyboard-editor)
++    target_include_directories(maliit-keyboard-plugin PRIVATE maliit-keyboard)
++    target_compile_definitions(maliit-keyboard-plugin PRIVATE
++            MALIIT_PLUGINS_DATA_DIR="${MALIIT_PLUGINS_DATA_DIR}"
++            MALIIT_KEYBOARD_DATA_DIR="${MALIIT_KEYBOARD_DATA_DIR}"
++            MALIIT_DEFAULT_PROFILE="${MALIIT_DEFAULT_PROFILE}")
++
++    add_executable(maliit-keyboard-benchmark maliit-keyboard/benchmark/main.cpp)
++    target_link_libraries(maliit-keyboard-benchmark maliit-keyboard)
++endif()
++
++if(enable-docs)
++    find_package(Doxygen REQUIRED)
++
++    configure_file(doc/doxyfile.conf.in Doxyfile @ONLY)
++
++    add_custom_target(doc ALL
++            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
++            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
++            COMMENT "Generating API documentation with Doxygen" VERBATIM)
++endif()
++
++# Installation
++
++install(FILES LICENSE NEWS README
++        DESTINATION ${SHARE_INSTALL_PREFIX}/doc/maliit-plugins)
++
++if(enable-maliit-keyboard)
++    install(TARGETS maliit-keyboard-benchmark maliit-keyboard-plugin
++            RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
++            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/maliit/plugins)
++    install(DIRECTORY maliit-keyboard/data/languages
++            DESTINATION ${MALIIT_PLUGINS_DATA_DIR})
++    install(DIRECTORY maliit-keyboard/data/styles
++            DESTINATION ${MALIIT_KEYBOARD_DATA_DIR})
++    install(FILES maliit-keyboard/qml/Keyboard.qml maliit-keyboard/qml/maliit-keyboard.qml
++                  maliit-keyboard/qml/maliit-keyboard-extended.qml maliit-keyboard/qml/maliit-magnifier.qml
++            DESTINATION ${MALIIT_KEYBOARD_DATA_DIR})
++endif()
++
++if(enable-nemo-keyboard)
++    install(FILES nemo-keyboard/nemo-keyboard.qml
++            DESTINATION ${LIB_INSTALL_DIR}/maliit/plugins)
++    install(DIRECTORY nemo-keyboard/org
++            DESTINATION ${MALIIT_PLUGINS_DATA_DIR})
++endif()
++
++if(enable-docs)
++    install(DIRECTORY ${CMAKE_BINARY_DIR}/html/
++            DESTINATION ${SHARE_INSTALL_PREFIX}/doc/maliit-plugins-doc)
++endif()
++
++if(enable-tests)
++    enable_testing()
++
++    find_package(Qt5Test)
++
++    add_library(test-utils STATIC
++            maliit-keyboard/tests/common/inputmethodhostprobe.cpp
++            maliit-keyboard/tests/common/inputmethodhostprobe.h
++            maliit-keyboard/tests/common/utils-gui.cpp
++            maliit-keyboard/tests/common/utils.cpp
++            maliit-keyboard/tests/common/utils.h)
++
++    target_link_libraries(test-utils PUBLIC Qt5::Core Qt5::Gui Qt5::Test maliit-keyboard-editor)
++    target_include_directories(test-utils INTERFACE maliit-keyboard/tests/common maliit-keyboard/tests maliit-keyboard)
++
++    function(create_test name)
++        set(_extra_sources ${ARGV})
++        list(REMOVE_AT _extra_sources 0)
++
++        add_executable(${name}
++                maliit-keyboard/tests/${name}/${name}.cpp
++                ${_extra_sources})
++
++        target_link_libraries(${name} test-utils ${_libs})
++
++        add_test(${name} ${name})
++
++        set(test_targets ${test_targets} ${name} PARENT_SCOPE)
++    endfunction()
++
++    create_test(language-layout-loading)
++    target_compile_definitions(language-layout-loading PRIVATE
++            -DTEST_DATADIR="${CMAKE_SOURCE_DIR}/maliit-keyboard/tests/language-layout-loading"
++            -DTEST_MALIIT_KEYBOARD_DATADIR="${CMAKE_SOURCE_DIR}/maliit-keyboard/tests/language-layout-loading")
++    create_test(language-layout-switching
++            maliit-keyboard/tests/ut_editor/wordengineprobe.cpp
++            maliit-keyboard/tests/ut_editor/wordengineprobe.h)
++    create_test(repeat-backspace)
++    create_test(ut_editor
++            maliit-keyboard/tests/ut_editor/wordengineprobe.cpp
++            maliit-keyboard/tests/ut_editor/wordengineprobe.h)
++    create_test(preedit-string
++            maliit-keyboard/tests/preedit-string/wordengineprobe.cpp
++            maliit-keyboard/tests/preedit-string/wordengineprobe.h)
++    create_test(word-candidates
++            maliit-keyboard/tests/word-candidates/wordengineprobe.cpp
++            maliit-keyboard/tests/word-candidates/wordengineprobe.h)
++
++    set_property(TEST ${test_targets} PROPERTY ENVIRONMENT
++            MALIIT_PLUGINS_DATADIR=${CMAKE_SOURCE_DIR}/maliit-keyboard/data)
++
++endif()
+\ No newline at end of file
+diff --git a/VERSION b/VERSION
+deleted file mode 100644
+index 626c498f..00000000
+--- a/VERSION
++++ /dev/null
+@@ -1 +0,0 @@
+-0.99.1
+diff --git a/cmake/FindHunspell.cmake b/cmake/FindHunspell.cmake
+new file mode 100644
+index 00000000..b9ee3b3c
+--- /dev/null
++++ b/cmake/FindHunspell.cmake
+@@ -0,0 +1,15 @@
++include(FeatureSummary)
++set_package_properties(HUNSPELL PROPERTIES
++        URL "http://hunspell.sourceforge.net/"
++        DESCRIPTION "Hunspell is a spell checker library.")
++
++
++find_package(PkgConfig)
++pkg_check_modules(PC_HUNSPELL QUIET hunspell)
++
++find_library(HUNSPELL_LIBRARIES NAMES hunspell ${PC_HUNSPELL_LIBRARIES} HINTS ${PC_HUNSPELL_LIBRARY_DIRS})
++find_path(HUNSPELL_INCLUDE_DIRS hunspell/hunspell.hxx HINTS ${PC_HUNSPELL_INCLUDE_DIRS})
++
++include(FindPackageHandleStandardArgs)
++find_package_handle_standard_args(HUNSPELL DEFAULT_MSG HUNSPELL_LIBRARIES HUNSPELL_INCLUDE_DIRS)
++mark_as_advanced(HUNSPELL_INCLUDE_DIRS HUNSPELL_LIBRARIES)
+\ No newline at end of file
+diff --git a/cmake/FindPresage.cmake b/cmake/FindPresage.cmake
+new file mode 100644
+index 00000000..882753e4
+--- /dev/null
++++ b/cmake/FindPresage.cmake
+@@ -0,0 +1,11 @@
++include(FeatureSummary)
++set_package_properties(PRESAGE PROPERTIES
++        URL "http://presage.sourceforge.net/"
++        DESCRIPTION "Presage is an intelligent predictive text entry platform.")
++
++find_library(PRESAGE_LIBRARIES presage)
++find_path(PRESAGE_INCLUDE_DIRS presage.h)
++
++include(FindPackageHandleStandardArgs)
++find_package_handle_standard_args(PRESAGE DEFAULT_MSG PRESAGE_LIBRARIES PRESAGE_INCLUDE_DIRS)
++mark_as_advanced(PRESAGE_INCLUDE_DIRS PRESAGE_LIBRARIES)
+diff --git a/config.pri b/config.pri
+deleted file mode 100644
+index 61b2e9ee..00000000
+--- a/config.pri
++++ /dev/null
+@@ -1,52 +0,0 @@
+-# Linker optimization for release build
+-QMAKE_LFLAGS_RELEASE+=-Wl,--as-needed
+-# Compiler warnings are error if the build type is debug.
+-# Except when we pass a CONFIG+=no-werror as a workaround for QTBUG-18092
+-no-werror {
+-    QMAKE_CXXFLAGS_DEBUG+=-O0
+-} else {
+-    QMAKE_CXXFLAGS_DEBUG+=-Werror -O0
+-}
+-
+-CONFIG += no_keywords
+-
+-# The feature maliit-defines initializes some variables related for MALIIT, such as installation paths
+-# here have to load it early, to start using the defines immediately
+-!load(maliit-defines) {
+-   error(Cannot find $$[QT_INSTALL_DATA]/mkspecs/features/maliit-defines.prf. Probably Maliit framework not installed)
+-}
+-# This enables the maliit library for C++ code
+-CONFIG += maliit-plugins
+-
+-isEmpty(PREFIX) {
+-   PREFIX = $$MALIIT_PREFIX
+-}
+-
+-isEmpty(LIBDIR) {
+-   LIBDIR = $$PREFIX/lib
+-}
+-
+-isEmpty(MALIIT_DEFAULT_PROFILE) {
+-    MALIIT_DEFAULT_PROFILE = nokia-n9
+-}
+-
+-isEmpty(HUNSPELL_DICT_PATH) {
+-    HUNSPELL_DICT_PATH = $$PREFIX/share/hunspell
+-}
+-
+-contains(QT_CONFIG, embedded) {
+-    CONFIG += qws
+-}
+-
+-INSTALL_BIN = $$PREFIX/bin
+-INSTALL_LIBS = $$LIBDIR
+-INSTALL_HEADERS = $$PREFIX/include
+-INSTALL_DOCS = $$PREFIX/share/doc
+-
+-enable-opengl {
+-    QT += opengl
+-    DEFINES += MALIIT_KEYBOARD_HAVE_OPENGL
+-}
+-
+-MALIIT_PACKAGENAME = maliit-plugins
+-MALIIT_VERSION = $$system(cat $$PWD/VERSION)
+diff --git a/doc/doc.pro b/doc/doc.pro
+deleted file mode 100644
+index 46d643e6..00000000
+--- a/doc/doc.pro
++++ /dev/null
+@@ -1,24 +0,0 @@
+-include(../config.pri)
+-
+-TEMPLATE = lib
+-CONFIG += plugin
+-TARGET = dummy
+-
+-DOXYFILE = doxyfile.conf.in
+-
+-doc.name = doc
+-doc.CONFIG += target_predeps no_link
+-doc.output = html/index.html
+-doc.clean_commands = rm -rf html
+-doc.clean = ${QMAKE_FILE_IN_BASE}
+-doc.input = DOXYFILE
+-doc.commands += sed -e \"s;@VERSION@;$${MALIIT_VERSION};g\" -e \"s;@PWD@;$${PWD};g\" ${QMAKE_FILE_IN} > $${OUT_PWD}/${QMAKE_FILE_IN_BASE} &&
+-doc.commands += doxygen $${OUT_PWD}/${QMAKE_FILE_IN_BASE}
+-QMAKE_EXTRA_COMPILERS += doc
+-
+-htmldocs.files = html
+-htmldocs.path = $$INSTALL_DOCS/$$MALIIT_PACKAGENAME
+-htmldocs.CONFIG += no_check_exist directory
+-INSTALLS += htmldocs
+-
+-OTHER_FILES += $$DOXYFILE
+diff --git a/doc/doxyfile.conf.in b/doc/doxyfile.conf.in
+index 75a473b4..c7ea8db6 100644
+--- a/doc/doxyfile.conf.in
++++ b/doc/doxyfile.conf.in
+@@ -1,7 +1,7 @@
+ DOXYFILE_ENCODING      = UTF-8
+ 
+ PROJECT_NAME           = "Maliit Plugins"
+-PROJECT_NUMBER         = @VERSION@
++PROJECT_NUMBER         = @PROJECT_VERSION@
+ PROJECT_BRIEF          =
+ PROJECT_LOGO           =
+ 
+@@ -17,7 +17,7 @@ ALWAYS_DETAILED_SEC    = NO
+ INLINE_INHERITED_MEMB  = NO
+ 
+ FULL_PATH_NAMES        = YES
+-STRIP_FROM_PATH        = @IN_PWD@/..
++STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@
+ STRIP_FROM_INC_PATH    =
+ SHORT_NAMES            = NO
+ 
+@@ -113,7 +113,7 @@ WARN_NO_PARAMDOC       = NO
+ WARN_FORMAT            = "$file:$line: $text"
+ WARN_LOGFILE           = doxygen_warnings.log
+ 
+-INPUT                  = @IN_PWD@/../maliit-keyboard
++INPUT                  = @CMAKE_SOURCE_DIR@/maliit-keyboard
+ INPUT_ENCODING         = UTF-8
+ FILE_PATTERNS          =
+ RECURSIVE              = YES
+diff --git a/maliit-keyboard/benchmark/benchmark.pro b/maliit-keyboard/benchmark/benchmark.pro
+deleted file mode 100644
+index f5db95b9..00000000
+--- a/maliit-keyboard/benchmark/benchmark.pro
++++ /dev/null
+@@ -1,16 +0,0 @@
+-include(../config.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../..
+-TEMPLATE = app
+-TARGET = maliit-keyboard-benchmark
+-target.path = $$INSTALL_BIN
+-
+-INCLUDEPATH += ../lib
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-SOURCES += main.cpp
+-
+-QT = core
+-INSTALLS += target
+-
+-include(../word-prediction.pri)
+diff --git a/maliit-keyboard/config-plugin.pri b/maliit-keyboard/config-plugin.pri
+deleted file mode 100644
+index 4f2effc8..00000000
+--- a/maliit-keyboard/config-plugin.pri
++++ /dev/null
+@@ -1,2 +0,0 @@
+-# This enables the maliit library for C++ code
+-CONFIG += maliit-plugins
+diff --git a/maliit-keyboard/config.pri b/maliit-keyboard/config.pri
+deleted file mode 100644
+index c5266b9a..00000000
+--- a/maliit-keyboard/config.pri
++++ /dev/null
+@@ -1,44 +0,0 @@
+-include(../config.pri)
+-
+-MALIIT_KEYBOARD_DATA_DIR = "$${MALIIT_PLUGINS_DATA_DIR}/org/maliit"
+-
+-DEFINES += MALIIT_PLUGINS_DATA_DIR=\\\"$${MALIIT_PLUGINS_DATA_DIR}\\\"
+-DEFINES += MALIIT_KEYBOARD_DATA_DIR=\\\"$${MALIIT_KEYBOARD_DATA_DIR}\\\"
+-
+-unix {
+-    MALIIT_STATIC_PREFIX=lib
+-    MALIIT_STATIC_SUFFIX=.a
+-    MALIIT_DYNAMIC_PREFIX=lib
+-    MALIIT_DYNAMIC_SUFFIX=.so
+-}
+-
+-win32 {
+-    # qmake puts libraries in subfolders on Windows
+-    release {
+-        MALIIT_STATIC_PREFIX=release/lib
+-        MALIIT_DYNAMIC_PREFIX=release/
+-    }
+-    debug {
+-        MALIIT_STATIC_PREFIX=debug/lib
+-        MALIIT_DYNAMIC_PREFIX=debug/
+-    }
+-
+-    MALIIT_STATIC_SUFFIX=.a
+-    MALIIT_DYNAMIC_SUFFIX=.dll
+-}
+-
+-defineReplace(maliitStaticLib) {
+-    return($${MALIIT_STATIC_PREFIX}$${1}$${MALIIT_STATIC_SUFFIX})
+-}
+-
+-defineReplace(maliitDynamicLib) {
+-    return($${MALIIT_DYNAMIC_PREFIX}$${1}$${MALIIT_DYNAMIC_SUFFIX})
+-}
+-
+-MALIIT_KEYBOARD_TARGET = maliit-keyboard
+-MALIIT_KEYBOARD_VIEW_TARGET = maliit-keyboard-view
+-MALIIT_KEYBOARD_PLUGIN_TARGET = maliit-keyboard-plugin
+-
+-MALIIT_KEYBOARD_LIB = maliit-keyboard/lib/$$maliitStaticLib($${MALIIT_KEYBOARD_TARGET})
+-MALIIT_KEYBOARD_VIEW_LIB = maliit-keyboard/view/$$maliitStaticLib($${MALIIT_KEYBOARD_VIEW_TARGET})
+-MALIIT_KEYBOARD_PLUGIN_LIB = maliit-keyboard/plugin/$$maliitDynamicLib($${MALIIT_KEYBOARD_PLUGIN_TARGET})
+diff --git a/maliit-keyboard/data/data.pro b/maliit-keyboard/data/data.pro
+deleted file mode 100644
+index a93b7310..00000000
+--- a/maliit-keyboard/data/data.pro
++++ /dev/null
+@@ -1,20 +0,0 @@
+-include(../config.pri)
+-
+-TARGET = dummy
+-TEMPLATE = lib
+-
+-languages.path = $$MALIIT_PLUGINS_DATA_DIR/languages
+-languages.files = languages/*.xml languages/*.dtd
+-# make it available for testing, not intended for proper release though:
+-languages.files += languages/debug/showcase.xml
+-
+-styles.path = $$MALIIT_KEYBOARD_DATA_DIR
+-styles.files = styles
+-
+-INSTALLS += languages styles
+-
+-QMAKE_EXTRA_TARGETS += check
+-check.target = check
+-
+-check.commands = \
+-    xmllint --noout --dtdvalid \"$$PWD/languages/VirtualKeyboardLayout.dtd\" \"$$PWD/languages/\"*.xml
+diff --git a/maliit-keyboard/lib/lib.pro b/maliit-keyboard/lib/lib.pro
+deleted file mode 100644
+index 3d0a579a..00000000
+--- a/maliit-keyboard/lib/lib.pro
++++ /dev/null
+@@ -1,16 +0,0 @@
+-include(../config.pri)
+-
+-VERSION = 0.2.0
+-TARGET = $${MALIIT_KEYBOARD_TARGET}
+-TEMPLATE = lib
+-QT = core
+-CONFIG += staticlib
+-
+-include(models/models.pri)
+-include(logic/logic.pri)
+-include(parser/parser.pri)
+-
+-HEADERS += coreutils.h
+-SOURCES += coreutils.cpp
+-
+-include(../word-prediction.pri)
+diff --git a/maliit-keyboard/lib/logic/logic.pri b/maliit-keyboard/lib/logic/logic.pri
+deleted file mode 100644
+index 74baddc1..00000000
+--- a/maliit-keyboard/lib/logic/logic.pri
++++ /dev/null
+@@ -1,37 +0,0 @@
+-LOGIC_DIR = ./logic
+-
+-HEADERS += \
+-    logic/hitlogic.h \
+-    logic/layouthelper.h \
+-    logic/layoutupdater.h \
+-    logic/keyboardloader.h \
+-    logic/keyareaconverter.h \
+-    logic/style.h \
+-    logic/spellchecker.h \
+-    logic/abstracttexteditor.h \
+-    logic/abstractwordengine.h \
+-    logic/wordengine.h \
+-    logic/abstractlanguagefeatures.h \
+-    logic/languagefeatures.h \
+-    logic/eventhandler.h \
+-
+-SOURCES += \
+-    logic/hitlogic.cpp \
+-    logic/layouthelper.cpp \
+-    logic/layoutupdater.cpp \
+-    logic/keyboardloader.cpp \
+-    logic/keyareaconverter.cpp \
+-    logic/style.cpp \
+-    logic/spellchecker.cpp \
+-    logic/abstracttexteditor.cpp \
+-    logic/abstractwordengine.cpp \
+-    logic/wordengine.cpp \
+-    logic/abstractlanguagefeatures.cpp \
+-    logic/languagefeatures.cpp \
+-    logic/eventhandler.cpp \
+-
+-DEFINES += HUNSPELL_DICT_PATH=\\\"$$HUNSPELL_DICT_PATH\\\"
+-
+-DEPENDPATH += $$LOGIC_DIR
+-
+-include(state-machines/state-machines.pri)
+diff --git a/maliit-keyboard/lib/logic/state-machines/state-machines.pri b/maliit-keyboard/lib/logic/state-machines/state-machines.pri
+deleted file mode 100644
+index 6468a86c..00000000
+--- a/maliit-keyboard/lib/logic/state-machines/state-machines.pri
++++ /dev/null
+@@ -1,15 +0,0 @@
+-STATE_MACHINES_DIR = $$LOGIC_DIR/state-machines
+-
+-HEADERS += \
+-    logic/state-machines/abstractstatemachine.h \
+-    logic/state-machines/shiftmachine.h \
+-    logic/state-machines/viewmachine.h \
+-    logic/state-machines/deadkeymachine.h \
+-
+-SOURCES += \
+-    logic/state-machines/abstractstatemachine.cpp \
+-    logic/state-machines/shiftmachine.cpp \
+-    logic/state-machines/viewmachine.cpp \
+-    logic/state-machines/deadkeymachine.cpp \
+-
+-DEPENDPATH += $$STATE_MACHINES_DIR
+diff --git a/maliit-keyboard/lib/models/models.pri b/maliit-keyboard/lib/models/models.pri
+deleted file mode 100644
+index ef475d5d..00000000
+--- a/maliit-keyboard/lib/models/models.pri
++++ /dev/null
+@@ -1,29 +0,0 @@
+-MODELS_DIR = ./models
+-
+-HEADERS += \
+-    models/area.h \
+-    models/font.h \
+-    models/label.h \
+-    models/key.h \
+-    models/keyarea.h \
+-    models/layout.h \
+-    models/keyboard.h \
+-    models/keydescription.h \
+-    models/wordcandidate.h \
+-    models/wordribbon.h \
+-    models/text.h \
+-    models/styleattributes.h \
+-
+-SOURCES += \
+-    models/area.cpp \
+-    models/font.cpp \
+-    models/label.cpp \
+-    models/key.cpp \
+-    models/keyarea.cpp \
+-    models/layout.cpp \
+-    models/wordcandidate.cpp \
+-    models/wordribbon.cpp \
+-    models/text.cpp \
+-    models/styleattributes.cpp \
+-
+-DEPENDPATH += $$MODELS_DIR
+diff --git a/maliit-keyboard/lib/parser/parser.pri b/maliit-keyboard/lib/parser/parser.pri
+deleted file mode 100644
+index e2a1b96a..00000000
+--- a/maliit-keyboard/lib/parser/parser.pri
++++ /dev/null
+@@ -1,34 +0,0 @@
+-PARSER_DIR = ./parser
+-
+-HEADERS += \
+-    parser/alltagtypes.h \
+-    parser/layoutparser.h \
+-    parser/tagbindingcontainer.h \
+-    parser/tagbinding.h \
+-    parser/tagextended.h \
+-    parser/tagkeyboard.h \
+-    parser/tagkey.h \
+-    parser/taglayout.h \
+-    parser/tagmodifiers.h \
+-    parser/tagrowcontainer.h \
+-    parser/tagrowelement.h \
+-    parser/tagrow.h \
+-    parser/tagsection.h \
+-    parser/tagspacer.h
+-
+-SOURCES += \
+-    parser/layoutparser.cpp \
+-    parser/tagbindingcontainer.cpp \
+-    parser/tagbinding.cpp \
+-    parser/tagextended.cpp \
+-    parser/tagkeyboard.cpp \
+-    parser/tagkey.cpp \
+-    parser/taglayout.cpp \
+-    parser/tagmodifiers.cpp \
+-    parser/tagrowcontainer.cpp \
+-    parser/tagrowelement.cpp \
+-    parser/tagrow.cpp \
+-    parser/tagsection.cpp \
+-    parser/tagspacer.cpp
+-
+-DEPENDPATH += $$PARSER_DIR
+diff --git a/maliit-keyboard/maliit-keyboard.pro b/maliit-keyboard/maliit-keyboard.pro
+deleted file mode 100644
+index 30444ccc..00000000
+--- a/maliit-keyboard/maliit-keyboard.pro
++++ /dev/null
+@@ -1,18 +0,0 @@
+-CONFIG += ordered 
+-TEMPLATE = subdirs
+-SUBDIRS = \
+-    lib \
+-    view \
+-    plugin \
+-    data \
+-    qml \
+-    benchmark \
+-
+-
+-!notests {
+-    SUBDIRS += tests
+-}
+-
+-QMAKE_EXTRA_TARGETS += check
+-check.target = check
+-check.CONFIG = recursive
+diff --git a/maliit-keyboard/plugin/inputmethod.cpp b/maliit-keyboard/plugin/inputmethod.cpp
+index 9a0e1873..2b432a87 100644
+--- a/maliit-keyboard/plugin/inputmethod.cpp
++++ b/maliit-keyboard/plugin/inputmethod.cpp
+@@ -59,9 +59,9 @@ typedef MaliitKeyboard::NullFeedback DefaultFeedback;
+ #include <maliit/plugins/abstractpluginsetting.h>
+ #include <maliit/plugins/updateevent.h>
+ 
+-#include <QApplication>
+-#include <QWidget>
+-#include <QDesktopWidget>
++//#include <QApplication>
++//#include <QWidget>
++//#include <QDesktopWidget>
+ #include <QtQuick>
+ 
+ class MImUpdateEvent;
+diff --git a/maliit-keyboard/plugin/plugin.pro b/maliit-keyboard/plugin/plugin.pro
+deleted file mode 100644
+index d62c0ca0..00000000
+--- a/maliit-keyboard/plugin/plugin.pro
++++ /dev/null
+@@ -1,39 +0,0 @@
+-include(../config.pri)
+-include(../config-plugin.pri)
+-include(../view/view.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../..
+-TARGET = $${MALIIT_KEYBOARD_PLUGIN_TARGET}
+-TEMPLATE = lib
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-INCLUDEPATH += ../lib ../
+-DEFINES += MALIIT_DEFAULT_PROFILE=\\\"$$MALIIT_DEFAULT_PROFILE\\\"
+-
+-contains(QT_MAJOR_VERSION, 4) {
+-    QT = core gui
+-} else {
+-    QT = core gui widgets quick qml
+-}
+-
+-CONFIG += \
+-    plugin \
+-
+-HEADERS += \
+-    plugin.h \
+-    inputmethod.h \
+-    editor.h \
+-    updatenotifier.h \
+-    maliitcontext.h \
+-
+-SOURCES += \
+-    plugin.cpp \
+-    inputmethod.cpp \
+-    editor.cpp \
+-    updatenotifier.cpp \
+-    maliitcontext.cpp \
+-
+-target.path += $${MALIIT_PLUGINS_DIR}
+-INSTALLS += target
+-
+-include(../word-prediction.pri)
+diff --git a/maliit-keyboard/qml/qml.pro b/maliit-keyboard/qml/qml.pro
+deleted file mode 100644
+index ac2876fc..00000000
+--- a/maliit-keyboard/qml/qml.pro
++++ /dev/null
+@@ -1,14 +0,0 @@
+-include(../config.pri)
+-
+-TARGET = dummy
+-TEMPLATE = lib
+-
+-qml.path = $$MALIIT_KEYBOARD_DATA_DIR
+-qml.files = *.qml
+-
+-INSTALLS += qml
+-OTHER_FILES += \
+-    maliit-keyboard.qml \
+-    maliit-keyboard-extended.qml \
+-    maliit-magnifier.qml \
+-    Keyboard.qml \
+diff --git a/maliit-keyboard/tests/common-check.pri b/maliit-keyboard/tests/common-check.pri
+deleted file mode 100644
+index 25f45654..00000000
+--- a/maliit-keyboard/tests/common-check.pri
++++ /dev/null
+@@ -1,25 +0,0 @@
+-QMAKE_EXTRA_TARGETS += check
+-check.target = check
+-
+-# This enables the maliit library for C++ code
+-CONFIG += maliit-plugins
+-
+-qws {
+-    test_arguments += -qws
+-}
+-
+-# Note that if datafiles are generated they would end out in
+-# $$OUT_PWD and this would fail
+-DATA_DIR = $$PWD/../data
+-
+-check.commands = \
+-    MALIIT_PLUGINS_DATADIR=$$DATA_DIR \
+-    MALIIT_KEYBOARD_DATADIR=$$DATA_DIR \
+-    LD_LIBRARY_PATH=$$MALIIT_INSTALL_LIBS:$$[QT_INSTALL_LIBS]:$(LD_LIBRARY_PATH) \
+-    ./$$TARGET $$test_arguments
+-
+-check.depends += $$TARGET
+-
+-LIBS += ../common/$$maliitStaticLib(tests-common)
+-POST_TARGETDEPS += ../common/$$maliitStaticLib(tests-common)
+-INCLUDEPATH += ../common
+diff --git a/maliit-keyboard/tests/common/common.pro b/maliit-keyboard/tests/common/common.pro
+deleted file mode 100644
+index 62ca5ba1..00000000
+--- a/maliit-keyboard/tests/common/common.pro
++++ /dev/null
+@@ -1,25 +0,0 @@
+-include(../../config-plugin.pri)
+-
+-TARGET = tests-common
+-TEMPLATE = lib
+-CONFIG += staticlib
+-
+-SOURCES += \
+-           utils.cpp \
+-           utils-gui.cpp \
+-           inputmethodhostprobe.cpp \
+-
+-HEADERS += \
+-           utils.h \
+-           inputmethodhostprobe.h \
+-
+-contains(QT_MAJOR_VERSION, 4) {
+-    QT = core gui
+-} else {
+-    QT = core gui widgets
+-}
+-
+-QMAKE_EXTRA_TARGETS += check
+-check.target = check
+-check.command = $$system(true)
+-check.depends += libtests-common.a
+diff --git a/maliit-keyboard/tests/common/utils-gui.cpp b/maliit-keyboard/tests/common/utils-gui.cpp
+index f4975a53..a745eb50 100644
+--- a/maliit-keyboard/tests/common/utils-gui.cpp
++++ b/maliit-keyboard/tests/common/utils-gui.cpp
+@@ -33,9 +33,6 @@
+ 
+ #include <QtCore>
+ 
+-#include <QApplication>
+-#include <QCommonStyle>
+-
+ namespace TestUtils {
+ 
+ } // namespace TestUtils
+diff --git a/maliit-keyboard/tests/editor/editor.pro b/maliit-keyboard/tests/editor/editor.pro
+deleted file mode 100644
+index f62b7d0a..00000000
+--- a/maliit-keyboard/tests/editor/editor.pro
++++ /dev/null
+@@ -1,19 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-include(../../config-plugin.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = editor
+-TEMPLATE = app
+-QT = core testlib gui
+-
+-INCLUDEPATH += ../ ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-HEADERS += \
+-    wordengineprobe.h \
+-
+-SOURCES += \
+-    wordengineprobe.cpp \
+-    main.cpp \
+diff --git a/maliit-keyboard/tests/language-layout-loading/main.cpp b/maliit-keyboard/tests/language-layout-loading/language-layout-loading.cpp
+similarity index 99%
+rename from maliit-keyboard/tests/language-layout-loading/main.cpp
+rename to maliit-keyboard/tests/language-layout-loading/language-layout-loading.cpp
+index 681bcfa4..be162d54 100644
+--- a/maliit-keyboard/tests/language-layout-loading/main.cpp
++++ b/maliit-keyboard/tests/language-layout-loading/language-layout-loading.cpp
+@@ -622,4 +622,4 @@ class TestLanguageLayoutLoading
+ };
+ 
+ QTEST_MAIN(TestLanguageLayoutLoading)
+-#include "main.moc"
++#include "language-layout-loading.moc"
+diff --git a/maliit-keyboard/tests/language-layout-loading/language-layout-loading.pro b/maliit-keyboard/tests/language-layout-loading/language-layout-loading.pro
+deleted file mode 100644
+index 6b8c1251..00000000
+--- a/maliit-keyboard/tests/language-layout-loading/language-layout-loading.pro
++++ /dev/null
+@@ -1,27 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = language-layout-loading
+-TEMPLATE = app
+-QT = core testlib
+-
+-INCLUDEPATH += ../ ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-DEFINES += TEST_DATADIR=\\\"$$PWD\\\"
+-DEFINES += TEST_MALIIT_KEYBOARD_DATADIR=\\\"$$PWD\\\"
+-
+-HEADERS += \
+-
+-SOURCES += \
+-    main.cpp \
+-
+-include(../../word-prediction.pri)
+-
+-QMAKE_EXTRA_TARGETS += xml_check
+-xml_check.commands = \
+-    xmllint --path "$$PWD/../../data/languages" --noout --dtdvalid "$$PWD/../../data/languages/VirtualKeyboardLayout.dtd" "$$PWD/languages/*.xml"
+-
+-check.depends += xml_check
+diff --git a/maliit-keyboard/tests/language-layout-switching/main.cpp b/maliit-keyboard/tests/language-layout-switching/language-layout-switching.cpp
+similarity index 95%
+rename from maliit-keyboard/tests/language-layout-switching/main.cpp
+rename to maliit-keyboard/tests/language-layout-switching/language-layout-switching.cpp
+index 44f85d66..9c7e00f2 100644
+--- a/maliit-keyboard/tests/language-layout-switching/main.cpp
++++ b/maliit-keyboard/tests/language-layout-switching/language-layout-switching.cpp
+@@ -36,7 +36,8 @@
+ #include "logic/layouthelper.h"
+ #include "plugin/editor.h"
+ #include "logic/layoutupdater.h"
+-#include "logic/style.h"
++#include "logic/languagefeatures.h"
++#include "logic/wordengine.h"
+ #include "inputmethodhostprobe.h"
+ 
+ #include <QtCore>
+@@ -98,7 +99,7 @@ class TestLanguageLayoutSwitching
+         Key right_layout;
+         right_layout.setAction(Key::ActionRightLayout);
+ 
+-        Editor editor(0, 0, 0);
++        Editor editor(new Model::Text, new Logic::WordEngine, new Logic::LanguageFeatures);
+         InputMethodHostProbe probe;
+         editor.setHost(&probe);
+ 
+@@ -120,4 +121,4 @@ class TestLanguageLayoutSwitching
+ };
+ 
+ QTEST_MAIN(TestLanguageLayoutSwitching)
+-#include "main.moc"
++#include "language-layout-switching.moc"
+diff --git a/maliit-keyboard/tests/language-layout-switching/language-layout-switching.pro b/maliit-keyboard/tests/language-layout-switching/language-layout-switching.pro
+deleted file mode 100644
+index a68f1bf6..00000000
+--- a/maliit-keyboard/tests/language-layout-switching/language-layout-switching.pro
++++ /dev/null
+@@ -1,23 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-include(../../config-plugin.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = language-layout-switching
+-TEMPLATE = app
+-QT = core testlib gui
+-
+-!contains(QT_MAJOR_VERSION, 4) {
+-    QT += widgets
+-}
+-
+-INCLUDEPATH += ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-HEADERS += \
+-
+-SOURCES += \
+-    main.cpp \
+-
+-include(../../word-prediction.pri)
+diff --git a/maliit-keyboard/tests/preedit-string/main.cpp b/maliit-keyboard/tests/preedit-string/preedit-string.cpp
+similarity index 98%
+rename from maliit-keyboard/tests/preedit-string/main.cpp
+rename to maliit-keyboard/tests/preedit-string/preedit-string.cpp
+index f6f3dde4..bdd43b31 100644
+--- a/maliit-keyboard/tests/preedit-string/main.cpp
++++ b/maliit-keyboard/tests/preedit-string/preedit-string.cpp
+@@ -55,8 +55,6 @@
+ #include <QtCore>
+ #include <QtGui>
+ 
+-#include <QtWidgets>
+-
+ using namespace MaliitKeyboard;
+ Q_DECLARE_METATYPE(Logic::LayoutHelper::Orientation)
+ Q_DECLARE_METATYPE(QList<QMouseEvent*>)
+@@ -191,8 +189,6 @@ class SetupTest
+     Logic::LayoutHelper layout_helper;
+     Logic::EventHandler event_handler;
+     SharedStyle style;
+-    QScopedPointer<QGraphicsView> surface;
+-    QScopedPointer<QGraphicsView> extended_surface;
+     KeyArea key_area;
+ 
+     SetupTest(Logic::LayoutHelper::Orientation orientation = Logic::LayoutHelper::Landscape,
+@@ -203,14 +199,10 @@ class SetupTest
+         , layout_helper()
+         , event_handler(&layout, &layout_updater)
+         , style(new Style(qApp))
+-        , surface(new QGraphicsView)
+-        , extended_surface(new QGraphicsView(surface.data()))
+         , key_area(createAbcdArea())
+     {
+         // geometry stuff is usually done by maliit-server, so we need
+         // to do it manually here:
+-        surface->setSceneRect(0, 0, g_size, g_size);
+-        surface->scene()->setSceneRect(0, 0, g_size, g_size);
+         layout_helper.setOrientation(orientation);
+ 
+         Logic::connectEventHandlerToTextEditor(&event_handler, &editor);
+@@ -623,4 +615,5 @@ class TestPreeditString
+ };
+ 
+ QTEST_MAIN(TestPreeditString)
+-#include "main.moc"
++
++#include "preedit-string.moc"
+diff --git a/maliit-keyboard/tests/preedit-string/preedit-string.pro b/maliit-keyboard/tests/preedit-string/preedit-string.pro
+deleted file mode 100644
+index 32cd78ac..00000000
+--- a/maliit-keyboard/tests/preedit-string/preedit-string.pro
++++ /dev/null
+@@ -1,25 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-include(../../config-plugin.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = preedit-string
+-TEMPLATE = app
+-QT = core testlib gui
+-
+-!contains(QT_MAJOR_VERSION, 4) {
+-    QT += widgets
+-}
+-
+-INCLUDEPATH += ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-HEADERS += \
+-    wordengineprobe.h
+-
+-SOURCES += \
+-    main.cpp \
+-    wordengineprobe.cpp
+-
+-include(../../word-prediction.pri)
+diff --git a/maliit-keyboard/tests/repeat-backspace/main.cpp b/maliit-keyboard/tests/repeat-backspace/repeat-backspace.cpp
+similarity index 98%
+rename from maliit-keyboard/tests/repeat-backspace/main.cpp
+rename to maliit-keyboard/tests/repeat-backspace/repeat-backspace.cpp
+index 17254560..7a73aeb4 100644
+--- a/maliit-keyboard/tests/repeat-backspace/main.cpp
++++ b/maliit-keyboard/tests/repeat-backspace/repeat-backspace.cpp
+@@ -193,13 +193,13 @@ class TestRepeatBackspace
+ 
+         QCOMPARE(host->keyEventCount(), 0);
+ 
+-        QTest::qWait(auto_repeat_delay + 10);
++        QTest::qWait(auto_repeat_delay + 15);
+ 
+         QCOMPARE(host->keyEventCount(), 1);
+         QCOMPARE(host->lastKeyEvent().type(), QEvent::KeyPress);
+         QCOMPARE(host->lastKeyEvent().key(), int(Qt::Key_Backspace));
+ 
+-        QTest::qWait(auto_repeat_interval + 10);
++        QTest::qWait(auto_repeat_interval);
+ 
+         QCOMPARE(host->keyEventCount(), 2);
+         QCOMPARE(host->lastKeyEvent().type(), QEvent::KeyPress);
+@@ -216,4 +216,4 @@ class TestRepeatBackspace
+ 
+ QTEST_MAIN(TestRepeatBackspace)
+ 
+-#include "main.moc"
++#include "repeat-backspace.moc"
+diff --git a/maliit-keyboard/tests/repeat-backspace/repeat-backspace.pro b/maliit-keyboard/tests/repeat-backspace/repeat-backspace.pro
+deleted file mode 100644
+index b5d7f325..00000000
+--- a/maliit-keyboard/tests/repeat-backspace/repeat-backspace.pro
++++ /dev/null
+@@ -1,19 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-include(../../config-plugin.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = repeat-backspace
+-TEMPLATE = app
+-QT = core testlib gui
+-
+-INCLUDEPATH += ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-HEADERS += \
+-
+-SOURCES += \
+-    main.cpp \
+-
+-include(../../word-prediction.pri)
+diff --git a/maliit-keyboard/tests/tests.pro b/maliit-keyboard/tests/tests.pro
+deleted file mode 100644
+index afc96d71..00000000
+--- a/maliit-keyboard/tests/tests.pro
++++ /dev/null
+@@ -1,14 +0,0 @@
+-TEMPLATE = subdirs
+-SUBDIRS = \
+-    common \
+-    editor \
+-    language-layout-switching \
+-    preedit-string \
+-    repeat-backspace \
+-    word-candidates \
+-    language-layout-loading \
+-
+-CONFIG += ordered
+-QMAKE_EXTRA_TARGETS += check
+-check.target = check
+-check.CONFIG = recursive
+diff --git a/maliit-keyboard/tests/editor/.gitignore b/maliit-keyboard/tests/ut_editor/.gitignore
+similarity index 100%
+rename from maliit-keyboard/tests/editor/.gitignore
+rename to maliit-keyboard/tests/ut_editor/.gitignore
+diff --git a/maliit-keyboard/tests/editor/main.cpp b/maliit-keyboard/tests/ut_editor/ut_editor.cpp
+similarity index 98%
+rename from maliit-keyboard/tests/editor/main.cpp
+rename to maliit-keyboard/tests/ut_editor/ut_editor.cpp
+index b202b377..24f4ab96 100644
+--- a/maliit-keyboard/tests/editor/main.cpp
++++ b/maliit-keyboard/tests/ut_editor/ut_editor.cpp
+@@ -26,6 +26,7 @@
+  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *maliit-keyboard
+  *
+  */
+ 
+@@ -101,7 +102,7 @@ class TestEditor
+                 << false << "Helol Wordl! " << "Helol Wordl! ";
+         QTest::newRow("auto-correct disabled, multiple punctation")
+                 << false << "Helol Wordl!! " << "Helol Wordl!! ";
+-        QTest::newRow("auto-correct enabled, digits")
++        QTest::newRow("auto-correct disabled, digits")
+                 << false << "Helol Wordl12 " << "Helol Wordl12 ";
+         QTest::newRow("auto-correct enabled")
+                 << true << "Helol Wordl! " << "Hello World! ";
+@@ -207,4 +208,4 @@ class TestEditor
+ };
+ 
+ QTEST_MAIN(TestEditor)
+-#include "main.moc"
++#include "ut_editor.moc"
+diff --git a/maliit-keyboard/tests/editor/wordengineprobe.cpp b/maliit-keyboard/tests/ut_editor/wordengineprobe.cpp
+similarity index 100%
+rename from maliit-keyboard/tests/editor/wordengineprobe.cpp
+rename to maliit-keyboard/tests/ut_editor/wordengineprobe.cpp
+diff --git a/maliit-keyboard/tests/editor/wordengineprobe.h b/maliit-keyboard/tests/ut_editor/wordengineprobe.h
+similarity index 100%
+rename from maliit-keyboard/tests/editor/wordengineprobe.h
+rename to maliit-keyboard/tests/ut_editor/wordengineprobe.h
+diff --git a/maliit-keyboard/tests/word-candidates/main.cpp b/maliit-keyboard/tests/word-candidates/word-candidates.cpp
+similarity index 99%
+rename from maliit-keyboard/tests/word-candidates/main.cpp
+rename to maliit-keyboard/tests/word-candidates/word-candidates.cpp
+index 4bb99e31..e4866162 100644
+--- a/maliit-keyboard/tests/word-candidates/main.cpp
++++ b/maliit-keyboard/tests/word-candidates/word-candidates.cpp
+@@ -240,4 +240,5 @@ class TestWordCandidates
+ };
+ 
+ QTEST_MAIN(TestWordCandidates)
+-#include "main.moc"
++
++#include "word-candidates.moc"
+diff --git a/maliit-keyboard/tests/word-candidates/word-candidates.pro b/maliit-keyboard/tests/word-candidates/word-candidates.pro
+deleted file mode 100644
+index 862e71e7..00000000
+--- a/maliit-keyboard/tests/word-candidates/word-candidates.pro
++++ /dev/null
+@@ -1,22 +0,0 @@
+-include(../../config.pri)
+-include(../common-check.pri)
+-include(../../config-plugin.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../../..
+-TARGET = word-candidates
+-TEMPLATE = app
+-QT = core testlib gui
+-
+-INCLUDEPATH += ../ ../../lib ../../
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_PLUGIN_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_VIEW_LIB} $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-HEADERS += \
+-    wordengineprobe.h \
+-
+-SOURCES += \
+-    wordengineprobe.cpp \
+-    main.cpp \
+-
+-include(../../word-prediction.pri)
+-
+diff --git a/maliit-keyboard/view/view.pri b/maliit-keyboard/view/view.pri
+deleted file mode 100644
+index 59a478fb..00000000
+--- a/maliit-keyboard/view/view.pri
++++ /dev/null
+@@ -1,7 +0,0 @@
+-# config.pri has to be included before this file.
+-
+-enable-qt-mobility {
+-    CONFIG += mobility
+-    MOBILITY += feedback
+-    DEFINES += HAVE_QT_MOBILITY
+-}
+diff --git a/maliit-keyboard/view/view.pro b/maliit-keyboard/view/view.pro
+deleted file mode 100644
+index 575a6c2d..00000000
+--- a/maliit-keyboard/view/view.pro
++++ /dev/null
+@@ -1,39 +0,0 @@
+-include(../config.pri)
+-include(view.pri)
+-
+-TOP_BUILDDIR = $${OUT_PWD}/../..
+-VERSION = 0.2.0
+-TARGET = $${MALIIT_KEYBOARD_VIEW_TARGET}
+-TEMPLATE = lib
+-CONFIG += staticlib
+-INCLUDEPATH = ../lib
+-LIBS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-PRE_TARGETDEPS += $${TOP_BUILDDIR}/$${MALIIT_KEYBOARD_LIB}
+-
+-contains(QT_MAJOR_VERSION, 4) {
+-    QT = core gui
+-} else {
+-    QT = core gui widgets
+-}
+-
+-HEADERS += \
+-    abstractfeedback.h \
+-    nullfeedback.h \
+-    surface.h \
+-
+-SOURCES += \
+-    abstractfeedback.cpp \
+-    nullfeedback.cpp \
+-    surface.cpp \
+-
+-enable-qt-mobility {
+-    HEADERS += soundfeedback.h
+-    SOURCES += soundfeedback.cpp
+-}
+-
+-disable-background-translucency {
+-    DEFINES += DISABLE_TRANSLUCENT_BACKGROUND_HINT
+-}
+-
+-include(../word-prediction.pri)
+diff --git a/maliit-keyboard/word-prediction.pri b/maliit-keyboard/word-prediction.pri
+deleted file mode 100644
+index 5e04d175..00000000
+--- a/maliit-keyboard/word-prediction.pri
++++ /dev/null
+@@ -1,15 +0,0 @@
+-# to be included at bottom of .pro files
+-enable-presage {
+-    DEFINES += HAVE_PRESAGE
+-    LIBS += -lpresage
+-}
+-
+-enable-hunspell {
+-    CONFIG += link_pkgconfig
+-    PKGCONFIG += hunspell
+-    DEFINES += HAVE_HUNSPELL
+-}
+-
+-disable-preedit {
+-    DEFINES += DISABLE_PREEDIT
+-}
+diff --git a/maliit-plugins.pro b/maliit-plugins.pro
+deleted file mode 100644
+index c7964ec8..00000000
+--- a/maliit-plugins.pro
++++ /dev/null
+@@ -1,86 +0,0 @@
+-include(config.pri)
+-
+-!isEmpty(HELP) {
+-    # Output help
+-    help_string = \
+-        Important build options: \
+-        \\n\\t PREFIX: Install prefix for tools. Default: Maliit framework prefix \
+-        \\n\\t\\t Note that the plugins themselves are installed under Maliit framework prefix \
+-        \\n\\t LIBDIR: Library install directory. Default: $$PREFIX/lib \
+-        \\n\\t MALIIT_DEFAULT_PROFILE: Default keyboard style. Default: nokia-n9 \
+-        \\n\\t HUNSPELL_DICT_PATH: Path to hunspell dictionaries. Default: $$PREFIX/share/hunspell \
+-        \\nRecognised CONFIG flags: \
+-        \\n\\t enable-presage: Use presage to calculate word candidates (maliit-keyboard-plugin only) \
+-        \\n\\t enable-hunspell: Use hunspell for error correction (maliit-keyboard-plugin only) \
+-        \\n\\t disable-preedit: Always commit characters and never use preedit (maliit-keyboard-plugin only) \
+-        \\n\\t enable-qt-mobility: Enable use of QtMobility (enables sound and haptic feedback) \
+-        \\n\\t notests: Do not attempt to build tests \
+-        \\n\\t nodoc: Do not build documentation \
+-        \\n\\t disable-maliit-keyboard: Do not build the C++ reference keyboard (Maliit Keyboard) \
+-        \\n\\t disable-nemo-keyboard: Do not build the QML reference keyboard (Nemo Keyboard) \
+-        \\n\\t disable-background-translucency : Do not set translucent background hint on surfaces (workaround for non-compositing WMs) \
+-        \\nInfluential environment variables: \
+-        \\n\\t QMAKEFEATURES A mkspecs/features directory list to look for features. \
+-        \\n\\t\\t Use it if a dependency is installed to non-default location. \
+-        \\n\\t\\t Note that it must also be passed to qmake calls in subdirectories. \
+-        \\nExamples: \
+-        \\n\\t qmake \
+-        \\n\\t qmake PREFIX=/usr LIBDIR=/usr/lib64 \
+-
+-    !build_pass:system(echo -e \"$$help_string\")
+-} else {
+-    config_string = Tip: Run qmake HELP=1 for a list of all supported build options
+-
+-    !build_pass:system(echo -e \"$$config_string\")
+-}
+-
+-CONFIG += ordered
+-TEMPLATE = subdirs
+-
+-!disable-nemo-keyboard:SUBDIRS += nemo-keyboard
+-!disable-maliit-keyboard:SUBDIRS += maliit-keyboard
+-!nodoc:SUBDIRS += doc
+-
+-DIST_NAME = $$MALIIT_PACKAGENAME-$$MALIIT_VERSION
+-DIST_PATH = $$OUT_PWD/$$DIST_NAME
+-TARBALL_SUFFIX = .tar.bz2
+-TARBALL_PATH = $$DIST_PATH$$TARBALL_SUFFIX
+-
+-# The 'make dist' target
+-# Creates a tarball
+-QMAKE_EXTRA_TARGETS += release
+-release.target = release
+-release.commands += git archive HEAD --prefix=$$DIST_NAME/ | bzip2 > $$TARBALL_PATH;
+-release.commands += md5sum $$TARBALL_PATH | cut -d \' \' -f 1 > $$DIST_PATH\\.md5
+-
+-# The 'make coverage' target
+-# Builds plugins with coverage libs in separate directory.
+-COVERAGE_CONFIG_STRING = CONFIG+=debug CONFIG+=nodoc CONFIG+=no-werror
+-
+-enable-presage {
+-    COVERAGE_CONFIG_STRING += CONFIG+=enable-presage
+-}
+-
+-enable-hunspell {
+-    COVERAGE_CONFIG_STRING += CONFIG+=enable-hunspell
+-}
+-
+-disable-preedit {
+-    COVERAGE_CONFIG_STRING += CONFIG+=disable-preedit
+-}
+-
+-enable-qt-mobility {
+-    COVERAGE_CONFIG_STRING += CONFIG+=enable-qt-mobility
+-}
+-
+-COVERAGE_DIR = coverage-build
+-
+-QMAKE_EXTRA_TARGETS += coverage
+-coverage.target = coverage
+-
+-coverage.commands += $(MKDIR) $$COVERAGE_DIR &&
+-coverage.commands += cd $$COVERAGE_DIR &&
+-coverage.commands += $(QMAKE) -r PREFIX=\"$$PREFIX\" LIBDIR=\"$$LIBDIR\" MALIIT_DEFAULT_PROFILE=\"$$MALIIT_DEFAULT_PROFILE\" HUNSPELL_DICT_PATH=\"$$HUNSPELL_DICT_PATH\" $$COVERAGE_CONFIG_STRING LIBS+=\"$$LIBS\" INCLUDEPATH+=\"$$INCLUDEPATH\" LIBS+=-lgcov QMAKE_CXXFLAGS_DEBUG+=\"-fprofile-arcs -ftest-coverage\" QMAKE_LFLAGS_DEBUG+=\"-fprofile-arcs -ftest-coverage\" $$PWD/maliit-plugins.pro.coverage &&
+-coverage.commands += make $(MAKEFLAGS) coverage
+-
+-coverage.clean_commands = rm -rf $$COVERAGE_DIR
+diff --git a/maliit-plugins.pro.coverage b/maliit-plugins.pro.coverage
+deleted file mode 100644
+index f3fdac6c..00000000
+--- a/maliit-plugins.pro.coverage
++++ /dev/null
+@@ -1,19 +0,0 @@
+-include(maliit-plugins.pro)
+-
+-REPORTS_DIR = ../coverage-report
+-INFO_FILE = maliit-keyboard.info
+-
+-# Here we override coverage commands to actually create coverage reports.
+-coverage.commands =
+-coverage.commands += lcov --directory . --capture --output-file $$INFO_FILE &&
+-coverage.commands += lcov --directory . --output-file $$INFO_FILE --remove $$INFO_FILE '*/include/Qt*' '*/include/qt4/Qt*' '*/include/maliit/*' '*/include/c++/*' '*presage*.h' '*.moc' '*moc_*.cpp' 'tests/*' &&
+-coverage.commands += rm -rf $$REPORTS_DIR &&
+-coverage.commands += $(MKDIR) $$REPORTS_DIR &&
+-coverage.commands += genhtml --title \"Maliit keyboard\" --output-directory $$REPORTS_DIR $$INFO_FILE
+-coverage.depends = all check
+-
+-check.depends += precoverage
+-
+-QMAKE_EXTRA_TARGETS += precoverage
+-precoverage.target = precoverage
+-precoverage.commands = lcov --directory . --zerocounters
+diff --git a/nemo-keyboard/nemo-keyboard.pro b/nemo-keyboard/nemo-keyboard.pro
+deleted file mode 100644
+index 70d5adf6..00000000
+--- a/nemo-keyboard/nemo-keyboard.pro
++++ /dev/null
+@@ -1,20 +0,0 @@
+-include(../config.pri)
+-
+-TEMPLATE = lib
+-TARGET = dummy
+-
+-PLUGIN_FILE = nemo-keyboard.qml
+-PLUGIN_DATA = org
+-
+-plugin.files = $${PLUGIN_FILE}
+-plugin.CONFIG += no_check_exist
+-plugin.path = $${MALIIT_PLUGINS_DIR}
+-
+-other_files.files = $${PLUGIN_DATA}/
+-other_files.CONFIG += no_check_exist
+-other_files.path = $${MALIIT_PLUGINS_DATA_DIR}
+-
+-QMAKE_CLEAN += libdummy.so*
+-INSTALLS += plugin other_files
+-
+-

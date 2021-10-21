@@ -4,7 +4,7 @@
 EAPI=8
 
 QTMIN=5.14.0
-inherit qmake-utils
+inherit ecm
 
 DESCRIPTION="Maliit plugins collection"
 HOMEPAGE="https://maliit.github.io/"
@@ -18,19 +18,20 @@ KEYWORDS="~amd64 ~arm64 ~ppc64 ~x86"
 IUSE="docs hunspell +maliit-keyboard +nemo-keyboard"
 
 DEPEND="
-	>=kde-misc/maliit-frameworks-2.1.0
+	>=kde-misc/maliit-framework-2.1.0
 	hunspell? ( app-text/hunspell )
 "
 RDEPEND="${DEPEND}"
 
+PATCHES=( "${FILESDIR}"/${P}-cmake.patch )
+
 src_configure() {
-        local myqmakeargs=(
-		PREFIX="${EPREFIX}"/usr
+        local mycmakeargs=(
 		-Denable-tests=OFF
 		-Denable-docs=$(usex docs)
 		-Denable-hunspell=$(usex hunspell)
 		-Denable-maliit-keyboard=$(usex maliit-keyboard)
 		-Denable-nemo-keyboard=$(usex nemo-keyboard)
         )
-	eqmake5 "${myqmakeargs[@]}"
+	ecm_src_configure
 }

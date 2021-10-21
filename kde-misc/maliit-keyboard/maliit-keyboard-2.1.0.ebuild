@@ -4,7 +4,7 @@
 EAPI=8
 
 QTMIN=5.14.0
-inherit ecm kde.org
+inherit ecm
 
 DESCRIPTION="Onscreen keyboard using maliit framework"
 HOMEPAGE="https://maliit.github.io/"
@@ -21,7 +21,8 @@ DEPEND="
 	dev-libs/glib
 	>=dev-qt/qtdbus-${QTMIN}:5
 	>=dev-qt/qtmultimedia-${QTMIN}:5
-	>=kde-misc/maliit-frameworks-2.1.0
+	>=dev-qt/qtfeedback-${QTMIN}:5
+	>=kde-misc/maliit-framework-2.1.0
 	>=kde-misc/maliit-plugins-0.99.1
 	hunspell? ( app-text/hunspell )
 "

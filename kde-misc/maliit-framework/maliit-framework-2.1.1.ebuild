@@ -4,7 +4,7 @@
 EAPI=8
 
 QTMIN=5.14.0
-inherit ecm kde.org
+inherit ecm
 
 DESCRIPTION="Maliit provides a flexible and cross-platform input method framework"
 HOMEPAGE="https://maliit.github.io/"
