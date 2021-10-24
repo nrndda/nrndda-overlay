@@ -24,3 +24,19 @@ index c7f80a3..779c4e2 100644
  
  DESTDIR ?=
  CHIPDB_SUBDIR ?= $(PROGRAM_PREFIX)icebox
+diff --git a/iceprog/Makefile b/iceprog/Makefile
+index 3cb07b8..7f5050f 100644
+--- a/iceprog/Makefile
++++ b/iceprog/Makefile
+@@ -4,7 +4,7 @@ ifneq ($(shell uname -s),Darwin)
+   LDLIBS = -L/usr/local/lib -lm
+ else
+   LIBFTDI_NAME = $(shell $(PKG_CONFIG) --exists libftdi1 && echo ftdi1 || echo ftdi)
+-  LDLIBS = -L/usr/local/lib -l$(LIBFTDI_NAME) -lm
++  LDLIBS = -l$(LIBFTDI_NAME) -lm
+ endif
+ 
+ ifeq ($(STATIC),1)
+-- 
+Daniel M. Weeks
+

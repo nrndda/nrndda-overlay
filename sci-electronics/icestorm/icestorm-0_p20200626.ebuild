@@ -29,9 +29,9 @@ DEPEND="
 		${RDEPEND}"
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-9999-prefix.patch
-	epatch "${FILESDIR}"/${PN}-9999-flags.patch
-	epatch "${FILESDIR}"/${PN}-9999-ftdi-fix.patch
+	epatch "${FILESDIR}"/${P}-prefix.patch
+	epatch "${FILESDIR}"/${P}-flags.patch
+	epatch "${FILESDIR}"/${P}-ftdi-fix.patch
 
 	eapply_user
 }
