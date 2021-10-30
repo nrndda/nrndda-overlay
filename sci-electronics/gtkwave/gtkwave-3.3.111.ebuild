@@ -5,9 +5,13 @@ EAPI=7
 
 inherit toolchain-funcs xdg
 
+NEW_P="gtkwave-gtk3-${PV}"
+
 DESCRIPTION="A wave viewer for LXT, LXT2, VZT, GHW and standard Verilog VCD/EVCD files"
 HOMEPAGE="http://gtkwave.sourceforge.net/"
-SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
+SRC_URI="mirror://sourceforge/${PN}/${NEW_P}.tar.gz"
+
+S="${WORKDIR}/${NEW_P}"
 
 LICENSE="GPL-2 MIT"
 SLOT="0"
