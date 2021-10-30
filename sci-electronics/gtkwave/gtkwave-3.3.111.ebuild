@@ -17,8 +17,8 @@ IUSE="doc examples fasttree fatlines judy lzma packed tcl gtk3"
 RDEPEND="
 	dev-libs/glib:2
 	sys-libs/zlib
-	gtk3? ( x11-libs/gtk+:2 )
-	!gtk3? ( x11-libs/gtk+:3 )
+	 gtk3? ( x11-libs/gtk+:3 )
+	!gtk3? ( x11-libs/gtk+:2 )
 	x11-libs/pango
 	judy? ( dev-libs/judy )
 	tcl? ( dev-lang/tcl:0 dev-lang/tk:0 )
