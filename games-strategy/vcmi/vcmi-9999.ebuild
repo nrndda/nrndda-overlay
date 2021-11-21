@@ -26,6 +26,9 @@ REQUIRED_USE="
 "
 
 DEPEND="
+  dev-lang/luajit
+  dev-cpp/tbb
+  >=dev-libs/boost-1.48
   media-libs/libsdl2[video]
   media-libs/sdl2-image
   media-libs/sdl2-mixer
@@ -42,11 +45,6 @@ DEPEND="
   )
 "
 
-BDEPEND="
-  >dev-libs/boost-1.48.0
-  virtual/pkgconfig
-"
-
 PDEPEND="
   games-strategy/vcmi-data
 "
@@ -59,7 +57,9 @@ src_configure() {
   fi
 
   local mycmakeargs=(
-    -DLIB_DIR=$(get_libdir)/${PN}
+    #-DLIB_DIR="${EPREFIX}"/usr/$(get_libdir)/${PN}
+    -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
+    -DCMAKE_INSTALL_RPATH="${EPREFIX}"/usr/$(get_libdir)/${PN}
     -DENABLE_TEST=OFF
     -DFORCE_BUNDLED_FL=OFF
     -DENABLE_PCH=$(usex pch)
@@ -79,14 +79,18 @@ src_configure() {
   fi
 }
 
-src_install() {
-  cmake-utils_src_install
-
-  dodir /etc/ld.so.conf.d/
-  echo "${EPREFIX}/usr/$(get_libdir)/${PN}" > ${ED}/etc/ld.so.conf.d/10-${PN}.conf || die
-}
+#src_install() {
+#  cmake-utils_src_install
+#
+#  dodir /etc/ld.so.conf.d/
+#  echo "${EPREFIX}/usr/$(get_libdir)/${PN}" > ${ED}/etc/ld.so.conf.d/10-${PN}.conf || die
+#}
 
 pkg_postinst() {
+  einfo "To start check out https://wiki.vcmi.eu/Installation_on_Linux#Automated_install"
+  einfo "Howto:"
+  einfo " - add 'Data', 'Maps', 'Mp3' to ~/.local/share/vcmi"
+
   elog "In order to play VCMI you must install:"
   elog "- Heroes III: Shadow of Death or Complete edition;"
   elog "- Unnoficial WoG addon;"
