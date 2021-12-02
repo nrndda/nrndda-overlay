@@ -33,30 +33,27 @@ RESTRICT="
 "
 
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
-VIDEO_CARDS="${RADEON_CARDS} freedreno i915 i965 intel iris crocus lima nouveau panfrost v3d vc4 virgl vivante vmware"
+VIDEO_CARDS="${RADEON_CARDS} crocus freedreno i915 i965 intel iris lima nouveau panfrost v3d vc4 virgl vivante vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	+classic d3d9 debug +egl +gallium +gbm gles1 +gles2 +llvm
+	+classic cpu_flags_x86_sse2 d3d9 debug +gallium gles1 +gles2 +llvm
 	lm-sensors opencl osmesa selinux test unwind vaapi valgrind vdpau vulkan
 	vulkan-overlay wayland +X xa xvmc zink +zstd"
 
 REQUIRED_USE="
 	d3d9?   ( || ( video_cards_iris video_cards_crocus video_cards_r300 video_cards_r600 video_cards_radeonsi video_cards_nouveau video_cards_vmware ) )
-	gles1?  ( egl )
-	gles2?  ( egl )
 	osmesa? ( gallium )
 	vulkan? ( video_cards_radeonsi? ( llvm ) )
 	vulkan-overlay? ( vulkan )
-	wayland? ( egl gbm )
+	video_cards_crocus? ( gallium )
 	video_cards_freedreno?  ( gallium )
 	video_cards_intel?  ( classic )
 	video_cards_i915?   ( || ( classic gallium ) )
 	video_cards_i965?   ( classic )
 	video_cards_iris?   ( gallium )
-	video_cards_crocus? ( gallium )
 	video_cards_lima?   ( gallium )
 	video_cards_nouveau? ( || ( classic gallium ) )
 	video_cards_panfrost? ( gallium )
@@ -70,7 +67,7 @@ REQUIRED_USE="
 	video_cards_v3d? ( gallium )
 	video_cards_vc4? ( gallium )
 	video_cards_virgl? ( gallium )
-	video_cards_vivante? ( gallium gbm )
+	video_cards_vivante? ( gallium )
 	video_cards_vmware? ( gallium )
 	xa? ( X )
 	xvmc? ( X )
@@ -261,12 +258,13 @@ llvm_check_deps() {
 
 pkg_pretend() {
 	if use vulkan; then
-		if ! use video_cards_i965 &&
+		if ! use video_cards_freedreno &&
+		   ! use video_cards_i965 &&
 		   ! use video_cards_iris &&
 		   ! use video_cards_crocus &&
 		   ! use video_cards_radeonsi &&
 		   ! use video_cards_v3d; then
-			ewarn "Ignoring USE=vulkan     since VIDEO_CARDS does not contain i965, iris, crocus, radeonsi, or v3d"
+			ewarn "Ignoring USE=vulkan     since VIDEO_CARDS does not contain crocus, freedreno, i965, iris, radeonsi, or v3d"
 		fi
 	fi
 
@@ -391,12 +389,6 @@ multilib_src_configure() {
 	use wayland && platforms+=",wayland"
 	emesonargs+=(-Dplatforms=${platforms#,})
 
-	if use X || use egl; then
-		emesonargs+=(-Dglvnd=true)
-	else
-		emesonargs+=(-Dglvnd=false)
-	fi
-
 	if use gallium; then
 		emesonargs+=(
 			$(meson_feature llvm)
@@ -477,12 +469,9 @@ multilib_src_configure() {
 			fi
 		fi
 
-		gallium_enable video_cards_iris iris
 		gallium_enable video_cards_crocus crocus
 
-		if ! use classic && use video_cards_crocus; then
-			emesonargs+=(-Dprefer-crocus=true)
-		fi
+		gallium_enable video_cards_iris iris
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
@@ -502,6 +491,7 @@ multilib_src_configure() {
 	fi
 
 	if use vulkan; then
+		vulkan_enable video_cards_freedreno freedreno
 		vulkan_enable video_cards_i965 intel
 		vulkan_enable video_cards_iris intel
 		vulkan_enable video_cards_crocus intel
@@ -524,13 +514,17 @@ multilib_src_configure() {
 		-Dglx=$(usex X dri disabled)
 		-Dshared-glapi=enabled
 		-Ddri3=enabled
-		$(meson_feature egl)
-		$(meson_feature gbm)
+		-Degl=true
+		-Dgbm=true
+		-Dglvnd=true
 		$(meson_feature gles1)
 		$(meson_feature gles2)
 		$(meson_use osmesa)
 		$(meson_use selinux)
 		$(meson_feature zstd)
+		$(meson_use video_cards_crocus prefer-crocus)
+		$(meson_use video_cards_iris prefer-iris)
+		$(meson_use cpu_flags_x86_sse2 sse2)
 		-Dvalgrind=$(usex valgrind auto disabled)
 		-Ddri-drivers=$(driver_list "${DRI_DRIVERS[*]}")
 		-Dgallium-drivers=$(driver_list "${GALLIUM_DRIVERS[*]}")
