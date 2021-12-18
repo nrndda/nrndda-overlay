@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -6,14 +6,14 @@ EAPI=7
 MY_P="qTox-${PV}"
 inherit cmake xdg
 
-DESCRIPTION="Most feature-rich GUI for net-libs/tox using Qt5"
-HOMEPAGE="https://github.com/qTox/qTox"
-SRC_URI="https://github.com/qTox/qTox/archive/v${PV}.tar.gz -> ${MY_P}.tar.gz"
+DESCRIPTION="qTox is an instant messaging client using the encrypted p2p Tox protocol"
+HOMEPAGE="https://qtox.github.io/"
+SRC_URI="https://github.com/qTox/qTox/releases/download/v${PV}/v${PV}.tar.gz -> ${MY_P}.tar.gz"
 
 LICENSE="GPL-3+"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="notification test X spell"
+IUSE="notification spell test X"
 
 RESTRICT="!test? ( test )"
 
@@ -24,14 +24,14 @@ BDEPEND="
 	virtual/pkgconfig
 "
 RDEPEND="
-	dev-db/sqlcipher
-	dev-libs/libsodium:=
-	dev-qt/qtconcurrent:5
-	dev-qt/qtcore:5
 	|| (
 		dev-qt/qtgui:5[gif,jpeg,png,X(-)]
 		dev-qt/qtgui:5[gif,jpeg,png,xcb(-)]
 	)
+	dev-db/sqlcipher
+	dev-libs/libsodium:=
+	dev-qt/qtconcurrent:5
+	dev-qt/qtcore:5
 	dev-qt/qtnetwork:5
 	dev-qt/qtopengl:5
 	dev-qt/qtsql:5
@@ -45,14 +45,14 @@ RDEPEND="
 	net-libs/tox:0/0.2[av]
 	notification? ( x11-libs/snorenotify )
 	spell? ( >=kde-frameworks/sonnet-5.45.0 )
-	X? ( x11-libs/libX11
-		x11-libs/libXScrnSaver )
+	X? (
+		x11-libs/libX11
+		x11-libs/libXScrnSaver
+	)
 "
 DEPEND="${RDEPEND}
 	test? ( dev-qt/qttest:5 )
 "
-
-#PATCHES=( "${FILESDIR}/${P}-qt-5.13.patch" ) # bug #699152
 
 src_prepare() {
 	cmake_src_prepare
@@ -66,13 +66,23 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
+		-DCMAKE_BUILD_TYPE="Release"
+		-DPLATFORM_EXTENSIONS=$(usex X)
+		-DUPDATE_CHECK=OFF
+		-DUSE_CCACHE=ON
+		-DSPELL_CHECK=$(usex spell)
+		-DSVGZ_ICON=ON
+		-DASAN=OFF
 		-DENABLE_STATUSNOTIFIER=$(usex notification)
 		-DDESKTOP_NOTIFICATIONS=$(usex notification)
-		-DSPELL_CHECK=$(usex spell)
-		-DPLATFORM_EXTENSIONS=$(usex X)
+		-DSTRICT_OPTIONS=OFF
 		-DGIT_DESCRIBE="${PV}"
-		-DUPDATE_CHECK=OFF
 	)
 
 	cmake_src_configure
+}
+
+src_test() {
+	# The excluded tests require network access.
+	cmake_src_test -E "test_(bsu|core)"
 }
