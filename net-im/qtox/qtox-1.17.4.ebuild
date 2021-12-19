@@ -3,12 +3,11 @@
 
 EAPI=7
 
-MY_P="qTox-${PV}"
 inherit cmake xdg
 
 DESCRIPTION="qTox is an instant messaging client using the encrypted p2p Tox protocol"
 HOMEPAGE="https://qtox.github.io/"
-SRC_URI="https://github.com/qTox/qTox/releases/download/v${PV}/v${PV}.tar.gz -> ${MY_P}.tar.gz"
+SRC_URI="https://github.com/qTox/qTox/releases/download/v${PV}/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-3+"
 SLOT="0"
@@ -17,7 +16,7 @@ IUSE="notification spell test X"
 
 RESTRICT="!test? ( test )"
 
-S="${WORKDIR}/${MY_P}"
+S="${WORKDIR}/qTox"
 
 BDEPEND="
 	dev-qt/linguist-tools:5
