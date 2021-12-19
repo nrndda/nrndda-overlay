@@ -7,7 +7,7 @@ KFMIN=5.86.0
 QTMIN=5.15.0
 inherit cmake git-r3
 
-DESCRIPTION="KDE Plasma Mobile control module for virtual keyboard"
+DESCRIPTION="KDE Plasma Mobile settings"
 HOMEPAGE="https://invent.kde.org/plasma-mobile/plasma-settings"
 EGIT_REPO_URI="https://invent.kde.org/plasma-mobile/plasma-settings"
 SRC_URI=""
@@ -35,14 +35,3 @@ DEPEND="
 	>=kde-frameworks/modemmanager-qt-${KFMIN}:5
 	>=kde-frameworks/networkmanager-qt-${KFMIN}:5
 "
-
-src_install() {
-	mkdir -p "${D}"/usr/share/kpackage/kcms || die
-	cp -R "${S}"/modules/virtualkeyboard/package "${D}"/usr/share/kpackage/kcms/kcm_mobile_virtualkeyboard || die
-
-	insinto /usr/lib64/qt5/plugins/kcms/
-	doins "${S}_build"/bin/kcm_mobile_virtualkeyboard.so
-
-	insinto /usr/share/kservices5/
-	newins "${S}"/modules/virtualkeyboard/package/metadata.desktop kcm_mobile_virtualkeyboard.desktop
-}
