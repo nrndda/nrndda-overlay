@@ -4,17 +4,17 @@
 EAPI=8
 
 DESCRIPTION="Sound Open Firmware (SOF) binary files"
-
 HOMEPAGE="https://www.sofproject.org https://github.com/thesofproject/sof https://github.com/thesofproject/sof-bin"
 SRC_URI="https://github.com/thesofproject/sof-bin/releases/download/v${PV}/sof-bin-v${PV}.tar.gz -> ${P}.tar.gz"
+S=${WORKDIR}/sof-bin-v${PV}
 
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64"
 
-S=${WORKDIR}/sof-bin-v${PV}
+RDEPEND="media-libs/alsa-lib"
 
-QA_PREBUILT="/usr/bin/sof-logger"
+QA_PREBUILT="usr/bin/sof-logger usr/bin/sof-ctl usr/bin/sof-probes"
 
 MAJOR_V=$(ver_cut 1-2)
 src_install() {
