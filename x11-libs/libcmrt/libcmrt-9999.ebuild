@@ -12,7 +12,7 @@ fi
 inherit autotools multilib-minimal
 
 DESCRIPTION="Media GPU kernel manager for Intel G45 & HD Graphics family"
-HOMEPAGE="https://github.com/intel/${MY_PN}"
+HOMEPAGE="https://github.com/intel/cmrt"
 if [[ ${PV} != *9999* ]] ; then
 	SRC_URI="https://github.com/intel/${MY_PN}/archive/refs/tags/${PV}.tar.gz"
 	S="${WORKDIR}/${MY_PN}-${PV}"
