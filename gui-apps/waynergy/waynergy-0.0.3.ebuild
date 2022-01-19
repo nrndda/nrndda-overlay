@@ -12,7 +12,7 @@ SRC_URI="https://github.com/r-c-f/waynergy/archive/refs/tags/v${PV}.tar.gz"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS=""
-IUSE="kde wlroots"
+IUSE=""
 
 RDEPEND="
 	dev-libs/wayland
@@ -20,10 +20,6 @@ RDEPEND="
 	dev-util/wayland-scanner
 	x11-libs/libxkbcommon
 	dev-libs/libretls
-	!kde? (
-		 wlroots? ( gui-libs/wlroots )
-		!wlroots? ( gui-libs/wlroots )
-	)
 	gui-apps/wl-clipboard
 "
 
