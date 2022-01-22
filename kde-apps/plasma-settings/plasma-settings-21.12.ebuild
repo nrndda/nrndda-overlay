@@ -12,8 +12,6 @@ HOMEPAGE="https://www.plasma-mobile.org/"
 if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="https://invent.kde.org/plasma-mobile/plasma-settings"
 	inherit git-r3
-	SRC_URI=""
-	KEYWORDS=""
 else
 	SRC_URI="mirror://kde/stable/plasma-mobile/${PV}/${P}.tar.xz"
 	KEYWORDS="~amd64 ~x86"

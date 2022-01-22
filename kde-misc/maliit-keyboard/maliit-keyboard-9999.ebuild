@@ -12,15 +12,12 @@ HOMEPAGE="https://maliit.github.io/"
 if [[ ${PV} == 9999 ]]; then
         EGIT_REPO_URI="https://github.com/maliit/keyboard.git"
         inherit git-r3
-	SRC_URI=""
-	KEYWORDS=""
 else
 	SRC_URI="https://github.com/maliit/keyboard/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64 ~arm64 ~ppc64 ~x86"
+	S="${WORKDIR}/keyboard-${PV}"
 fi
 
-
-S="${WORKDIR}/keyboard-${PV}"
 
 LICENSE="LGPL-3"
 SLOT="0"
@@ -32,6 +29,7 @@ DEPEND="
 	>=dev-qt/qtmultimedia-${QTMIN}:5
 	>=kde-misc/maliit-framework-2.1.0
 	>=kde-misc/maliit-plugins-0.99.1
+	virtual/libintl
 	hunspell? ( app-text/hunspell )
 	anthy? ( app-i18n/anthy )
 	pinyin? ( app-i18n/libpinyin )

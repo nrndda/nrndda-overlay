@@ -12,8 +12,6 @@ HOMEPAGE="https://maliit.github.io/"
 if [[ ${PV} == 9999 ]]; then
         EGIT_REPO_URI="https://github.com/maliit/keyboard.git"
         inherit git-r3
-	SRC_URI=""
-	KEYWORDS=""
 else
 	SRC_URI="https://github.com/maliit/keyboard/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64 ~arm64 ~ppc64 ~x86"
