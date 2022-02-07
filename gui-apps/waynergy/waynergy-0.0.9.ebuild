@@ -7,7 +7,13 @@ inherit meson
 
 DESCRIPTION="An implementation of a synergy client for wayland compositors."
 HOMEPAGE="https://github.com/r-c-f/waynergy"
-SRC_URI="https://github.com/r-c-f/waynergy/archive/refs/tags/v${PV}.tar.gz"
+
+if [[ ${PV} == 9999 ]]; then
+        EGIT_REPO_URI="https://github.com/r-c-f/waynergy.git"
+        inherit git-r3
+else
+	SRC_URI="https://github.com/r-c-f/waynergy/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+fi
 
 LICENSE="MIT"
 SLOT="0"
