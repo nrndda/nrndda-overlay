@@ -8,26 +8,46 @@ inherit git-r3 cmake-utils
 EGIT_REPO_URI="https://github.com/YosysHQ/nextpnr.git"
 LICENSE=ISC
 SLOT=0
-IUSE="ice40 ecp5"
 
+NEXTPNR_ARCHES="ice40 ecp5 nexus gowin generic"
+for use_arch in ${NEXTPNR_ARCHES}; do
+	ALL_NEXTPNR_ARCHES+="nextpnr_arch_${use_arch} "
+done
+IUSE="gui openmp +heap ${ALL_NEXTPNR_ARCHES}"
+
+REQUIRED_USE="|| ( ${ALL_NEXTPNR_ARCHES[*]} )"
 DEPEND="
-	dev-qt/qtcore:5
 	dev-libs/boost[python]
-	ice40? (
+	heap? (
+		dev-cpp/eigen
+	)
+	gui? (
+		dev-qt/qtcore:5
+		virtual/opengl
+	)
+	nextpnr_arch_ice40? (
 			  sci-electronics/icestorm
 			>=sci-electronics/yosys-0.8
 	)
-	ecp5? (
+	nextpnr_arch_ecp5? (
 			  sci-electronics/prjtrellis
 			 >sci-electronics/yosys-0.8
 	)
 "
 
 src_configure() {
+	local enabled_arches
+	for use_arch in ${NEXTPNR_ARCHES}; do
+		if use nextpnr_arch_${use_arch}; then
+			enabled_arches+="${use_arch};"
+		fi
+	done
 	local mycmakeargs=(
-		$(usex ice40 $(usex ecp5 "-DARCH=all" "-DARCH=ice40") $(usex ecp5 "-DARCH=ecp5" "-DARCH=generic"))
-		$(usex ice40 -DICEBOX_ROOT=/usr/share/icebox "")
-		$(usex ecp5 -DTRELLIS_ROOT=/usr/share/trellis "")
+		-DARCH=$enabled_arches
+		$(usex nextpnr_arch_ice40 -DICEBOX_ROOT=/usr/share/icebox "")
+		$(usex nextpnr_arch_ecp5 -DTRELLIS_ROOT=/usr/share/trellis "")
+		-DBUILD_GUI=$(usex gui)
+		-DBUILD_HEAP=$(usex heap)
 	)
 	cmake-utils_src_configure
 }
