@@ -9,19 +9,24 @@ DESCRIPTION="IIO accelerometer sensor to input device proxy"
 HOMEPAGE="https://gitlab.freedesktop.org/hadess/iio-sensor-proxy"
 EGIT_REPO_URI="https://gitlab.freedesktop.org/hadess/iio-sensor-proxy"
 
+
 LICENSE="Unlicense"
 # Unknown. There is no info about the license ATM.
 SLOT="0"
 KEYWORDS=""
 IUSE=""
 
+BDEPEND="
+	dev-python/psutil
+	dev-libs/libxml2
+"
+
 RDEPEND="
 	sys-apps/systemd
+	sys-apps/dbus
+	sys-auth/polkit
 	dev-libs/libgudev
 	app-misc/geoclue:*
-"
-DEPEND="
-	${RDEPEND}
 "
 
 DOCS=( README.md )
