@@ -17,7 +17,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE="gtk tk"
 
 DEPEND="
-	dev-python/beautifulsoup[${PYTHON_USEDEP}]
+	dev-python/beautifulsoup4[${PYTHON_USEDEP}]
 	dev-python/lxml[${PYTHON_USEDEP}]
 	dev-python/pyyaml[${PYTHON_USEDEP}]
 	dev-python/PyICU[${PYTHON_USEDEP}]
