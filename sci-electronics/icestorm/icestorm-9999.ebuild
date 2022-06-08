@@ -28,13 +28,11 @@ DEPEND="
 		virtual/pkgconfig
 		${RDEPEND}"
 
-src_prepare() {
-	epatch "${FILESDIR}"/${PN}-9999-prefix.patch
-	epatch "${FILESDIR}"/${PN}-9999-flags.patch
-	epatch "${FILESDIR}"/${PN}-9999-ftdi-fix.patch
-
-	eapply_user
-}
+PATCHES=(
+	"${FILESDIR}/${PN}-9999-prefix.patch"
+	"${FILESDIR}/${PN}-9999-flags.patch"
+	"${FILESDIR}/${PN}-9999-ftdi-fix.patch"
+)
 
 src_compile() {
 	export PREFIX=/usr
