@@ -5,7 +5,7 @@
 EAPI=7
 
 CMAKE_MAKEFILE_GENERATOR="emake"
-inherit cmake-utils
+inherit cmake
 
 DESCRIPTION="An enhanced port of Jagged Alliance 2 to SDL2"
 HOMEPAGE="http://ja2-stracciatella.github.io/"

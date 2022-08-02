@@ -2,7 +2,7 @@ EAPI=7
 DESCRIPTION="portable FPGA place and route tool"
 HOMEPAGE="https://github.com/YosysHQ/nextpnr"
 
-inherit git-r3 cmake-utils
+inherit git-r3 cmake
 
 # SRC_URI="https://github.com/YosysHQ/$PN/archive/$GIT_COMMIT.tar.gz -> $P.tar.gz"
 EGIT_REPO_URI="https://github.com/YosysHQ/nextpnr.git"

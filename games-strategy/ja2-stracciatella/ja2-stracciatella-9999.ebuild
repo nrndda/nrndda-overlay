@@ -5,7 +5,7 @@
 EAPI=7
 
 CMAKE_MAKEFILE_GENERATOR="emake"
-inherit cmake-utils git-r3
+inherit cmake git-r3
 
 EGIT_REPO_URI="https://github.com/ja2-stracciatella/ja2-stracciatella.git"
 

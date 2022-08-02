@@ -3,7 +3,7 @@
 
 EAPI=7
 
-inherit eutils cmake-utils flag-o-matic
+inherit eutils cmake flag-o-matic
 
 if [[ ${PV} == "9999" ]]; then
   inherit git-r3
