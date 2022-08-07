@@ -88,6 +88,7 @@ RDEPEND="
 	)
 	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_intel?,video_cards_nouveau?,video_cards_vc4?,video_cards_vivante?,video_cards_vmware?,${MULTILIB_USEDEP}]
 	vulkan-overlay? ( dev-util/glslang:0=[${MULTILIB_USEDEP}] )
+	vulkan? ( video_cards_radeonsi? ( dev-util/glslang:0=[${MULTILIB_USEDEP}] ) )
 	X? (
 		>=x11-libs/libX11-1.6.2:=[${MULTILIB_USEDEP}]
 		>=x11-libs/libxshmfence-1.1:=[${MULTILIB_USEDEP}]
@@ -121,7 +122,6 @@ LLVM_DEPSTR="
 	|| (
 		sys-devel/llvm:14[${MULTILIB_USEDEP}]
 		sys-devel/llvm:13[${MULTILIB_USEDEP}]
-		sys-devel/llvm:12[${MULTILIB_USEDEP}]
 	)
 	<sys-devel/llvm-$((LLVM_MAX_SLOT + 1)):=[${MULTILIB_USEDEP}]
 "
