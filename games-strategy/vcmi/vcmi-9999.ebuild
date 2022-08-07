@@ -71,7 +71,7 @@ src_configure() {
 
   export CCACHE_SLOPPINESS="time_macros"
 
-  cmake-utils_src_configure
+  cmake_src_configure
 
   if ! use debug; then
     filter-flags -DNDEBUG

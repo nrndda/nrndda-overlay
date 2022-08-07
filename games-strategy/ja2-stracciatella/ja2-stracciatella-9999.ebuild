@@ -45,7 +45,7 @@ src_configure() {
 		-DLOCAL_GTEST_LIB="$(usex !system-gtest)"
 	)
 
-	cmake-utils_src_configure
+	cmake_src_configure
 }
 
 src_install() {

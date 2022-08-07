@@ -49,5 +49,5 @@ src_configure() {
 		-DBUILD_GUI=$(usex gui)
 		-DBUILD_HEAP=$(usex heap)
 	)
-	cmake-utils_src_configure
+	cmake_src_configure
 }
