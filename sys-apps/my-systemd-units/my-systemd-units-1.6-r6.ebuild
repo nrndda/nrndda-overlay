@@ -157,6 +157,7 @@ src_install() {
 
 	if use zswap ; then
 		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/zswap.conf
+		dosbin "${FILESDIR}"/zswap
 	fi
 
 	if use no_tmp_as_tmpfs ; then
