@@ -40,7 +40,7 @@ IUSE="${IUSE_VIDEO_CARDS}
 	cpu_flags_x86_sse2 d3d9 debug gles1 +gles2 +llvm
 	lm-sensors opencl osmesa +proprietary-codecs selinux
 	test unwind vaapi valgrind vdpau vulkan
-	vulkan-overlay wayland +X xa xvmc zink +zstd"
+	vulkan-overlay wayland +X xa zink +zstd"
 
 REQUIRED_USE="
 	d3d9?   ( || ( video_cards_intel video_cards_r300 video_cards_r600 video_cards_radeonsi video_cards_nouveau video_cards_vmware ) )
@@ -50,7 +50,6 @@ REQUIRED_USE="
 	video_cards_r300?   ( x86? ( llvm ) amd64? ( llvm ) )
 	video_cards_radeonsi?   ( llvm )
 	xa? ( X )
-	xvmc? ( X )
 	zink? ( vulkan )
 "
 
@@ -114,9 +113,10 @@ RDEPEND="${RDEPEND}
 # 1. List all the working slots (with min versions) in ||, newest first.
 # 2. Update the := to specify *max* version, e.g. < 10.
 # 3. Specify LLVM_MAX_SLOT, e.g. 9.
-LLVM_MAX_SLOT="15"
+LLVM_MAX_SLOT="16"
 LLVM_DEPSTR="
 	|| (
+		sys-devel/llvm:16[${MULTILIB_USEDEP}]
 		sys-devel/llvm:15[${MULTILIB_USEDEP}]
 		sys-devel/llvm:14[${MULTILIB_USEDEP}]
 		sys-devel/llvm:13[${MULTILIB_USEDEP}]
@@ -274,13 +274,6 @@ pkg_pretend() {
 		fi
 	fi
 
-	if use xvmc; then
-		if ! use video_cards_r600 &&
-		   ! use video_cards_nouveau; then
-			ewarn "Ignoring USE=xvmc       since VIDEO_CARDS does not contain r600 or nouveau"
-		fi
-	fi
-
 	if ! use llvm; then
 		use opencl     && ewarn "Ignoring USE=opencl     since USE does not contain llvm"
 	fi
@@ -370,13 +363,6 @@ multilib_src_configure() {
 		emesonargs+=($(meson_feature xa gallium-xa))
 	else
 		emesonargs+=(-Dgallium-xa=disabled)
-	fi
-
-	if use video_cards_r600 ||
-	   use video_cards_nouveau; then
-		emesonargs+=($(meson_feature xvmc gallium-xvmc))
-	else
-		emesonargs+=(-Dgallium-xvmc=disabled)
 	fi
 
 	if use video_cards_freedreno ||
