@@ -4,7 +4,7 @@
 
 EAPI="7"
 
-inherit eutils user systemd
+inherit eutils systemd
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
