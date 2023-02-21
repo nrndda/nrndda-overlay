@@ -23,7 +23,7 @@ DEPEND="
 	dev-python/pyicu[${PYTHON_USEDEP}]
 	dev-python/html5lib[${PYTHON_USEDEP}]
 	dev-python/python-lzo[${PYTHON_USEDEP}]
-	dev-python/prompt_toolkit[${PYTHON_USEDEP}]
+	dev-python/prompt-toolkit[${PYTHON_USEDEP}]
 	dev-libs/marisa[${PYTHON_USEDEP}]
 	tk? (
 		dev-tcltk/tix
