@@ -1,9 +1,9 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{8..11} )
+PYTHON_COMPAT=( python3_{9..11} )
 
 inherit llvm meson-multilib python-any-r1 linux-info
 
@@ -116,8 +116,6 @@ LLVM_DEPSTR="
 	|| (
 		sys-devel/llvm:16[${MULTILIB_USEDEP}]
 		sys-devel/llvm:15[${MULTILIB_USEDEP}]
-		sys-devel/llvm:14[${MULTILIB_USEDEP}]
-		sys-devel/llvm:13[${MULTILIB_USEDEP}]
 	)
 	<sys-devel/llvm-$((LLVM_MAX_SLOT + 1)):=[${MULTILIB_USEDEP}]
 "
@@ -400,7 +398,7 @@ multilib_src_configure() {
 
 	if use vulkan; then
 		vulkan_enable video_cards_freedreno freedreno
-		vulkan_enable video_cards_intel intel
+		vulkan_enable video_cards_intel intel intel_hasvk
 		vulkan_enable video_cards_d3d12 microsoft-experimental
 		vulkan_enable video_cards_radeonsi amd
 		vulkan_enable video_cards_v3d broadcom
