@@ -93,9 +93,11 @@ RDEPEND="
 	vdpau? ( >=x11-libs/libvdpau-1.1:=[${MULTILIB_USEDEP}] )
 	vulkan? (
 		video_cards_intel? (
-			amd64? (
-				dev-libs/libclc[spirv(-)]
-				>=dev-util/spirv-tools-1.3.231.0
+			llvm? (
+				amd64? (
+					dev-libs/libclc[spirv(-)]
+					>=dev-util/spirv-tools-1.3.231.0
+				)
 			)
 		)
 	)
