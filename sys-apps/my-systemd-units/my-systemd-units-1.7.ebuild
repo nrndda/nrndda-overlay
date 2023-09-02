@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI="7"
+EAPI="8"
 
-inherit eutils systemd
+inherit systemd tmpfiles
 
 DESCRIPTION="My units for systemd"
 HOMEPAGE="http://nrndda.mine.nu"
@@ -93,14 +93,14 @@ src_install() {
 		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd@.service
 		systemd_dounit ${SOURCE_SOCKETS_DIR}/distccd.socket
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/distccd.conf
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/distccd@.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/distccd.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/distccd@.conf
 	fi
 	if use hostapd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/hostapd.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/hostapd@.service
 		systemd_dounit ${SOURCE_TARGETS_DIR}/hostapd.target
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/hostapd.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/hostapd.conf
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/crda_set.sh
 	fi
@@ -131,11 +131,11 @@ src_install() {
 	fi
 	if use miniupnpd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/miniupnpd.service
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/miniupnpd.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/miniupnpd.conf
 	fi
 	if use minissdpd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/minissdpd.service
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/minissdpd.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/minissdpd.conf
 	fi
 	if use flexlm ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/flexlm.service
@@ -156,7 +156,7 @@ src_install() {
 	fi
 
 	if use zswap ; then
-		systemd_dotmpfilesd ${SOURCE_TMPFILES_DIR}/zswap.conf
+		dotmpfiles ${SOURCE_TMPFILES_DIR}/zswap.conf
 		dosbin "${FILESDIR}"/zswap
 	fi
 
