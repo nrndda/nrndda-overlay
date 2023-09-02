@@ -4,16 +4,25 @@
 EAPI="7"
 
 PYTHON_COMPAT=( python3_{9,10,11} )
-inherit eutils python-any-r1
+inherit python-any-r1
 
 DESCRIPTION="Yosys - Yosys Open SYnthesis Suite"
 HOMEPAGE="http://www.clifford.at/icestorm/"
 LICENSE="ISC"
-SRC_URI="https://github.com/cliffordwolf/${PN}/archive/${P}.tar.gz"
+RESTRICT="network-sandbox"
+
+if [[ ${PV} == 9999 ]]; then
+	EGIT_REPO_URI="https://github.com/cliffordwolf/yosys.git"
+        inherit git-r3
+	RESTRICT="network-sandbox"
+else
+	SRC_URI="https://github.com/cliffordwolf/${PN}/archive/${P}.tar.gz"
+	KEYWORDS="~amd64"
+	S="${WORKDIR}/${PN}-${P}"
+fi
 
 SLOT="0"
-KEYWORDS="~amd64"
-IUSE=""
+IUSE="abc"
 
 RDEPEND="
 	sys-libs/readline:=
@@ -29,10 +38,9 @@ DEPEND="
 	virtual/pkgconfig
 	${RDEPEND}"
 
-S="${WORKDIR}/${PN}-${P}"
 src_configure() {
 	emake config-gcc
-	echo "ENABLE_ABC := 0" >> "${S}/Makefile.conf"
+	echo "ENABLE_ABC := $(usex abc 1 0)" >> "${S}/Makefile.conf"
 }
 
 src_compile() {
@@ -40,5 +48,5 @@ src_compile() {
 }
 
 src_install() {
-	emake PREFIX="${ED}/usr" install
+	emake PREFIX="${ED}/usr" STRIP=true install
 }

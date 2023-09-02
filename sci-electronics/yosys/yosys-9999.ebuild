@@ -4,17 +4,25 @@
 EAPI="7"
 
 PYTHON_COMPAT=( python3_{9,10,11} )
-inherit eutils git-r3 python-any-r1
+inherit python-any-r1
 
 DESCRIPTION="Yosys - Yosys Open SYnthesis Suite"
 HOMEPAGE="http://www.clifford.at/icestorm/"
 LICENSE="ISC"
-EGIT_REPO_URI="https://github.com/cliffordwolf/yosys.git"
 RESTRICT="network-sandbox"
 
+if [[ ${PV} == 9999 ]]; then
+	EGIT_REPO_URI="https://github.com/cliffordwolf/yosys.git"
+        inherit git-r3
+	RESTRICT="network-sandbox"
+else
+	SRC_URI="https://github.com/cliffordwolf/${PN}/archive/${P}.tar.gz"
+	KEYWORDS="~amd64"
+	S="${WORKDIR}/${PN}-${P}"
+fi
+
 SLOT="0"
-KEYWORDS=""
-IUSE="+abc"
+IUSE="abc"
 
 RDEPEND="
 	sys-libs/readline:=
