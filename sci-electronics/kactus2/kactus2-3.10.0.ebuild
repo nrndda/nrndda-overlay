@@ -28,9 +28,14 @@ IUSE="python"
 
 RDEPEND="
 	${PYTHON_DEPS}
-	dev-qt/qtbase:6[gui,xml,widgets]
-	dev-qt/qttools:6[assistant]
-	dev-qt/qtsvg:6
+	dev-qt/qtchooser
+	dev-qt/qtcore:5
+	dev-qt/qtgui:5
+	dev-qt/qthelp:5
+	dev-qt/qtprintsupport:5
+	dev-qt/qtsvg:5
+	dev-qt/qtwidgets:5
+	dev-qt/qtxml:5
 "
 
 DEPEND="
@@ -48,8 +53,7 @@ src_prepare() {
 		echo "CONFIG+=nostrip" >> "${i}" || die
 	done < <(find . -type f '(' -name "*.pro" ')' -print0)
 	# Fix QTBIN_PATH
-	sed -i -e "s QTBIN_PATH=.* QTBIN_PATH=\"$(qt6_get_bindir)/\" " configure || die
-	sed -i -e "s ${QTBIN_PATH}qhelpgenerator ${QTBIN_PATH}../libexec/qhelpgenerator " configure || die
+	sed -i -e "s QTBIN_PATH=.* QTBIN_PATH=\"$(qt5_get_bindir)/\" " configure || die
 }
 
 src_install() {
@@ -60,7 +64,7 @@ src_install() {
 		export PYTHON_LIBS="$(python_get_LIBS)"
 		pushd "PythonAPI" || die
 		emake clean
-		eqmake6 PREFIX="$(python_get_library_path)"
+		eqmake5 PREFIX="$(python_get_library_path)"
 		emake
 		rm -rf _pythonAPI.so || die
 		cp -rf libPythonAPI.so.1.0.0 _pythonAPI.so || die
