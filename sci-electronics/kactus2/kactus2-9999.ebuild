@@ -41,6 +41,8 @@ BDEPEND="
 	>=dev-lang/swig-3.0.12
 "
 
+#PATCHES=( "${FILESDIR}/qt6.6.0.patch" )
+
 src_prepare() {
 	default
 	# Fix QA pre-stripped warnings, bug 781674
