@@ -192,8 +192,6 @@ x86? (
 )"
 
 PATCHES=(
-	"${FILESDIR}"/23.3.3-symbols-check-Add-_GLOBAL_OFFSET_TABLE_.patch
-	"${FILESDIR}"/23.3.3-big-endian.patch
 	"${FILESDIR}/revert_shadow_global_config.patch"
 )
 
