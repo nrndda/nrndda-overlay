@@ -13,9 +13,9 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+power +noclear cgroups cpupower distccd br0 ssh hostapd inet dhcpcd_firewall_hook hwclock microcode_ctl \
+IUSE="+power +noclear cgroups cpupower +distccd br0 ssh hostapd inet dhcpcd_firewall_hook hwclock \
 	iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm vfio touchegg printer"
+	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm vfio printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
@@ -31,12 +31,11 @@ DEPEND="sys-apps/systemd
 	minissdpd? ( net-misc/minissdpd )
 	mediatomb? ( net-misc/mediatomb )
 	ushare? ( media-video/ushare )
-	microcode_ctl? ( sys-apps/microcode-ctl )
 	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	screen? ( app-misc/screen )
 	ssh? ( virtual/ssh )
 	hdparm? ( sys-apps/hdparm )
-	touchegg? ( x11-misc/touchegg )"
+"
 
 SOURCE_SERVICES_DIR="${FILESDIR}/services"
 SOURCE_TMPFILES_DIR="${FILESDIR}/tmpfiles"
@@ -65,7 +64,7 @@ src_install() {
 		doins "${FILESDIR}"/stock_dialog_warning_48.png
 	fi
 
-	for i in mediatomb ushare hwclock microcode_ctl cpupower; do
+	for i in mediatomb ushare hwclock cpupower; do
 		if use $i; then
 			systemd_dounit ${SOURCE_SERVICES_DIR}/$i.service
 		fi
@@ -90,11 +89,9 @@ src_install() {
 		systemd_dounit ${SOURCE_TARGETS_DIR}/br0.target
 	fi
 	if use distccd ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd@.service
 		systemd_dounit ${SOURCE_SOCKETS_DIR}/distccd.socket
 		dotmpfiles ${SOURCE_TMPFILES_DIR}/distccd.conf
-		dotmpfiles ${SOURCE_TMPFILES_DIR}/distccd@.conf
 	fi
 	if use hostapd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/hostapd.service
@@ -168,9 +165,6 @@ src_install() {
 		systemd_dounit ${SOURCE_SERVICES_DIR}/vfio-bind.service
 		dosbin "${FILESDIR}"/vfio-bind
 		newconfd "${FILESDIR}"/vfio-pci.conf vfio-pci
-	fi
-	if use touchegg ; then
-		systemd_douserunit ${SOURCE_SERVICES_DIR}/touchegg.service
 	fi
 }
 
