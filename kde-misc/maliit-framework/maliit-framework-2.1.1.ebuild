@@ -30,6 +30,7 @@ DEPEND="
 	wayland? (
 		dev-libs/wayland-protocols
 		dev-util/wayland-scanner
+		dev-qt/qtwaylandscanner
 		dev-qt/qtwayland
 		x11-libs/libxkbcommon
 		gtk? ( x11-libs/gtk+:3 )
