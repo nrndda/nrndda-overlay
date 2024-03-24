@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
+EAPI=7
+
 DESCRIPTION="A conversion script for mass converting your music collection from one format to another"
 HOMEPAGE="http://lossless2lossy.sourceforge.net/"
 SRC_URI="http://downloads.sourceforge.net/${PN}/${PN}-v${PV}.gz"
@@ -20,12 +22,6 @@ RDEPEND="ape? ( media-sound/mac )
 
 S="${WORKDIR}"
 
-src_unpack() {
-	unpack ${A}
-	cd ${S} || die
-	mv lossless2lossy-v${PV} lossless2lossy
-}
-
 src_install() {
-	dobin lossless2lossy || die
+	newbin lossless2lossy-v${PV} lossless2lossy || die
 }
