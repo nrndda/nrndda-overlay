@@ -1,0 +1,10 @@
+[Unit]
+Description=screen (%i)
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/screen -dmS %i
+ExecStop=/usr/bin/screen -S %i -X quit
+
+[Install]
+WantedBy=default.target
