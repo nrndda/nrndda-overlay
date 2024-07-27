@@ -194,8 +194,12 @@ x86? (
 	usr/lib/libGLX_mesa.so.0.0.0
 )"
 
+PATCHES=(
+        "${FILESDIR}/revert_shadow_global_config.patch"
+)
+
 src_unpack() {
-	if [[ ${PV} == 9999 ]]; then
+	if [[ ${MINOR_V} == 9999 ]] || [[ ${PV} == 9999 ]]; then
 		git-r3_src_unpack
 	else
 		unpack ${MY_P}.tar.xz

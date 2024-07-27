@@ -1,0 +1,12 @@
+--- a/src/amd/common/ac_shadowed_regs.c	2023-12-10 18:27:59.613409724 +0300
++++ b/src/amd/common/ac_shadowed_regs.c	2023-12-10 18:30:07.164750520 +0300
+@@ -3708,8 +3708,7 @@
+                CC1_SHADOW_PER_CONTEXT_STATE(1) |
+                CC1_SHADOW_CS_SH_REGS(1) |
+                CC1_SHADOW_GFX_SH_REGS(1) |
+-               CC1_SHADOW_GLOBAL_UCONFIG(1) |
+-               CC1_SHADOW_GLOBAL_CONFIG(1));
++               CC1_SHADOW_GLOBAL_UCONFIG(1));
+ 
+    if (!info->has_fw_based_shadowing) {
+       for (unsigned i = 0; i < SI_NUM_REG_RANGES; i++)

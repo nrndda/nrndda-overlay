@@ -170,6 +170,7 @@ x86? (
 )"
 
 PATCHES=(
+	"${FILESDIR}/revert_shadow_global_config.patch"
 	"${FILESDIR}"/24.0.4-dzn-Include-vulkan_core.h-instead-of-vulkan.h-in-the.patch
 )
 
