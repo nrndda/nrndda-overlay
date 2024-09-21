@@ -13,9 +13,9 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+power +noclear cgroups cpupower +distccd br0 ssh hostapd inet dhcpcd_firewall_hook hwclock \
+IUSE="power noclear cgroups cpupower distcc br0 ssh hostapd inet dhcpcd_firewall_hook hwclock \
 	iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram +zswap mediatomb ushare flexlm vfio printer"
+	no_tmp_as_tmpfs zram zswap mediatomb ushare flexlm vfio printer"
 
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
