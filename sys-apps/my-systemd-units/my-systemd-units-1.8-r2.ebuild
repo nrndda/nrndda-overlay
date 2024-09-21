@@ -20,7 +20,7 @@ IUSE="power noclear cgroups cpupower distcc br0 ssh hostapd inet dhcpcd_firewall
 DEPEND="sys-apps/systemd
 	cgroups? ( dev-libs/libcgroup )
 	cpupower? ( sys-power/cpupower )
-	distccd? ( sys-devel/distcc )
+	distcc? ( sys-devel/distcc )
 	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
 	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
@@ -88,7 +88,7 @@ src_install() {
 		systemd_dounit ${SOURCE_SERVICES_DIR}/br0@.service
 		systemd_dounit ${SOURCE_TARGETS_DIR}/br0.target
 	fi
-	if use distccd ; then
+	if use distcc ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd@.service
 		systemd_dounit ${SOURCE_SOCKETS_DIR}/distccd.socket
 		dotmpfiles ${SOURCE_TMPFILES_DIR}/distccd.conf
