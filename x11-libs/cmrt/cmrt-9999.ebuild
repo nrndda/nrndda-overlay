@@ -26,7 +26,7 @@ RESTRICT="test" # No tests
 
 RDEPEND="
 	>=x11-libs/libdrm-2.4.23[video_cards_intel,${MULTILIB_USEDEP}]
-	>=x11-libs/libva-1.2.0:=[drm,${MULTILIB_USEDEP}]
+	>=media-libs/libva-1.2.0:=[drm,${MULTILIB_USEDEP}]
 "
 DEPEND="${RDEPEND}"
 BDEPEND="virtual/pkgconfig"

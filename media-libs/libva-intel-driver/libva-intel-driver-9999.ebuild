@@ -26,13 +26,13 @@ RESTRICT="test" # No tests
 
 RDEPEND="
 	>=x11-libs/libdrm-2.4.52[video_cards_intel,${MULTILIB_USEDEP}]
-	>=x11-libs/libva-2.4.0:=[X?,wayland?,drm,${MULTILIB_USEDEP}]
+	>=media-libs/libva-2.4.0:=[X?,wayland?,drm,${MULTILIB_USEDEP}]
 	wayland? (
 		>=dev-libs/wayland-1.11[${MULTILIB_USEDEP}]
 		>=media-libs/mesa-9.1.6[${MULTILIB_USEDEP}]
 	)
 	hybrid? (
-		x11-libs/libva-intel-hybrid-driver[X?,wayland?,${MULTILIB_USEDEP}]
+		media-libs/libva-intel-hybrid-driver[X?,wayland?,${MULTILIB_USEDEP}]
 	)
 "
 DEPEND="${RDEPEND}"
