@@ -13,6 +13,7 @@ if [[ "${PV}" != "9999" ]]; then
 	S="${WORKDIR}/llama.cpp-${MY_PV}"
 	SRC_URI="https://github.com/ikawrakow/ik_llama.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz"
 else
+	KEYWORDS=""
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/ikawrakow/ik_llama.cpp.git"
 fi

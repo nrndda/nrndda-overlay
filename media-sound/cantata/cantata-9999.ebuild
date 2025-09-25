@@ -12,6 +12,7 @@ HOMEPAGE="https://github.com/nrndda/cantata.git"
 if [[ ${PV} == 9999 ]]; then
         EGIT_REPO_URI="https://github.com/nrndda/cantata.git"
         inherit git-r3
+	KEYWORDS=""
 else
 	SRC_URI="https://github.com/nrndda/${PN}/releases/download/v${PV}/${P}.tar.bz2"
 	KEYWORDS="amd64 ~ppc ~ppc64 x86"
