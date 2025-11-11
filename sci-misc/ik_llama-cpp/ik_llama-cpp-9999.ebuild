@@ -34,8 +34,8 @@ CDEPEND="
 	openblas? ( sci-libs/openblas:= )
 	openmp? ( llvm-runtimes/openmp:= )
 	blis? ( sci-libs/blis:= )
-	hip? ( >=dev-util/hip-6.3:=
-		>=sci-libs/hipBLAS-6.3:=
+	hip? ( >=dev-util/hip-${ROCM_VERSION}:=
+		>=sci-libs/hipBLAS-${ROCM_VERSION}:=
 	)
 	cuda? ( dev-util/nvidia-cuda-toolkit:= )
 "
@@ -48,6 +48,7 @@ RDEPEND="${CDEPEND}
 	opencl? ( dev-libs/opencl-icd-loader )
 	vulkan? ( media-libs/vulkan-loader )
 "
+BDEPEND="media-libs/shaderc"
 
 pkg_setup() {
 	if use hip; then
