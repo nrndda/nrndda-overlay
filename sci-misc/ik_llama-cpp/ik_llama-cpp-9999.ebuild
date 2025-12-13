@@ -24,8 +24,8 @@ HOMEPAGE="https://github.com/ggml-org/llama.cpp"
 LICENSE="MIT"
 SLOT="0"
 CPU_FLAGS_X86=( avx avx2 f16c )
-IUSE="curl openblas +openmp blis hip cuda opencl vulkan"
-REQUIRED_USE="?? ( openblas blis )"
+IUSE="curl openblas +openmp blis hip cuda opencl vulkan flexiblas"
+REQUIRED_USE="?? ( openblas blis flexiblas )"
 
 # curl is needed for pulling models from huggingface
 # numpy is used by convert_hf_to_gguf.py
@@ -34,6 +34,7 @@ CDEPEND="
 	openblas? ( sci-libs/openblas:= )
 	openmp? ( llvm-runtimes/openmp:= )
 	blis? ( sci-libs/blis:= )
+	flexiblas? ( sci-libs/flexiblas:= )
 	hip? ( >=dev-util/hip-${ROCM_VERSION}:=
 		>=sci-libs/hipBLAS-${ROCM_VERSION}:=
 	)
@@ -97,6 +98,12 @@ src_configure() {
 	if use blis ; then
 		mycmakeargs+=(
 			-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=FLAME
+		)
+	fi
+
+	if use flexiblas; then
+		mycmakeargs+=(
+			-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=FlexiBLAS
 		)
 	fi
 
