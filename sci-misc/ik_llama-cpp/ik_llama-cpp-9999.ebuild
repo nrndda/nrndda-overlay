@@ -82,7 +82,7 @@ src_configure() {
 	local mycmakeargs=(
 		-DCMAKE_INSTALL_INCLUDEDIR=include/ik_llama.cpp
 		-DLLAMA_BUILD_TESTS=OFF
-		-DLLAMA_BUILD_EXAMPLES=OFF
+		-DLLAMA_BUILD_EXAMPLES=ON
 		-DLLAMA_BUILD_SERVER=ON
 		-DCMAKE_SKIP_BUILD_RPATH=ON
 		-DGGML_NATIVE=1	# workaround Illegal instruction
