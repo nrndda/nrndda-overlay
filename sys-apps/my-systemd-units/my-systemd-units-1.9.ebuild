@@ -13,25 +13,17 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="power noclear cgroups cpupower distcc br0 ssh hostapd inet dhcpcd_firewall_hook hwclock \
-	iptables miniupnpd minissdpd rtorrent screen hdparm \
-	no_tmp_as_tmpfs zram zswap mediatomb ushare flexlm vfio printer"
+IUSE="power noclear cpupower distcc ssh hostapd hwclock \
+	miniupnpd minissdpd screen hdparm \
+	no_tmp_as_tmpfs zram zswap vfio"
 
 DEPEND="sys-apps/systemd
-	cgroups? ( dev-libs/libcgroup )
 	cpupower? ( sys-power/cpupower )
 	distcc? ( sys-devel/distcc )
-	br0? ( net-misc/bridge-utils )
 	hostapd? ( net-wireless/hostapd )
-	inet? ( net-dialup/rp-pppoe net-misc/ndisc6 net-firewall/iptables sys-apps/iproute2 )
-	dhcpcd_firewall_hook? ( net-misc/dhcpcd )
 	hwclock? ( sys-apps/util-linux )
-	iptables? ( net-firewall/iptables )
 	miniupnpd? ( net-misc/miniupnpd )
 	minissdpd? ( net-misc/minissdpd )
-	mediatomb? ( net-misc/mediatomb )
-	ushare? ( media-video/ushare )
-	rtorrent? ( net-p2p/rtorrent app-misc/screen )
 	screen? ( app-misc/screen )
 	ssh? ( virtual/ssh )
 	hdparm? ( sys-apps/hdparm )
@@ -64,14 +56,11 @@ src_install() {
 		doins "${FILESDIR}"/stock_dialog_warning_48.png
 	fi
 
-	for i in mediatomb ushare hwclock cpupower; do
+	for i in hwclock cpupower; do
 		if use $i; then
 			systemd_dounit ${SOURCE_SERVICES_DIR}/$i.service
 		fi
 	done
-	if use printer; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/configure-printer@.service
-	fi
 	if use power; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/cpufreq_governor@.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_usb@.service
@@ -79,15 +68,7 @@ src_install() {
 		systemd_dounit ${SOURCE_SERVICES_DIR}/autosuspend_pcie@.service
 		systemd_dounit ${SOURCE_SERVICES_DIR}/disable_wifi_powersave@.service
 	fi
-	if use cgroups; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/cgconfig.service
-		systemd_dounit ${SOURCE_SERVICES_DIR}/cgrules.service
-	fi
 
-	if use br0; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/br0@.service
-		systemd_dounit ${SOURCE_TARGETS_DIR}/br0.target
-	fi
 	if use distcc ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/distccd@.service
 		systemd_dounit ${SOURCE_SOCKETS_DIR}/distccd.socket
@@ -101,30 +82,8 @@ src_install() {
 	        exeinto /usr/local/sbin/
 	        doexe "${FILESDIR}"/crda_set.sh
 	fi
-	if use inet ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/inet@.service
-		systemd_dounit ${SOURCE_TARGETS_DIR}/inet.target
-		systemd_dounit ${SOURCE_SERVICES_DIR}/ext_lan@.service
-		systemd_dounit ${SOURCE_TARGETS_DIR}/ext_lan.target
-		systemd_dounit ${SOURCE_SERVICES_DIR}/firewall.service
-		systemd_dounit ${SOURCE_SERVICES_DIR}/firewall_inet.service
-	        exeinto /usr/local/sbin/
-	        doexe "${FILESDIR}"/fw_flush_all_rules.sh
-	        doexe "${FILESDIR}"/fw_full.sh
-	        doexe "${FILESDIR}"/fw_full_with_ip.sh
-	        doexe "${FILESDIR}"/fw_with_dhcpcd_hooks.sh
-	fi
-	if use dhcpcd_firewall_hook ; then
-		insinto /lib/dhcpcd/dhcpcd-hooks/
-		doins "${FILESDIR}"/99-dhcpcd_fw_hook.sh
-	fi
 	if use hdparm ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/hdparm_disableAPM@.service
-	fi
-	if use iptables ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/iptables.service
-		systemd_dounit ${SOURCE_SERVICES_DIR}/ip6tables.service
-		dosbin "${FILESDIR}"/iptables-stop
 	fi
 	if use miniupnpd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/miniupnpd.service
@@ -133,14 +92,6 @@ src_install() {
 	if use minissdpd ; then
 		systemd_dounit ${SOURCE_SERVICES_DIR}/minissdpd.service
 		dotmpfiles ${SOURCE_TMPFILES_DIR}/minissdpd.conf
-	fi
-	if use flexlm ; then
-		systemd_dounit ${SOURCE_SERVICES_DIR}/flexlm.service
-		dosbin "${FILESDIR}"/flexlm
-	fi
-	if use rtorrent ; then
-		systemd_douserunit ${SOURCE_SERVICES_DIR}/rtorrent.service
-		systemd_douserunit ${SOURCE_PATH_DIR}/rtorrent.path
 	fi
 	if use screen ; then
 		#systemd_douserunit ${SOURCE_SERVICES_DIR}/screen.service
@@ -170,10 +121,6 @@ src_install() {
 }
 
 pkg_postinst() {
-	if use cgroups; then
-		enewgroup cgroup
-		usermod -a -G cgroup portage
-	fi
 	einfo "Reloading systemd rules."
 	systemctl daemon-reload
 }

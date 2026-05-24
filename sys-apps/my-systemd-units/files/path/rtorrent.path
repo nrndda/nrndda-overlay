@@ -1,8 +1,0 @@
-[Unit]
-Description=rtorrent watcher
-
-[Path]
-PathChanged=/home/myuser/torrents
-
-[Install]
-WantedBy=multi-user.target
